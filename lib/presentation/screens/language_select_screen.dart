@@ -1,0 +1,431 @@
+import 'package:flutter/material.dart';
+import '../../services/supabase_service.dart';
+import 'level_test_screen.dart';
+
+// ═══════════════════════════════════════════════════════════
+//  LanguageSelectScreen
+//  Показывается после регистрации — пользователь выбирает
+//  язык для изучения. Выбор сохраняется в Supabase.
+// ═══════════════════════════════════════════════════════════
+class LanguageSelectScreen extends StatefulWidget {
+  final String name;
+  final int age;
+
+  const LanguageSelectScreen({
+    super.key,
+    required this.name,
+    required this.age,
+  });
+
+  @override
+  State<LanguageSelectScreen> createState() => _LanguageSelectScreenState();
+}
+
+class _LanguageSelectScreenState extends State<LanguageSelectScreen>
+    with SingleTickerProviderStateMixin {
+  String? _selected;
+  bool _isLoading = false;
+  late AnimationController _listController;
+
+  static const _langs = [
+    _Lang(
+      code: 'en',
+      flag: '🇬🇧',
+      name: 'Английский',
+      native: 'English',
+      method: 'Система Александра «с нуля»',
+      color: Color(0xFF1A56DB),
+      bg: Color(0xFFEFF6FF),
+    ),
+    _Lang(
+      code: 'kz',
+      flag: '🇰🇿',
+      name: 'Казахский',
+      native: 'Қазақша',
+      method: 'Казахский разговорный',
+      color: Color(0xFF059669),
+      bg: Color(0xFFECFDF5),
+    ),
+    _Lang(
+      code: 'ru',
+      flag: '🇷🇺',
+      name: 'Русский',
+      native: 'Русский',
+      method: 'Для иностранцев · Кириллица',
+      color: Color(0xFFDC2626),
+      bg: Color(0xFFFEF2F2),
+    ),
+    _Lang(
+      code: 'de',
+      flag: '🇩🇪',
+      name: 'Немецкий',
+      native: 'Deutsch',
+      method: 'Deutsche Schritt für Schritt',
+      color: Color(0xFF92400E),
+      bg: Color(0xFFFFFBEB),
+    ),
+    _Lang(
+      code: 'fr',
+      flag: '🇫🇷',
+      name: 'Французский',
+      native: 'Français',
+      method: 'Méthode française',
+      color: Color(0xFF1D4ED8),
+      bg: Color(0xFFEFF6FF),
+    ),
+    _Lang(
+      code: 'zh',
+      flag: '🇨🇳',
+      name: 'Китайский',
+      native: '中文',
+      method: '汉语入门 · Пиньинь → Иероглифы',
+      color: Color(0xFFB91C1C),
+      bg: Color(0xFFFFF1F2),
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _listController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _listController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirm() async {
+    if (_selected == null || _isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      await SupabaseService.instance.updateLanguage(_selected!);
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => LevelTestScreen(
+            name: widget.name,
+            age: widget.age,
+            language: _selected!,
+          ),
+          transitionsBuilder: (_, anim, __, child) =>
+              FadeTransition(opacity: anim, child: child),
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка: $e'),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4FEFE),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Шапка ──────────────────────────────────────
+            _Header(name: widget.name),
+
+            // ── Список языков ───────────────────────────────
+            Expanded(
+              child: ListView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                itemCount: _langs.length,
+                itemBuilder: (ctx, i) {
+                  final delay = i * 0.1;
+                  return AnimatedBuilder(
+                    animation: _listController,
+                    builder: (_, child) {
+                      final t = Curves.easeOutCubic.transform(
+                        ((_listController.value - delay) / (1 - delay))
+                            .clamp(0.0, 1.0),
+                      );
+                      return Opacity(
+                        opacity: t,
+                        child: Transform.translate(
+                          offset: Offset(0, 24 * (1 - t)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _LangCard(
+                      lang: _langs[i],
+                      isSelected: _selected == _langs[i].code,
+                      onTap: () =>
+                          setState(() => _selected = _langs[i].code),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // ── Кнопка подтверждения ────────────────────────
+            _BottomButton(
+              enabled: _selected != null,
+              isLoading: _isLoading,
+              onTap: _confirm,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Data class ─────────────────────────────────────────────
+class _Lang {
+  final String code, flag, name, native, method;
+  final Color color, bg;
+  const _Lang({
+    required this.code,
+    required this.flag,
+    required this.name,
+    required this.native,
+    required this.method,
+    required this.color,
+    required this.bg,
+  });
+}
+
+// ─── Шапка ──────────────────────────────────────────────────
+class _Header extends StatelessWidget {
+  final String name;
+  const _Header({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Логотип
+          Row(children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0ABDB9),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: const Icon(Icons.hub_rounded,
+                  color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 9),
+            const Text('SYNAPSE',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          ]),
+          const SizedBox(height: 24),
+
+          // Приветствие
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F1F1E),
+                letterSpacing: -0.5,
+                height: 1.2,
+              ),
+              children: [
+                TextSpan(text: 'Привет, $name!\n'),
+                const TextSpan(
+                  text: 'Что учим? ',
+                  style: TextStyle(color: Color(0xFF0ABDB9)),
+                ),
+                const TextSpan(text: '👇'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Выбери язык — AI настроит программу под тебя',
+            style: TextStyle(fontSize: 14, color: Color(0xFF4D6766)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Карточка языка ──────────────────────────────────────────
+class _LangCard extends StatelessWidget {
+  final _Lang lang;
+  final bool isSelected;
+  final VoidCallback onTap;
+  const _LangCard(
+      {required this.lang, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected ? lang.bg : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isSelected ? lang.color : const Color(0xFFD6F5F4),
+              width: isSelected ? 2 : 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: lang.color.withValues(alpha: 0.12),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    )
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              // Флаг в круглом контейнере
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? lang.color.withValues(alpha: 0.12)
+                      : const Color(0xFFF0FAFA),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Center(
+                  child:
+                      Text(lang.flag, style: const TextStyle(fontSize: 28)),
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Текст
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? lang.color : const Color(0xFF0F1F1E),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      lang.native,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? lang.color.withValues(alpha: 0.65)
+                            : const Color(0xFF8EAEAC),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      lang.method,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF8EAEAC),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Чекбокс
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? lang.color : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected ? lang.color : const Color(0xFFCBD5E1),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check_rounded,
+                        size: 15, color: Colors.white)
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Кнопка внизу ────────────────────────────────────────────
+class _BottomButton extends StatelessWidget {
+  final bool enabled;
+  final bool isLoading;
+  final VoidCallback onTap;
+  const _BottomButton(
+      {required this.enabled,
+      required this.isLoading,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: enabled ? 1.0 : 0.45,
+        child: SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton(
+            onPressed: enabled ? onTap : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0ABDB9),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(0xFFD6F5F4),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.5, color: Colors.white),
+                  )
+                : const Text(
+                    'Начать обучение →',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
