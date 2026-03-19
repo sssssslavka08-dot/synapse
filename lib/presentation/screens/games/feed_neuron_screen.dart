@@ -34,7 +34,6 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
   late AnimationController _bounceCtrl;
   late AnimationController _xpCtrl;
   late Animation<double> _bounceAnim;
-  late Animation<double> _xpAnim;
   late FlutterTts _tts;
 
   static const _ttsLocales = {
@@ -59,9 +58,6 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
     _xpCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
-    );
-    _xpAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _xpCtrl, curve: Curves.easeOut),
     );
     _initTts();
     _loadWords();

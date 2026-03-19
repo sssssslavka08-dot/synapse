@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../auth/login_screen.dart';
 import '../../subscription/subscription_screen.dart';
+import '../../language_select_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   final String name;
@@ -18,6 +19,15 @@ class _ProfileTabState extends State<ProfileTab> {
   String _weakCategory = '—';
   int _totalDays = 0;
   bool _loadingStats = true;
+
+  static const _langNames = {
+    'en': '🇬🇧 Английский',
+    'kz': '🇰🇿 Казахский',
+    'ru': '🇷🇺 Русский',
+    'de': '🇩🇪 Немецкий',
+    'fr': '🇫🇷 Французский',
+    'zh': '🇨🇳 Китайский',
+  };
 
   @override
   void initState() {
@@ -40,9 +50,7 @@ class _ProfileTabState extends State<ProfileTab> {
           .eq('id', uid)
           .maybeSingle();
 
-      // Прогресс за 7 дней
-      final weekAgo =
-          DateTime.now().subtract(const Duration(days: 7)).toIso8601String();
+      // Прогресс
       final progress = await Supabase.instance.client
           .from('progress')
           .select('wrong_count, correct_count, next_review, words(category)')
@@ -369,9 +377,21 @@ class _ProfileTabState extends State<ProfileTab> {
 
                       _SettingItem(
                         icon: Icons.language_rounded,
-                        title: 'Язык интерфейса',
-                        value: 'Русский',
-                        onTap: () {},
+                        title: 'Язык обучения',
+                        value: _langNames[_userData?['selected_language'] as String? ?? ''] ?? 'Не выбран',
+                        onTap: () async {
+                          // ignore: use_build_context_synchronously
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LanguageSelectScreen(
+                                name: widget.name,
+                                age: widget.age,
+                              ),
+                            ),
+                          );
+                          _loadStats(); // обновить после смены языка
+                        },
                       ),
                       _SettingItem(
                         icon: Icons.notifications_outlined,

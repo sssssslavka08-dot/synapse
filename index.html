@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SYNAPSE — Интеллектуальная языковая платформа</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #0ABDB9;
+      --teal-dark: #059692;
+      --teal-light: #E0F9F8;
+      --dark: #0F1F1E;
+      --dark2: #1E3332;
+      --mid: #4D6766;
+      --muted: #8EAEAC;
+      --bg: #F4FEFE;
+      --white: #FFFFFF;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--white);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e0f3f2;
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 38px; height: 38px; background: var(--teal);
+      border-radius: 11px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .nav-logo-text { font-size: 20px; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link { text-decoration: none; color: var(--mid); font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 8px; transition: color .2s; }
+    .nav-link:hover { color: var(--teal); }
+    .btn-nav {
+      background: var(--teal); color: #fff; border: none; border-radius: 10px;
+      padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+      text-decoration: none; transition: background .2s;
+    }
+    .btn-nav:hover { background: var(--teal-dark); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 1100px; margin: 0 auto;
+      padding: 100px 24px 80px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--teal-light); color: var(--teal);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 6px 14px; border-radius: 100px;
+      border: 1px solid rgba(10,189,185,0.3);
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: 54px; font-weight: 900; line-height: 1.08;
+      letter-spacing: -2px; color: var(--dark);
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--teal); }
+    .hero p {
+      font-size: 18px; color: var(--mid); line-height: 1.7;
+      margin-bottom: 32px; max-width: 440px;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--teal); color: #fff;
+      border-radius: 14px; padding: 16px 28px;
+      font-size: 16px; font-weight: 700; text-decoration: none;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 8px 24px rgba(10,189,185,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(10,189,185,0.4); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--dark);
+      border: 2px solid #D6F5F4;
+      border-radius: 14px; padding: 14px 28px;
+      font-size: 16px; font-weight: 600; text-decoration: none;
+      transition: border-color .2s;
+    }
+    .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+
+    .hero-stats {
+      display: flex; gap: 28px; margin-top: 36px;
+      padding-top: 28px; border-top: 1px solid #E0F3F2;
+    }
+    .hero-stat-val { font-size: 26px; font-weight: 900; color: var(--dark); }
+    .hero-stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Phone mockup ── */
+    .hero-visual {
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    .phone-wrap {
+      width: 270px; background: var(--dark);
+      border-radius: 44px; padding: 12px;
+      box-shadow: 0 40px 80px rgba(15,31,30,0.35), 0 0 0 1px rgba(255,255,255,0.07);
+      position: relative;
+    }
+    .phone-screen {
+      background: var(--bg); border-radius: 35px;
+      overflow: hidden; padding: 20px 16px;
+    }
+    .phone-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .phone-logo { font-size: 13px; font-weight: 800; color: var(--dark); }
+    .phone-streak { font-size: 12px; font-weight: 700; color: #F59E0B; }
+    .phone-word-card {
+      background: #fff; border-radius: 18px; padding: 20px;
+      text-align: center; margin-bottom: 14px;
+      border: 1px solid #E0F3F2;
+      box-shadow: 0 4px 16px rgba(10,189,185,0.08);
+    }
+    .phone-emoji { font-size: 48px; margin-bottom: 8px; }
+    .phone-word { font-size: 24px; font-weight: 900; color: var(--dark); }
+    .phone-trans { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .phone-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .phone-option {
+      background: #fff; border: 1.5px solid #E0F3F2;
+      border-radius: 12px; padding: 10px 6px; text-align: center;
+      font-size: 12px; font-weight: 600; color: var(--dark);
+    }
+    .phone-option.correct { background: #ECFDF5; border-color: #059669; color: #059669; }
+    .phone-xp {
+      margin-top: 12px; background: var(--teal); border-radius: 10px;
+      padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .phone-xp span { color: #fff; font-size: 12px; font-weight: 700; }
+
+    /* Float elements */
+    .float-badge {
+      position: absolute;
+      background: #fff; border-radius: 12px; padding: 8px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .float-badge.top-right { top: 20px; right: -40px; }
+    .float-badge.bot-left  { bottom: 40px; left: -50px; }
+
+    /* ── FEATURES ── */
+    .section { max-width: 1100px; margin: 0 auto; padding: 80px 24px; }
+    .section-tag {
+      display: inline-block; background: var(--teal-light); color: var(--teal);
+      font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 100px; margin-bottom: 12px;
+    }
+    .section-title { font-size: 38px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
+    .section-sub { font-size: 16px; color: var(--mid); max-width: 500px; }
+
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+    .feature-card {
+      background: var(--bg); border-radius: 22px; padding: 28px;
+      border: 1px solid #E0F3F2; transition: transform .2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); }
+    .feature-icon { font-size: 36px; margin-bottom: 16px; }
+    .feature-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; color: var(--dark); }
+    .feature-desc { font-size: 14px; color: var(--mid); line-height: 1.6; }
+
+    /* ── PRICING ── */
+    .pricing-section { background: var(--bg); padding: 80px 0; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+    .pricing-card {
+      background: var(--white); border-radius: 24px; padding: 32px;
+      border: 2px solid #E0F3F2; position: relative; transition: transform .2s;
+    }
+    .pricing-card:hover { transform: translateY(-4px); }
+    .pricing-card.popular {
+      border-color: var(--teal);
+      box-shadow: 0 16px 48px rgba(10,189,185,0.18);
+    }
+    .popular-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: var(--teal); color: #fff;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+      padding: 4px 16px; border-radius: 100px;
+    }
+    .pricing-name { font-size: 14px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .pricing-price { font-size: 42px; font-weight: 900; color: var(--dark); letter-spacing: -1.5px; }
+    .pricing-price sub { font-size: 16px; font-weight: 600; color: var(--muted); }
+    .pricing-price span { font-size: 16px; font-weight: 600; color: var(--muted); }
+    .pricing-desc { font-size: 14px; color: var(--mid); margin: 12px 0 24px; }
+    .pricing-features { list-style: none; margin-bottom: 28px; }
+    .pricing-features li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--mid); padding: 6px 0;
+    }
+    .pricing-features li::before { content: '✓'; color: var(--teal); font-weight: 800; flex-shrink: 0; }
+    .pricing-features li.no::before { content: '✗'; color: #CBD5E1; }
+    .pricing-features li.no { color: #CBD5E1; }
+    .btn-pricing {
+      display: block; width: 100%; text-align: center;
+      background: var(--teal); color: #fff;
+      border-radius: 12px; padding: 14px;
+      font-size: 15px; font-weight: 700; text-decoration: none;
+      transition: background .2s;
+    }
+    .btn-pricing:hover { background: var(--teal-dark); }
+    .btn-pricing.outline {
+      background: transparent; color: var(--teal);
+      border: 2px solid var(--teal-light);
+    }
+    .btn-pricing.outline:hover { background: var(--teal-light); }
+
+    /* ── LEADS FORM ── */
+    .leads-section {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 100%);
+      padding: 80px 24px;
+    }
+    .leads-inner { max-width: 560px; margin: 0 auto; text-align: center; }
+    .leads-inner h2 { font-size: 38px; font-weight: 900; color: #fff; letter-spacing: -1px; margin-bottom: 12px; }
+    .leads-inner p { font-size: 16px; color: #8EAEAC; margin-bottom: 36px; }
+    .leads-form { display: flex; gap: 10px; }
+    .leads-input {
+      flex: 1; background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px;
+      padding: 14px 18px; font-size: 15px; color: #fff;
+      outline: none; transition: border-color .2s;
+    }
+    .leads-input::placeholder { color: #8EAEAC; }
+    .leads-input:focus { border-color: var(--teal); }
+    .btn-leads {
+      background: var(--teal); color: #fff; border: none; border-radius: 12px;
+      padding: 14px 24px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: background .2s; white-space: nowrap;
+    }
+    .btn-leads:hover { background: var(--teal-dark); }
+    .leads-note { font-size: 12px; color: #4D6766; margin-top: 12px; }
+    .leads-success { display: none; font-size: 16px; color: var(--teal); font-weight: 700; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark); color: #4D6766;
+      padding: 40px 24px; text-align: center;
+      font-size: 13px;
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+    .footer-logo { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 48px; padding: 60px 20px; text-align: center; }
+      .hero h1 { font-size: 40px; }
+      .hero-visual { order: -1; }
+      .float-badge { display: none; }
+      .hero-actions { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero p { max-width: 100%; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+      .nav-links .nav-link { display: none; }
+    }
+    @media (max-width: 560px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .leads-form { flex-direction: column; }
+      .section-title { font-size: 30px; }
+      .hero h1 { font-size: 34px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">⚡</div>
+    <div class="nav-logo-text">SYNAPSE</div>
+  </a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Возможности</a>
+    <a href="#pricing" class="nav-link">Цены</a>
+    <a href="admin/dashboard.html" class="nav-link">Admin</a>
+    <a href="#download" class="btn-nav">Скачать приложение</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section>
+  <div class="hero">
+    <div>
+      <div class="hero-badge">⚡ AI-платформа для изучения языков</div>
+      <h1>Учи языки<br>умнее, с <span>AI</span></h1>
+      <p>SYNAPSE запоминает то, что ты забываешь. Адаптивный алгоритм подбирает слова именно в тот момент, когда они готовы "осесть" в памяти.</p>
+      <div class="hero-actions">
+        <a href="#download" class="btn-primary">📱 Скачать бесплатно</a>
+        <a href="#pricing" class="btn-outline">Посмотреть тарифы →</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-val" id="statUsers">—</div>
+          <div class="hero-stat-label">пользователей</div>
+        </div>
+        <div>
+          <div class="hero-stat-val" id="statWords">—</div>
+          <div class="hero-stat-label">слов в базе</div>
+        </div>
+        <div>
+          <div class="hero-stat-val">6</div>
+          <div class="hero-stat-label">языков</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone mockup -->
+    <div class="hero-visual">
+      <div class="float-badge top-right">🔥 Стрик 14 дней</div>
+      <div class="phone-wrap">
+        <div class="phone-screen">
+          <div class="phone-top">
+            <div class="phone-logo">⚡ SYNAPSE</div>
+            <div class="phone-streak">🔥 14</div>
+          </div>
+          <div class="phone-word-card">
+            <div class="phone-emoji">🍎</div>
+            <div class="phone-word">Apple</div>
+            <div class="phone-trans">ˈæp.əl</div>
+          </div>
+          <div class="phone-options">
+            <div class="phone-option correct">✓ Яблоко</div>
+            <div class="phone-option">Апельсин</div>
+            <div class="phone-option">Груша</div>
+            <div class="phone-option">Банан</div>
+          </div>
+          <div class="phone-xp">
+            <span>⚡ +15 XP</span>
+            <span>1/20 слов</span>
+          </div>
+        </div>
+      </div>
+      <div class="float-badge bot-left">🏆 Топ-3 недели</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="section" id="features">
+  <div class="section-tag">Возможности</div>
+  <div class="section-title">Почему SYNAPSE работает</div>
+  <div class="section-sub">Наука + технологии + геймификация — всё для одной цели: ты помнишь слова.</div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-title">Интервальное повторение</div>
+      <div class="feature-desc">Алгоритм SM-2 (Ebbinghaus) показывает слова ровно перед моментом забывания. Ты запоминаешь в 3× меньше времени.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎮</div>
+      <div class="feature-title">Режимы для детей и взрослых</div>
+      <div class="feature-desc">Дети (≤12): Нейрончик, конструктор слов. Взрослые: классика + режим выживания 60 секунд.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔊</div>
+      <div class="feature-title">TTS-произношение</div>
+      <div class="feature-desc">Каждое слово озвучивается носителем языка. Автоматическое воспроизведение при показе слова.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏆</div>
+      <div class="feature-title">Еженедельный рейтинг</div>
+      <div class="feature-desc">Соревнуйся с другими пользователями. Раздельные лиги для детей и взрослых. Медали за топ-3.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">AI-аналитика</div>
+      <div class="feature-desc">Понимаешь, какие темы западают. Граф активности за 7 дней. Инсайты по ошибкам и прогрессу.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌍</div>
+      <div class="feature-title">6 языков</div>
+      <div class="feature-desc">Английский, Казахский, Русский, Немецкий, Французский, Китайский. Каждый язык — своя методика.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section class="pricing-section" id="pricing">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+    <div class="section-tag">Тарифы</div>
+    <div class="section-title">Начни бесплатно</div>
+    <div class="section-sub">Базовые функции — бесплатно навсегда. Разблокируй всё с PRO или LEGENDA.</div>
+
+    <div class="pricing-grid">
+
+      <!-- FREE -->
+      <div class="pricing-card">
+        <div class="pricing-name">🌱 FREE</div>
+        <div class="pricing-price">0 <span>/ мес</span></div>
+        <div class="pricing-desc">Для старта. Навсегда бесплатно.</div>
+        <ul class="pricing-features">
+          <li>20 слов в день</li>
+          <li>1 язык</li>
+          <li>Базовые карточки</li>
+          <li>Рейтинг</li>
+          <li class="no">Режим выживания</li>
+          <li class="no">AI-аналитика</li>
+          <li class="no">Офлайн-режим</li>
+        </ul>
+        <a href="#download" class="btn-pricing outline">Скачать</a>
+      </div>
+
+      <!-- PRO -->
+      <div class="pricing-card popular">
+        <div class="popular-badge">Популярный</div>
+        <div class="pricing-name">⚡ PRO</div>
+        <div class="pricing-price"><sub>$</sub>4<span>.99 / мес</span></div>
+        <div class="pricing-desc">Для серьёзного изучения языка.</div>
+        <ul class="pricing-features">
+          <li>Безлимит слов</li>
+          <li>Все 6 языков</li>
+          <li>Все мини-игры</li>
+          <li>Режим выживания</li>
+          <li>AI-аналитика</li>
+          <li>Приоритет в рейтинге</li>
+          <li class="no">Офлайн-режим</li>
+        </ul>
+        <a href="#download" class="btn-pricing">Начать PRO →</a>
+      </div>
+
+      <!-- LEGENDA -->
+      <div class="pricing-card">
+        <div class="pricing-name">👑 LEGENDA</div>
+        <div class="pricing-price"><sub>$</sub>9<span>.99 / мес</span></div>
+        <div class="pricing-desc">Всё включено. Максимальный результат.</div>
+        <ul class="pricing-features">
+          <li>Всё из PRO</li>
+          <li>Офлайн-режим</li>
+          <li>Персональный AI-план</li>
+          <li>Разблокированные лиги</li>
+          <li>Эксклюзивные бейджи</li>
+          <li>Ранний доступ к фичам</li>
+          <li>Приоритетная поддержка</li>
+        </ul>
+        <a href="#download" class="btn-pricing">Стать легендой →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── LEADS FORM ── -->
+<section class="leads-section" id="download">
+  <div class="leads-inner">
+    <div style="font-size:48px;margin-bottom:16px">📱</div>
+    <h2>Первым узнай о запуске</h2>
+    <p>Оставь email — пришлём ссылку на App Store и Google Play в день релиза + месяц PRO в подарок.</p>
+
+    <div class="leads-form">
+      <input type="email" id="leadEmail" class="leads-input" placeholder="твой@email.com">
+      <button class="btn-leads" onclick="submitLead()">Уведомить меня</button>
+    </div>
+    <div class="leads-note">Только важные письма. Без спама. Отписка в 1 клик.</div>
+    <div class="leads-success" id="leadsSuccess">✅ Отлично! Ты в списке первых. Скоро напишем!</div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo">⚡ SYNAPSE</div>
+  <p>Интеллектуальная платформа для изучения языков</p>
+  <p style="margin-top:8px">
+    <a href="admin/dashboard.html">Admin Panel</a> ·
+    <a href="mailto:hello@synapse.app">hello@synapse.app</a>
+  </p>
+  <p style="margin-top:16px;font-size:11px">© 2024 SYNAPSE. Все права защищены.</p>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://recotdufzxbuffrlluqu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable__B2IbsUIvFWWXsK0AmIaTA_b50roGB-';
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Load live stats ──────────────────────────────────────────
+async function loadStats() {
+  const [usersR, wordsR] = await Promise.all([
+    db.from('users').select('*', { count:'exact', head:true }),
+    db.from('words').select('*', { count:'exact', head:true }),
+  ]);
+  const u = usersR.count || 0;
+  const w = wordsR.count || 0;
+  document.getElementById('statUsers').textContent =
+    u > 1000 ? (u/1000).toFixed(0) + 'K+' : u + '+';
+  document.getElementById('statWords').textContent =
+    w > 1000 ? (w/1000).toFixed(1) + 'K+' : w + '+';
+}
+
+// ── Submit lead ──────────────────────────────────────────────
+async function submitLead() {
+  const email = document.getElementById('leadEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('leadEmail').style.borderColor = '#EF4444';
+    return;
+  }
+  document.getElementById('leadEmail').style.borderColor = '';
+
+  const { error } = await db.from('leads').insert({ email, source: 'landing' });
+  if (error && !error.message.includes('duplicate')) {
+    alert('Ошибка: ' + error.message);
+    return;
+  }
+  document.querySelector('.leads-form').style.display = 'none';
+  document.getElementById('leadsSuccess').style.display = 'block';
+}
+
+// ── Smooth scroll ────────────────────────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+
+loadStats();
+</script>
+</body>
+</html>

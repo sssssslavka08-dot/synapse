@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Пользователи — SYNAPSE Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-text">SYNAPSE</div><div class="logo-sub">Admin Panel</div></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Обзор</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+      <div class="nav-section">Управление</div>
+      <a href="users.html" class="nav-item active"><span class="icon">👥</span> Пользователи</a>
+      <a href="words.html" class="nav-item"><span class="icon">📚</span> База слов</a>
+      <a href="subscriptions.html" class="nav-item"><span class="icon">👑</span> Подписки</a>
+      <div class="nav-section">Аналитика</div>
+      <a href="analytics.html" class="nav-item"><span class="icon">📈</span> Аналитика</a>
+      <a href="leaderboard.html" class="nav-item"><span class="icon">🏆</span> Рейтинг</a>
+    </nav>
+    <div class="sidebar-footer">SYNAPSE v1.0</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="menuBtn" class="btn btn-ghost btn-sm">☰</button>
+        <span class="topbar-title">Пользователи</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-badge" id="totalCount">…</span>
+        <div class="topbar-avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Все пользователи</span>
+          <div class="table-controls">
+            <input type="search" id="searchInput" placeholder="🔍 Поиск по имени / email" style="width:220px">
+            <select id="filterPlan">
+              <option value="">Все тарифы</option>
+              <option value="free">FREE</option>
+              <option value="pro">PRO</option>
+              <option value="legenda">LEGENDA</option>
+            </select>
+            <select id="filterAge">
+              <option value="">Все возрасты</option>
+              <option value="kids">Дети (≤12)</option>
+              <option value="adult">Взрослые (>12)</option>
+            </select>
+            <select id="filterLang">
+              <option value="">Все языки</option>
+              <option value="en">🇬🇧 EN</option>
+              <option value="kz">🇰🇿 KZ</option>
+              <option value="ru">🇷🇺 RU</option>
+              <option value="de">🇩🇪 DE</option>
+              <option value="fr">🇫🇷 FR</option>
+              <option value="zh">🇨🇳 ZH</option>
+            </select>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Пользователь</th>
+              <th>Контакт</th>
+              <th>Возраст</th>
+              <th>Язык</th>
+              <th>XP</th>
+              <th>Стрик</th>
+              <th>Тариф</th>
+              <th>Дата</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr class="loading-row">
+              <td colspan="9"><div class="spinner" style="margin:auto"></div></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Пагинация -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-top:1px solid #f0fafa">
+          <span style="font-size:13px;color:#4D6766" id="pageInfo">—</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" id="prevBtn" onclick="prevPage()">← Назад</button>
+            <button class="btn btn-ghost btn-sm" id="nextBtn" onclick="nextPage()">Вперёд →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="admin.js"></script>
+<script>
+const langFlag = { en:'🇬🇧', kz:'🇰🇿', ru:'🇷🇺', de:'🇩🇪', fr:'🇫🇷', zh:'🇨🇳' };
+const PAGE_SIZE = 20;
+let currentPage = 0;
+let totalCount = 0;
+let searchTerm = '';
+let filterPlan = '';
+let filterAge  = '';
+let filterLang = '';
+
+async function loadUsers() {
+  document.getElementById('usersBody').innerHTML =
+    '<tr class="loading-row"><td colspan="9"><div class="spinner" style="margin:auto"></div></td></tr>';
+
+  let query = db.from('users').select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
+
+  if (filterPlan) query = query.eq('subscription_type', filterPlan);
+  if (filterLang) query = query.eq('selected_language', filterLang);
+  if (filterAge === 'kids')  query = query.lte('age', 12).gt('age', 0);
+  if (filterAge === 'adult') query = query.gt('age', 12);
+
+  const { data, count } = await query;
+  totalCount = count || 0;
+
+  document.getElementById('totalCount').textContent = `${totalCount} пользователей`;
+
+  // client-side search filter
+  let users = data || [];
+  if (searchTerm) {
+    const s = searchTerm.toLowerCase();
+    users = users.filter(u =>
+      (u.name||'').toLowerCase().includes(s) ||
+      (u.email||'').toLowerCase().includes(s)
+    );
+  }
+
+  const tbody = document.getElementById('usersBody');
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty"><div class="empty-icon">😶</div><p>Ничего не найдено</p></td></tr>';
+    updatePagination();
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => `
+    <tr id="row-${u.id}">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:34px;height:34px;background:#0ABDB9;border-radius:10px;
+               display:flex;align-items:center;justify-content:center;
+               font-weight:800;color:#fff;font-size:14px">
+            ${(u.name||'?')[0].toUpperCase()}
+          </div>
+          <strong>${u.name || '—'}</strong>
+        </div>
+      </td>
+      <td style="color:#4D6766">${u.email || u.phone || '—'}</td>
+      <td>${ageBadge(u.age)}</td>
+      <td>${langFlag[u.selected_language]||'🌐'} ${(u.selected_language||'—').toUpperCase()}</td>
+      <td><strong style="color:#0ABDB9">⚡ ${u.xp||0}</strong></td>
+      <td>🔥 ${u.streak||0}</td>
+      <td>${planBadge(u.subscription_type||'free')}</td>
+      <td style="color:#8EAEAC;white-space:nowrap">${fmtDate(u.created_at)}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="blockUser('${u.id}')">
+          🚫 Блок
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  updatePagination();
+}
+
+function updatePagination() {
+  const from = currentPage * PAGE_SIZE + 1;
+  const to   = Math.min((currentPage + 1) * PAGE_SIZE, totalCount);
+  document.getElementById('pageInfo').textContent =
+    totalCount > 0 ? `${from}–${to} из ${totalCount}` : '0 результатов';
+  document.getElementById('prevBtn').disabled = currentPage === 0;
+  document.getElementById('nextBtn').disabled = to >= totalCount;
+}
+
+function prevPage() { if (currentPage > 0) { currentPage--; loadUsers(); } }
+function nextPage() { currentPage++; loadUsers(); }
+
+async function blockUser(id) {
+  if (!confirm('Заблокировать пользователя? Это удалит его из таблицы.')) return;
+  const { error } = await db.from('users').delete().eq('id', id);
+  if (error) { toast('Ошибка: ' + error.message, 'error'); return; }
+  document.getElementById(`row-${id}`)?.remove();
+  toast('Пользователь удалён');
+}
+
+// Filters
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchTerm = e.target.value;
+    currentPage = 0;
+    loadUsers();
+  }, 350);
+});
+document.getElementById('filterPlan').addEventListener('change', e => {
+  filterPlan = e.target.value; currentPage = 0; loadUsers();
+});
+document.getElementById('filterAge').addEventListener('change', e => {
+  filterAge = e.target.value; currentPage = 0; loadUsers();
+});
+document.getElementById('filterLang').addEventListener('change', e => {
+  filterLang = e.target.value; currentPage = 0; loadUsers();
+});
+
+loadUsers();
+</script>
+</body>
+</html>

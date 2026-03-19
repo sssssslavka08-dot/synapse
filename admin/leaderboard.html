@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Рейтинг — SYNAPSE Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-text">SYNAPSE</div><div class="logo-sub">Admin Panel</div></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Обзор</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+      <div class="nav-section">Управление</div>
+      <a href="users.html" class="nav-item"><span class="icon">👥</span> Пользователи</a>
+      <a href="words.html" class="nav-item"><span class="icon">📚</span> База слов</a>
+      <a href="subscriptions.html" class="nav-item"><span class="icon">👑</span> Подписки</a>
+      <div class="nav-section">Аналитика</div>
+      <a href="analytics.html" class="nav-item"><span class="icon">📈</span> Аналитика</a>
+      <a href="leaderboard.html" class="nav-item active"><span class="icon">🏆</span> Рейтинг</a>
+    </nav>
+    <div class="sidebar-footer">SYNAPSE v1.0</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="menuBtn" class="btn btn-ghost btn-sm">☰</button>
+        <span class="topbar-title">Еженедельный рейтинг</span>
+      </div>
+      <div class="topbar-right">
+        <select id="filterAge" class="btn btn-ghost btn-sm">
+          <option value="adult">👤 Взрослые</option>
+          <option value="kids">👶 Дети</option>
+        </select>
+        <div class="topbar-avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Топ недели <span id="weekLabel" style="color:#8EAEAC;font-weight:400"></span></span>
+          <button class="btn btn-danger btn-sm" onclick="resetLeaderboard()">🔄 Сбросить рейтинг</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Пользователь</th>
+              <th>XP за неделю</th>
+              <th>Лига</th>
+              <th>Группа</th>
+            </tr>
+          </thead>
+          <tbody id="lbBody">
+            <tr class="loading-row"><td colspan="5"><div class="spinner" style="margin:auto"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="admin.js"></script>
+<script>
+function currentWeekNumber() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const week = Math.ceil(((now - start) / 86400000 + start.getDay() + 1) / 7);
+  return parseInt(`${now.getFullYear()}${String(week).padStart(2,'0')}`);
+}
+
+const weekNum = currentWeekNumber();
+document.getElementById('weekLabel').textContent = `(неделя ${weekNum})`;
+
+async function loadLeaderboard() {
+  const ageGroup = document.getElementById('filterAge').value;
+  const { data } = await db.from('leaderboard')
+    .select('*, users(name, subscription_type)')
+    .eq('age_group', ageGroup)
+    .eq('week_number', weekNum)
+    .order('xp_weekly', { ascending: false })
+    .limit(50);
+
+  const tbody = document.getElementById('lbBody');
+  const rows = data || [];
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="empty-icon">🏆</div><p>Нет данных за эту неделю</p></td></tr>';
+    return;
+  }
+
+  const medals = ['🥇','🥈','🥉'];
+  tbody.innerHTML = rows.map((r,i) => `
+    <tr>
+      <td><strong>${medals[i] || `#${i+1}`}</strong></td>
+      <td><strong>${r.users?.name || '—'}</strong></td>
+      <td><strong style="color:#0ABDB9">⚡ ${r.xp_weekly || 0}</strong></td>
+      <td><span class="badge badge-pro">${r.league || 'bronze'}</span></td>
+      <td>${planBadge(r.users?.subscription_type || 'free')}</td>
+    </tr>
+  `).join('');
+}
+
+async function resetLeaderboard() {
+  if (!confirm('Сбросить XP за эту неделю? Это действие нельзя отменить.')) return;
+  const { error } = await db.from('leaderboard')
+    .update({ xp_weekly: 0 })
+    .eq('week_number', weekNum);
+  if (error) { toast('Ошибка: ' + error.message, 'error'); return; }
+  toast('Рейтинг сброшен ✅');
+  loadLeaderboard();
+}
+
+document.getElementById('filterAge').addEventListener('change', loadLeaderboard);
+loadLeaderboard();
+</script>
+</body>
+</html>

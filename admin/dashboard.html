@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — SYNAPSE Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-text">SYNAPSE</div><div class="logo-sub">Admin Panel</div></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Обзор</div>
+      <a href="dashboard.html" class="nav-item active"><span class="icon">📊</span> Dashboard</a>
+      <div class="nav-section">Управление</div>
+      <a href="users.html" class="nav-item"><span class="icon">👥</span> Пользователи</a>
+      <a href="words.html" class="nav-item"><span class="icon">📚</span> База слов</a>
+      <a href="subscriptions.html" class="nav-item"><span class="icon">👑</span> Подписки</a>
+      <div class="nav-section">Аналитика</div>
+      <a href="analytics.html" class="nav-item"><span class="icon">📈</span> Аналитика</a>
+      <a href="leaderboard.html" class="nav-item"><span class="icon">🏆</span> Рейтинг</a>
+    </nav>
+    <div class="sidebar-footer">SYNAPSE v1.0</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="menuBtn" class="btn btn-ghost btn-sm">☰</button>
+        <span class="topbar-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-badge" id="liveDate"></span>
+        <div class="topbar-avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── STATS ── -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value" id="s-total">…</div>
+          <div class="stat-label">Всего пользователей</div>
+          <div class="stat-change" id="s-today">+0 сегодня</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🟢</div>
+          <div class="stat-value" id="s-week">…</div>
+          <div class="stat-label">Активных за 7 дней</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">👑</div>
+          <div class="stat-value" id="s-paid">…</div>
+          <div class="stat-label">Платных подписок</div>
+          <div class="stat-change" id="s-conv">…%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-value" id="s-words">…</div>
+          <div class="stat-label">Слов в базе</div>
+        </div>
+      </div>
+
+      <!-- ── CHARTS ── -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Регистрации — последние 14 дней</h3>
+          <div class="chart-wrap">
+            <canvas id="chartReg"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Распределение подписок</h3>
+          <div class="chart-wrap">
+            <canvas id="chartPlans"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RECENT USERS ── -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Последние регистрации</span>
+          <a href="users.html" class="btn btn-ghost btn-sm">Все →</a>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Email</th>
+              <th>Возраст</th>
+              <th>Язык</th>
+              <th>Тариф</th>
+              <th>Дата</th>
+            </tr>
+          </thead>
+          <tbody id="recentBody">
+            <tr class="loading-row"><td colspan="6"><div class="spinner" style="margin:auto"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="admin.js"></script>
+<script>
+const TEAL = '#0ABDB9';
+
+// Lang flags
+const langFlag = { en:'🇬🇧', kz:'🇰🇿', ru:'🇷🇺', de:'🇩🇪', fr:'🇫🇷', zh:'🇨🇳' };
+
+document.getElementById('liveDate').textContent =
+  new Date().toLocaleDateString('ru-RU', { day:'2-digit', month:'long', year:'numeric' });
+
+async function loadDashboard() {
+  // 1. Stats
+  const [totalRes, weekRes, paidRes, wordsRes, todayRes] = await Promise.all([
+    db.from('users').select('*', { count:'exact', head:true }),
+    db.from('users').select('*', { count:'exact', head:true })
+      .gte('created_at', new Date(Date.now()-7*86400000).toISOString()),
+    db.from('users').select('*', { count:'exact', head:true })
+      .in('subscription_type', ['pro','legenda']),
+    db.from('words').select('*', { count:'exact', head:true }),
+    db.from('users').select('*', { count:'exact', head:true })
+      .gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
+  ]);
+
+  const total = totalRes.count || 0;
+  const paid  = paidRes.count  || 0;
+
+  document.getElementById('s-total').textContent = total.toLocaleString();
+  document.getElementById('s-week').textContent  = (weekRes.count||0).toLocaleString();
+  document.getElementById('s-paid').textContent  = paid.toLocaleString();
+  document.getElementById('s-words').textContent = (wordsRes.count||0).toLocaleString();
+  document.getElementById('s-today').textContent = `+${todayRes.count||0} сегодня`;
+  document.getElementById('s-conv').textContent  =
+    total > 0 ? `конверсия ${((paid/total)*100).toFixed(1)}%` : '—';
+
+  // 2. Registration chart (last 14 days)
+  const days14 = [];
+  const labels14 = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(Date.now() - i*86400000);
+    labels14.push(d.toLocaleDateString('ru-RU', { day:'2-digit', month:'short' }));
+    days14.push({ from: new Date(d.setHours(0,0,0,0)).toISOString(),
+                  to:   new Date(d.setHours(23,59,59,999)).toISOString() });
+  }
+
+  const counts = await Promise.all(
+    days14.map(r => db.from('users').select('*', { count:'exact', head:true })
+      .gte('created_at', r.from).lte('created_at', r.to))
+  );
+
+  new Chart(document.getElementById('chartReg'), {
+    type: 'bar',
+    data: {
+      labels: labels14,
+      datasets: [{ label: 'Регистрации', data: counts.map(r => r.count||0),
+        backgroundColor: TEAL + '99', borderColor: TEAL, borderWidth: 2,
+        borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#f0fafa' } },
+                x: { grid: { display: false } } }
+    }
+  });
+
+  // 3. Plans donut
+  const [freeC, proC, legC] = await Promise.all([
+    db.from('users').select('*', { count:'exact', head:true }).eq('subscription_type','free'),
+    db.from('users').select('*', { count:'exact', head:true }).eq('subscription_type','pro'),
+    db.from('users').select('*', { count:'exact', head:true }).eq('subscription_type','legenda'),
+  ]);
+
+  new Chart(document.getElementById('chartPlans'), {
+    type: 'doughnut',
+    data: {
+      labels: ['FREE','PRO','LEGENDA'],
+      datasets: [{ data: [freeC.count||0, proC.count||0, legC.count||0],
+        backgroundColor: ['#e2e8f0', TEAL, '#d97706'],
+        borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: { legend: { position:'bottom' } }
+    }
+  });
+
+  // 4. Recent users
+  const { data: recent } = await db.from('users').select()
+    .order('created_at', { ascending: false }).limit(8);
+
+  const tbody = document.getElementById('recentBody');
+  if (!recent || recent.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty"><div class="empty-icon">😶</div><p>Нет пользователей</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(u => `
+    <tr>
+      <td><strong>${u.name || '—'}</strong></td>
+      <td style="color:#4D6766">${u.email || '—'}</td>
+      <td>${ageBadge(u.age)}</td>
+      <td>${langFlag[u.selected_language] || '🌐'} ${u.selected_language || '—'}</td>
+      <td>${planBadge(u.subscription_type || 'free')}</td>
+      <td style="color:#8EAEAC">${fmtDate(u.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
