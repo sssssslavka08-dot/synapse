@@ -276,7 +276,6 @@ class _QuestionCard extends StatelessWidget {
           IconData? icon;
 
           if (selected != null) {
-            final isCorrect = correct == null || opt == correct;
             if (opt == selected && correct != null && opt != correct) {
               bg = const Color(0xFFEF4444).withValues(alpha: 0.08);
               border = const Color(0xFFEF4444);

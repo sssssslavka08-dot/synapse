@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Подписки — SYNAPSE Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-text">SYNAPSE</div><div class="logo-sub">Admin Panel</div></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Обзор</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+      <div class="nav-section">Управление</div>
+      <a href="users.html" class="nav-item"><span class="icon">👥</span> Пользователи</a>
+      <a href="words.html" class="nav-item"><span class="icon">📚</span> База слов</a>
+      <a href="subscriptions.html" class="nav-item active"><span class="icon">👑</span> Подписки</a>
+      <div class="nav-section">Аналитика</div>
+      <a href="analytics.html" class="nav-item"><span class="icon">📈</span> Аналитика</a>
+      <a href="leaderboard.html" class="nav-item"><span class="icon">🏆</span> Рейтинг</a>
+    </nav>
+    <div class="sidebar-footer">SYNAPSE v1.0</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="menuBtn" class="btn btn-ghost btn-sm">☰</button>
+        <span class="topbar-title">Подписки</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── STATS ── -->
+      <div class="stat-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+          <div class="stat-icon">🌱</div>
+          <div class="stat-value" id="cntFree">…</div>
+          <div class="stat-label">FREE</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-value" id="cntPro">…</div>
+          <div class="stat-label">PRO</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">👑</div>
+          <div class="stat-value" id="cntLegenda">…</div>
+          <div class="stat-label">LEGENDA</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-value" id="mrr">…</div>
+          <div class="stat-label">MRR (оценка)</div>
+        </div>
+      </div>
+
+      <!-- ── TABLE ── -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Платные подписчики</span>
+          <div class="table-controls">
+            <input type="search" id="searchInput" placeholder="🔍 Поиск" style="width:200px">
+            <select id="filterPlan">
+              <option value="">Все тарифы</option>
+              <option value="pro">⚡ PRO</option>
+              <option value="legenda">👑 LEGENDA</option>
+            </select>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Пользователь</th>
+              <th>Email / Phone</th>
+              <th>Тариф</th>
+              <th>XP</th>
+              <th>Стрик</th>
+              <th>Дата регистрации</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="subBody">
+            <tr class="loading-row"><td colspan="7"><div class="spinner" style="margin:auto"></div></td></tr>
+          </tbody>
+        </table>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-top:1px solid #f0fafa">
+          <span style="font-size:13px;color:#4D6766" id="pageInfo">—</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" id="prevBtn" onclick="prevPage()">← Назад</button>
+            <button class="btn btn-ghost btn-sm" id="nextBtn" onclick="nextPage()">Вперёд →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── CHANGE PLAN MODAL ── -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">✏️ Изменить подписку</div>
+    <input type="hidden" id="editUserId">
+    <div class="form-group">
+      <label>Имя</label>
+      <input type="text" id="editName" disabled style="opacity:.6">
+    </div>
+    <div class="form-group">
+      <label>Тариф</label>
+      <select id="editPlan">
+        <option value="free">🌱 FREE</option>
+        <option value="pro">⚡ PRO</option>
+        <option value="legenda">👑 LEGENDA</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="savePlan()">Сохранить</button>
+      <button class="btn btn-ghost" onclick="closeModal('editModal')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+closeOnOverlay('editModal');
+
+const PAGE_SIZE = 20;
+let currentPage = 0;
+let totalCount  = 0;
+let filterPlan  = 'pro';   // default: show paid only
+let searchTerm  = '';
+
+// ── Stats ───────────────────────────────────────────────────
+async function loadStats() {
+  const [freeR, proR, legR] = await Promise.all([
+    db.from('users').select('*', { count:'exact', head:true }).eq('subscription_type','free'),
+    db.from('users').select('*', { count:'exact', head:true }).eq('subscription_type','pro'),
+    db.from('users').select('*', { count:'exact', head:true }).eq('subscription_type','legenda'),
+  ]);
+  const pro = proR.count || 0;
+  const leg = legR.count || 0;
+  document.getElementById('cntFree').textContent    = (freeR.count||0).toLocaleString();
+  document.getElementById('cntPro').textContent     = pro.toLocaleString();
+  document.getElementById('cntLegenda').textContent = leg.toLocaleString();
+  // Estimated MRR: PRO = $4.99, LEGENDA = $9.99
+  const mrr = (pro * 4.99 + leg * 9.99).toFixed(0);
+  document.getElementById('mrr').textContent = `$${Number(mrr).toLocaleString()}`;
+}
+
+// ── Table ───────────────────────────────────────────────────
+async function loadSubs() {
+  document.getElementById('subBody').innerHTML =
+    '<tr class="loading-row"><td colspan="7"><div class="spinner" style="margin:auto"></div></td></tr>';
+
+  let query = db.from('users').select('*', { count:'exact' })
+    .order('created_at', { ascending: false })
+    .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
+
+  if (filterPlan) {
+    query = query.eq('subscription_type', filterPlan);
+  } else {
+    query = query.in('subscription_type', ['pro','legenda']);
+  }
+
+  const { data, count } = await query;
+  totalCount = count || 0;
+
+  let users = data || [];
+  if (searchTerm) {
+    const s = searchTerm.toLowerCase();
+    users = users.filter(u =>
+      (u.name||'').toLowerCase().includes(s) ||
+      (u.email||'').toLowerCase().includes(s)
+    );
+  }
+
+  const tbody = document.getElementById('subBody');
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty"><div class="empty-icon">👑</div><p>Нет платных подписчиков</p></td></tr>';
+    updatePagination();
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => `
+    <tr id="sub-${u.id}">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:34px;height:34px;background:#d97706;border-radius:10px;
+               display:flex;align-items:center;justify-content:center;
+               font-weight:800;color:#fff;font-size:14px">
+            ${(u.name||'?')[0].toUpperCase()}
+          </div>
+          <strong>${u.name || '—'}</strong>
+        </div>
+      </td>
+      <td style="color:#4D6766">${u.email || u.phone || '—'}</td>
+      <td>${planBadge(u.subscription_type||'free')}</td>
+      <td><strong style="color:#0ABDB9">⚡ ${(u.xp||0).toLocaleString()}</strong></td>
+      <td>🔥 ${u.streak||0}</td>
+      <td style="color:#8EAEAC;white-space:nowrap">${fmtDate(u.created_at)}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="openEdit('${u.id}','${(u.name||'').replace(/'/g,"\\'")}','${u.subscription_type}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="downgradeFree('${u.id}')">⬇ FREE</button>
+      </td>
+    </tr>
+  `).join('');
+
+  updatePagination();
+}
+
+function updatePagination() {
+  const from = currentPage * PAGE_SIZE + 1;
+  const to   = Math.min((currentPage + 1) * PAGE_SIZE, totalCount);
+  document.getElementById('pageInfo').textContent =
+    totalCount > 0 ? `${from}–${to} из ${totalCount}` : '0 результатов';
+  document.getElementById('prevBtn').disabled = currentPage === 0;
+  document.getElementById('nextBtn').disabled = to >= totalCount;
+}
+
+function prevPage() { if (currentPage > 0) { currentPage--; loadSubs(); } }
+function nextPage() { currentPage++; loadSubs(); }
+
+// ── Edit plan ───────────────────────────────────────────────
+function openEdit(id, name, plan) {
+  document.getElementById('editUserId').value = id;
+  document.getElementById('editName').value   = name;
+  document.getElementById('editPlan').value   = plan;
+  openModal('editModal');
+}
+
+async function savePlan() {
+  const id   = document.getElementById('editUserId').value;
+  const plan = document.getElementById('editPlan').value;
+  const { error } = await db.from('users').update({ subscription_type: plan }).eq('id', id);
+  if (error) { toast('Ошибка: ' + error.message, 'error'); return; }
+  toast('Тариф обновлён ✅');
+  closeModal('editModal');
+  loadSubs();
+  loadStats();
+}
+
+async function downgradeFree(id) {
+  if (!confirm('Перевести пользователя на FREE?')) return;
+  const { error } = await db.from('users').update({ subscription_type: 'free' }).eq('id', id);
+  if (error) { toast('Ошибка: ' + error.message, 'error'); return; }
+  toast('Переведён на FREE');
+  loadSubs();
+  loadStats();
+}
+
+// ── Filters ─────────────────────────────────────────────────
+document.getElementById('filterPlan').value = filterPlan;
+document.getElementById('filterPlan').addEventListener('change', e => {
+  filterPlan = e.target.value; currentPage = 0; loadSubs();
+});
+
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchTerm = e.target.value; currentPage = 0; loadSubs();
+  }, 350);
+});
+
+loadStats();
+loadSubs();
+</script>
+</body>
+</html>

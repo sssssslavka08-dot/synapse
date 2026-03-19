@@ -518,5 +518,5 @@ class _LetterTile {
   final int id;
   final String letter;
   bool used;
-  _LetterTile({required this.id, required this.letter, this.used = false});
+  _LetterTile({required this.id, required this.letter}) : used = false;
 }

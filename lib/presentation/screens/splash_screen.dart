@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'onboarding_screen.dart';
 import 'home/home_screen.dart';
+import 'onboarding/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -52,13 +53,33 @@ class _SplashScreenState extends State<SplashScreen>
             .maybeSingle();
 
         if (mounted) {
+          final language = data?['selected_language'] as String?;
+          final firstLogin = data?['first_login'] as bool? ?? false;
+
+          Widget destination;
+          if (language == null || language.isEmpty) {
+            // Язык не выбран — новый пользователь
+            destination = WelcomeScreen(
+              name: data?['name'] ?? 'Пользователь',
+              age: data?['age'] ?? 13,
+            );
+          } else if (!firstLogin) {
+            // Язык есть, но welcome screen ещё не показывался
+            destination = WelcomeScreen(
+              name: data?['name'] ?? 'Пользователь',
+              age: data?['age'] ?? 13,
+            );
+          } else {
+            destination = HomeScreen(
+              name: data?['name'] ?? 'Пользователь',
+              age: data?['age'] ?? 13,
+            );
+          }
+
           Navigator.pushReplacement(
             context,
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => HomeScreen(
-                name: data?['name'] ?? 'Пользователь',
-                age: data?['age'] ?? 13,
-              ),
+              pageBuilder: (_, __, ___) => destination,
               transitionsBuilder: (_, anim, __, child) =>
                   FadeTransition(opacity: anim, child: child),
               transitionDuration: const Duration(milliseconds: 400),

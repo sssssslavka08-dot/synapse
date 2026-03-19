@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Аналитика — SYNAPSE Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-text">SYNAPSE</div><div class="logo-sub">Admin Panel</div></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Обзор</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+      <div class="nav-section">Управление</div>
+      <a href="users.html" class="nav-item"><span class="icon">👥</span> Пользователи</a>
+      <a href="words.html" class="nav-item"><span class="icon">📚</span> База слов</a>
+      <a href="subscriptions.html" class="nav-item"><span class="icon">👑</span> Подписки</a>
+      <div class="nav-section">Аналитика</div>
+      <a href="analytics.html" class="nav-item active"><span class="icon">📈</span> Аналитика</a>
+      <a href="leaderboard.html" class="nav-item"><span class="icon">🏆</span> Рейтинг</a>
+    </nav>
+    <div class="sidebar-footer">SYNAPSE v1.0</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="menuBtn" class="btn btn-ghost btn-sm">☰</button>
+        <span class="topbar-title">Аналитика</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── AI-МЕТРИКИ ── -->
+      <div class="stat-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-value" id="avgChurn">~</div>
+          <div class="stat-label">Средний день отказа (churn)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-value" id="convRate">—</div>
+          <div class="stat-label">Конверсия FREE → PRO</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-value" id="avgStreak">—</div>
+          <div class="stat-label">Средний стрик (дней)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-value" id="avgXp">—</div>
+          <div class="stat-label">Средний XP на пользователя</div>
+        </div>
+      </div>
+
+      <!-- ── CHARTS ── -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Регистрации за последние 30 дней</h3>
+          <div class="chart-wrap"><canvas id="chartReg30"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Распределение по языкам</h3>
+          <div class="chart-wrap"><canvas id="chartLangs"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ── TOP USERS ── -->
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Топ-10 по XP</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Пользователь</th>
+              <th>XP</th>
+              <th>Стрик</th>
+              <th>Тариф</th>
+              <th>Язык</th>
+            </tr>
+          </thead>
+          <tbody id="topBody">
+            <tr class="loading-row"><td colspan="6"><div class="spinner" style="margin:auto"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="admin.js"></script>
+<script>
+const TEAL = '#0ABDB9';
+const langFlag = { en:'🇬🇧', kz:'🇰🇿', ru:'🇷🇺', de:'🇩🇪', fr:'🇫🇷', zh:'🇨🇳' };
+
+async function loadAnalytics() {
+  const [usersRes, paidRes] = await Promise.all([
+    db.from('users').select('xp, streak, subscription_type, selected_language, created_at'),
+    db.from('users').select('*', { count:'exact', head:true })
+      .in('subscription_type', ['pro','legenda']),
+  ]);
+
+  const users = usersRes.data || [];
+  const total = users.length;
+  const paid  = paidRes.count || 0;
+
+  // Средний XP
+  const avgXp = total > 0
+    ? Math.round(users.reduce((a,u) => a + (u.xp||0), 0) / total)
+    : 0;
+  // Средний стрик
+  const avgStreak = total > 0
+    ? (users.reduce((a,u) => a + (u.streak||0), 0) / total).toFixed(1)
+    : 0;
+  // Конверсия
+  const conv = total > 0 ? ((paid/total)*100).toFixed(1) + '%' : '—';
+
+  document.getElementById('avgXp').textContent = avgXp.toLocaleString();
+  document.getElementById('avgStreak').textContent = avgStreak;
+  document.getElementById('convRate').textContent = conv;
+  document.getElementById('avgChurn').textContent = '~7 дней'; // статичная метрика
+
+  // Chart: регистрации 30 дней
+  const labels30 = [], counts30 = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(Date.now() - i*86400000);
+    labels30.push(d.toLocaleDateString('ru-RU', { day:'2-digit', month:'short' }));
+    const dayStart = new Date(d.setHours(0,0,0,0)).toISOString();
+    const dayEnd   = new Date(d.setHours(23,59,59,999)).toISOString();
+    const c = users.filter(u => u.created_at >= dayStart && u.created_at <= dayEnd).length;
+    counts30.push(c);
+  }
+
+  new Chart(document.getElementById('chartReg30'), {
+    type: 'line',
+    data: {
+      labels: labels30,
+      datasets: [{
+        label: 'Регистрации',
+        data: counts30,
+        borderColor: TEAL, backgroundColor: TEAL + '22',
+        borderWidth: 2, fill: true, tension: 0.4, pointRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#f0fafa' } },
+                x: { ticks: { maxTicksLimit: 8 }, grid: { display: false } } }
+    }
+  });
+
+  // Chart: языки
+  const langCount = {};
+  users.forEach(u => {
+    const l = u.selected_language || 'unknown';
+    langCount[l] = (langCount[l]||0) + 1;
+  });
+  const langLabels = Object.keys(langCount).map(k => `${langFlag[k]||''} ${k.toUpperCase()}`);
+  const langData   = Object.values(langCount);
+  const colors = ['#0ABDB9','#3FCFCC','#059669','#1A56DB','#D97706','#B91C1C','#8B5CF6'];
+
+  new Chart(document.getElementById('chartLangs'), {
+    type: 'doughnut',
+    data: {
+      labels: langLabels,
+      datasets: [{ data: langData, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: { legend: { position: 'right' } }
+    }
+  });
+
+  // Top-10
+  const top10 = [...users].sort((a,b) => (b.xp||0) - (a.xp||0)).slice(0,10);
+  const { data: topWithNames } = await db.from('users').select()
+    .order('xp', { ascending: false }).limit(10);
+
+  const tbody = document.getElementById('topBody');
+  tbody.innerHTML = (topWithNames||[]).map((u,i) => `
+    <tr>
+      <td><strong style="color:#0ABDB9">#${i+1}</strong></td>
+      <td><strong>${u.name||'—'}</strong></td>
+      <td><strong style="color:#0ABDB9">⚡ ${(u.xp||0).toLocaleString()}</strong></td>
+      <td>🔥 ${u.streak||0}</td>
+      <td>${planBadge(u.subscription_type||'free')}</td>
+      <td>${langFlag[u.selected_language]||'🌐'} ${(u.selected_language||'—').toUpperCase()}</td>
+    </tr>
+  `).join('');
+}
+
+loadAnalytics();
+</script>
+</body>
+</html>

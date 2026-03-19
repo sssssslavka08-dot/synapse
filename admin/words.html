@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>База слов — SYNAPSE Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-text">SYNAPSE</div><div class="logo-sub">Admin Panel</div></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Обзор</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+      <div class="nav-section">Управление</div>
+      <a href="users.html" class="nav-item"><span class="icon">👥</span> Пользователи</a>
+      <a href="words.html" class="nav-item active"><span class="icon">📚</span> База слов</a>
+      <a href="subscriptions.html" class="nav-item"><span class="icon">👑</span> Подписки</a>
+      <div class="nav-section">Аналитика</div>
+      <a href="analytics.html" class="nav-item"><span class="icon">📈</span> Аналитика</a>
+      <a href="leaderboard.html" class="nav-item"><span class="icon">🏆</span> Рейтинг</a>
+    </nav>
+    <div class="sidebar-footer">SYNAPSE v1.0</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="menuBtn" class="btn btn-ghost btn-sm">☰</button>
+        <span class="topbar-title">База слов</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('addModal')">+ Добавить слово</button>
+        <div class="topbar-avatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div id="alertBox"></div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Слова <span id="wordCount" style="color:#8EAEAC;font-weight:400"></span></span>
+          <div class="table-controls">
+            <input type="search" id="searchInput" placeholder="🔍 Поиск" style="width:180px">
+            <select id="filterLang">
+              <option value="">Все языки</option>
+              <option value="en">🇬🇧 Английский</option>
+              <option value="kz">🇰🇿 Казахский</option>
+              <option value="ru">🇷🇺 Русский</option>
+              <option value="de">🇩🇪 Немецкий</option>
+              <option value="fr">🇫🇷 Французский</option>
+              <option value="zh">🇨🇳 Китайский</option>
+            </select>
+            <select id="filterDiff">
+              <option value="">Любая сложность</option>
+              <option value="1">⭐ Лёгкие</option>
+              <option value="2">⭐⭐ Средние</option>
+              <option value="3">⭐⭐⭐ Сложные</option>
+            </select>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Слово</th>
+              <th>Перевод</th>
+              <th>Транскрипция</th>
+              <th>Категория</th>
+              <th>Язык</th>
+              <th>Сложность</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="wordsBody">
+            <tr class="loading-row"><td colspan="7"><div class="spinner" style="margin:auto"></div></td></tr>
+          </tbody>
+        </table>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-top:1px solid #f0fafa">
+          <span style="font-size:13px;color:#4D6766" id="pageInfo">—</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" id="prevBtn" onclick="prevPage()">← Назад</button>
+            <button class="btn btn-ghost btn-sm" id="nextBtn" onclick="nextPage()">Вперёд →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── ADD WORD MODAL ── -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-title">➕ Добавить слово</div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Язык *</label>
+        <select id="f-lang">
+          <option value="en">🇬🇧 Английский</option>
+          <option value="kz">🇰🇿 Казахский</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="de">🇩🇪 Немецкий</option>
+          <option value="fr">🇫🇷 Французский</option>
+          <option value="zh">🇨🇳 Китайский</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Слово *</label>
+        <input type="text" id="f-word" placeholder="Apple">
+      </div>
+      <div class="form-group">
+        <label>Перевод *</label>
+        <input type="text" id="f-trans" placeholder="Яблоко">
+      </div>
+      <div class="form-group">
+        <label>Транскрипция</label>
+        <input type="text" id="f-transc" placeholder="ˈæp.əl">
+      </div>
+      <div class="form-group">
+        <label>Категория</label>
+        <select id="f-cat">
+          <option value="food">🍎 food</option>
+          <option value="animals">🐾 animals</option>
+          <option value="home">🏠 home</option>
+          <option value="nature">🌿 nature</option>
+          <option value="education">📚 education</option>
+          <option value="people">👥 people</option>
+          <option value="technology">💻 technology</option>
+          <option value="transport">🚗 transport</option>
+          <option value="emotions">❤️ emotions</option>
+          <option value="phrases">💬 phrases</option>
+          <option value="places">🏙️ places</option>
+          <option value="abstract">💭 abstract</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Сложность</label>
+        <select id="f-diff">
+          <option value="1">⭐ 1 — Лёгкое</option>
+          <option value="2">⭐⭐ 2 — Среднее</option>
+          <option value="3">⭐⭐⭐ 3 — Сложное</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="addWord()">Сохранить</button>
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+closeOnOverlay('addModal');
+
+const langFlag = { en:'🇬🇧', kz:'🇰🇿', ru:'🇷🇺', de:'🇩🇪', fr:'🇫🇷', zh:'🇨🇳' };
+const diffStar  = { 1:'⭐', 2:'⭐⭐', 3:'⭐⭐⭐' };
+const PAGE_SIZE = 25;
+let currentPage = 0;
+let totalCount  = 0;
+let filterLang  = '';
+let filterDiff  = '';
+let searchTerm  = '';
+
+async function loadWords() {
+  document.getElementById('wordsBody').innerHTML =
+    '<tr class="loading-row"><td colspan="7"><div class="spinner" style="margin:auto"></div></td></tr>';
+
+  let query = db.from('words').select('*', { count:'exact' })
+    .order('language').order('difficulty')
+    .range(currentPage * PAGE_SIZE, (currentPage+1)*PAGE_SIZE - 1);
+
+  if (filterLang) query = query.eq('language', filterLang);
+  if (filterDiff) query = query.eq('difficulty', parseInt(filterDiff));
+
+  const { data, count } = await query;
+  totalCount = count || 0;
+  document.getElementById('wordCount').textContent = `(${totalCount})`;
+
+  let words = data || [];
+  if (searchTerm) {
+    const s = searchTerm.toLowerCase();
+    words = words.filter(w =>
+      (w.word||'').toLowerCase().includes(s) ||
+      (w.translation||'').toLowerCase().includes(s)
+    );
+  }
+
+  const tbody = document.getElementById('wordsBody');
+  if (words.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty"><div class="empty-icon">📭</div><p>Слов не найдено</p></td></tr>';
+    updatePagination();
+    return;
+  }
+
+  tbody.innerHTML = words.map(w => `
+    <tr id="wr-${w.id}">
+      <td><strong>${w.word}</strong></td>
+      <td>${w.translation}</td>
+      <td style="color:#8EAEAC;font-style:italic">${w.transcription||'—'}</td>
+      <td><span class="badge badge-pro">${w.category||'—'}</span></td>
+      <td>${langFlag[w.language]||''} ${(w.language||'').toUpperCase()}</td>
+      <td>${diffStar[w.difficulty]||w.difficulty}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteWord('${w.id}')">🗑</button>
+      </td>
+    </tr>
+  `).join('');
+
+  updatePagination();
+}
+
+function updatePagination() {
+  const from = currentPage * PAGE_SIZE + 1;
+  const to   = Math.min((currentPage + 1) * PAGE_SIZE, totalCount);
+  document.getElementById('pageInfo').textContent =
+    totalCount > 0 ? `${from}–${to} из ${totalCount}` : '0 слов';
+  document.getElementById('prevBtn').disabled = currentPage === 0;
+  document.getElementById('nextBtn').disabled = to >= totalCount;
+}
+
+function prevPage() { if (currentPage > 0) { currentPage--; loadWords(); } }
+function nextPage() { currentPage++; loadWords(); }
+
+async function addWord() {
+  const lang  = document.getElementById('f-lang').value;
+  const word  = document.getElementById('f-word').value.trim();
+  const trans = document.getElementById('f-trans').value.trim();
+  const transc= document.getElementById('f-transc').value.trim();
+  const cat   = document.getElementById('f-cat').value;
+  const diff  = parseInt(document.getElementById('f-diff').value);
+
+  if (!word || !trans) { toast('Заполни слово и перевод', 'error'); return; }
+
+  const { error } = await db.from('words').insert({
+    language: lang, word, translation: trans,
+    transcription: transc || null,
+    category: cat, difficulty: diff
+  });
+
+  if (error) { toast('Ошибка: ' + error.message, 'error'); return; }
+  toast(`Слово "${word}" добавлено ✅`);
+  closeModal('addModal');
+  document.getElementById('f-word').value = '';
+  document.getElementById('f-trans').value = '';
+  document.getElementById('f-transc').value = '';
+  loadWords();
+}
+
+async function deleteWord(id) {
+  if (!confirm('Удалить слово?')) return;
+  const { error } = await db.from('words').delete().eq('id', id);
+  if (error) { toast('Ошибка', 'error'); return; }
+  document.getElementById(`wr-${id}`)?.remove();
+  toast('Слово удалено');
+}
+
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => { searchTerm = e.target.value; currentPage = 0; loadWords(); }, 350);
+});
+document.getElementById('filterLang').addEventListener('change', e => { filterLang = e.target.value; currentPage = 0; loadWords(); });
+document.getElementById('filterDiff').addEventListener('change', e => { filterDiff = e.target.value; currentPage = 0; loadWords(); });
+
+loadWords();
+</script>
+</body>
+</html>
