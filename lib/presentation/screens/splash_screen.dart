@@ -54,26 +54,16 @@ class _SplashScreenState extends State<SplashScreen>
 
         if (mounted) {
           final language = data?['selected_language'] as String?;
-          final firstLogin = data?['first_login'] as bool? ?? false;
+          final name = data?['name'] as String? ?? 'Пользователь';
+          final age = data?['age'] as int? ?? 13;
 
           Widget destination;
           if (language == null || language.isEmpty) {
-            // Язык не выбран — новый пользователь
-            destination = WelcomeScreen(
-              name: data?['name'] ?? 'Пользователь',
-              age: data?['age'] ?? 13,
-            );
-          } else if (!firstLogin) {
-            // Язык есть, но welcome screen ещё не показывался
-            destination = WelcomeScreen(
-              name: data?['name'] ?? 'Пользователь',
-              age: data?['age'] ?? 13,
-            );
+            // Язык не выбран — показываем приветственный экран
+            destination = WelcomeScreen(name: name, age: age);
           } else {
-            destination = HomeScreen(
-              name: data?['name'] ?? 'Пользователь',
-              age: data?['age'] ?? 13,
-            );
+            // Язык уже выбран — сразу на главный экран
+            destination = HomeScreen(name: name, age: age);
           }
 
           Navigator.pushReplacement(

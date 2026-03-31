@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/level_system.dart';
 import '../../auth/login_screen.dart';
 import '../../subscription/subscription_screen.dart';
 import '../../language_select_screen.dart';
+import '../../friends/friends_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   final String name;
@@ -105,6 +107,10 @@ class _ProfileTabState extends State<ProfileTab> {
     final xp = _userData?['xp'] as int? ?? 0;
     final streak = _userData?['streak'] as int? ?? 0;
     final plan = _userData?['subscription_type'] as String? ?? 'free';
+    final level = LevelSystem.levelFromXp(xp);
+    final levelTitle = LevelSystem.titleForLevel(level);
+    final levelEmoji = LevelSystem.emojiForLevel(level);
+    final levelProgress = LevelSystem.progressInLevel(xp);
 
     final badges = [
       {'emoji': '🔥', 'title': '7 дней подряд'},
@@ -170,29 +176,105 @@ class _ProfileTabState extends State<ProfileTab> {
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                           )),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0ABDB9)
-                              .withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(
+                      const SizedBox(height: 8),
+                      // Значок уровня
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
                               color: const Color(0xFF0ABDB9)
-                                  .withValues(alpha: 0.4)),
-                        ),
-                        child: Text(
-                          plan == 'legenda'
-                              ? '👑 LEGENDA'
-                              : plan == 'pro'
-                                  ? '⚡ PRO'
-                                  : '🌱 FREE',
-                          style: const TextStyle(
-                            color: Color(0xFF3FCFCC),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                                  .withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                  color: const Color(0xFF0ABDB9)
+                                      .withValues(alpha: 0.4)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(levelEmoji,
+                                    style: const TextStyle(fontSize: 14)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Этаж $level · $levelTitle',
+                                  style: const TextStyle(
+                                    color: Color(0xFF3FCFCC),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0ABDB9)
+                                  .withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                  color: const Color(0xFF0ABDB9)
+                                      .withValues(alpha: 0.25)),
+                            ),
+                            child: Text(
+                              plan == 'legenda'
+                                  ? '👑 LEGENDA'
+                                  : plan == 'pro'
+                                      ? '⚡ PRO'
+                                      : '🌱 FREE',
+                              style: const TextStyle(
+                                color: Color(0xFF8EAEAC),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // XP прогресс к следующему этажу
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('$xp XP',
+                                    style: const TextStyle(
+                                        color: Color(0xFF5A7A78),
+                                        fontSize: 11)),
+                                if (level < LevelSystem.maxLevel)
+                                  Text(
+                                    'до этажа ${level + 1}: ${LevelSystem.xpToNextLevel(xp)} XP',
+                                    style: const TextStyle(
+                                        color: Color(0xFF5A7A78),
+                                        fontSize: 11))
+                                else
+                                  const Text('MAX',
+                                      style: TextStyle(
+                                          color: Color(0xFFFFD700),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: levelProgress,
+                                minHeight: 5,
+                                backgroundColor: const Color(0xFF1A3332),
+                                valueColor: const AlwaysStoppedAnimation(
+                                    Color(0xFF0ABDB9)),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -392,6 +474,17 @@ class _ProfileTabState extends State<ProfileTab> {
                           );
                           _loadStats(); // обновить после смены языка
                         },
+                      ),
+                      _SettingItem(
+                        icon: Icons.people_rounded,
+                        title: 'Друзья',
+                        value: 'Соревнуйся с друзьями',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const FriendsScreen(),
+                          ),
+                        ),
                       ),
                       _SettingItem(
                         icon: Icons.notifications_outlined,

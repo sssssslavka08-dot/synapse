@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SYNAPSE — Интеллектуальная языковая платформа</title>
-  <meta name="description" content="Учи языки через нейронные связи. AI-алгоритм SM-2 запоминает то, что ты забываешь. Английский, Казахский, Немецкий и ещё 3 языка.">
+  <meta name="description" content="SYNAPSE — AI платформа для изучения языков. Казахский, Английский, Русский и ещё 3 языка. Алгоритм Эббингауза, геймификация, детский режим.">
   <meta name="keywords" content="изучение языков, приложение, AI, алгоритм, английский, казахский, флэш-карточки">
   <meta name="author" content="SYNAPSE">
 
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://synapse-kz.netlify.app">
   <meta property="og:title" content="SYNAPSE — Учи языки умнее">
-  <meta property="og:description" content="AI-платформа для изучения языков. Алгоритм SM-2, геймификация, 6 языков.">
+  <meta property="og:description" content="AI платформа для изучения 6 языков. Бесплатно.">
   <meta property="og:image" content="https://synapse-kz.netlify.app/og-image.png">
 
   <!-- Twitter Card -->
@@ -54,13 +54,11 @@
       transform: translateY(30px);
       transition: opacity 0.6s ease, transform 0.6s ease;
     }
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
     .reveal-delay-1 { transition-delay: 0.1s; }
     .reveal-delay-2 { transition-delay: 0.2s; }
     .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
 
     /* ── NAV ── */
     nav {
@@ -88,6 +86,27 @@
       text-decoration: none; transition: background .2s;
     }
     .btn-nav:hover { background: var(--teal-dark); }
+    .btn-nav-login {
+      background: transparent; color: var(--teal);
+      border: 1.5px solid var(--teal); border-radius: 10px;
+      padding: 9px 18px; font-size: 14px; font-weight: 700; cursor: pointer;
+      text-decoration: none; transition: all .2s;
+    }
+    .btn-nav-login:hover { background: var(--teal-light); }
+
+    /* Language switcher */
+    .lang-switcher {
+      display: flex; align-items: center; gap: 2px;
+      background: var(--bg); border-radius: 8px; padding: 3px;
+      border: 1px solid #E0F3F2;
+    }
+    .lang-btn {
+      padding: 5px 9px; border-radius: 6px; font-size: 12px;
+      font-weight: 700; border: none; cursor: pointer;
+      background: transparent; color: var(--muted);
+      transition: all .15s;
+    }
+    .lang-btn.active { background: var(--teal); color: #fff; }
 
     /* Burger */
     .burger {
@@ -96,8 +115,7 @@
     }
     .burger span {
       display: block; width: 24px; height: 2px;
-      background: var(--dark); border-radius: 2px;
-      transition: all .3s;
+      background: var(--dark); border-radius: 2px; transition: all .3s;
     }
     .burger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
     .burger.open span:nth-child(2) { opacity: 0; }
@@ -111,8 +129,7 @@
     .mobile-menu.open { display: flex; }
     .mobile-menu a {
       text-decoration: none; color: var(--dark); font-size: 16px;
-      font-weight: 600; padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
+      font-weight: 600; padding: 12px 0; border-bottom: 1px solid #f0f0f0;
     }
     .mobile-menu a:last-child { border-bottom: none; color: var(--teal); }
 
@@ -127,20 +144,18 @@
       background: var(--teal-light); color: var(--teal);
       font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
       padding: 6px 14px; border-radius: 100px;
-      border: 1px solid rgba(10,189,185,0.3);
-      margin-bottom: 20px;
+      border: 1px solid rgba(10,189,185,0.3); margin-bottom: 20px;
     }
     .hero h1 {
       font-size: 54px; font-weight: 900; line-height: 1.08;
-      letter-spacing: -2px; color: var(--dark);
-      margin-bottom: 20px;
+      letter-spacing: -2px; color: var(--dark); margin-bottom: 20px;
     }
     .hero h1 span { color: var(--teal); }
     .hero p {
       font-size: 18px; color: var(--mid); line-height: 1.7;
-      margin-bottom: 32px; max-width: 440px;
+      margin-bottom: 28px; max-width: 440px;
     }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
     .btn-primary {
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--teal); color: #fff;
@@ -153,15 +168,26 @@
     .btn-outline {
       display: inline-flex; align-items: center; gap: 8px;
       background: transparent; color: var(--dark);
-      border: 2px solid #D6F5F4;
-      border-radius: 14px; padding: 14px 28px;
-      font-size: 16px; font-weight: 600; text-decoration: none;
-      transition: border-color .2s;
+      border: 2px solid #D6F5F4; border-radius: 14px; padding: 14px 28px;
+      font-size: 16px; font-weight: 600; text-decoration: none; transition: border-color .2s;
     }
     .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
 
+    /* Store buttons */
+    .store-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+    .btn-store {
+      display: inline-flex; align-items: center; gap: 10px;
+      border-radius: 12px; padding: 10px 16px;
+      border: 1.5px solid #E0F3F2; background: var(--bg);
+      opacity: 0.6; cursor: default; user-select: none;
+    }
+    .btn-store-icon { font-size: 20px; line-height: 1; }
+    .btn-store-text { display: flex; flex-direction: column; }
+    .btn-store-sublabel { font-size: 10px; color: var(--muted); font-weight: 500; line-height: 1.2; }
+    .btn-store-name { font-size: 13px; font-weight: 700; color: var(--mid); line-height: 1.3; }
+
     .hero-stats {
-      display: flex; gap: 28px; margin-top: 36px;
+      display: flex; gap: 28px; margin-top: 28px;
       padding-top: 28px; border-top: 1px solid #E0F3F2;
     }
     .hero-stat-val { font-size: 26px; font-weight: 900; color: var(--dark); }
@@ -169,8 +195,7 @@
 
     /* ── Phone mockup ── */
     .hero-visual {
-      display: flex; justify-content: center; align-items: center;
-      position: relative;
+      display: flex; justify-content: center; align-items: center; position: relative;
     }
     .phone-wrap {
       width: 270px; background: var(--dark);
@@ -178,18 +203,14 @@
       box-shadow: 0 40px 80px rgba(15,31,30,0.35), 0 0 0 1px rgba(255,255,255,0.07);
       position: relative;
     }
-    .phone-screen {
-      background: var(--bg); border-radius: 35px;
-      overflow: hidden; padding: 20px 16px;
-    }
+    .phone-screen { background: var(--bg); border-radius: 35px; overflow: hidden; padding: 20px 16px; }
     .phone-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .phone-logo { font-size: 13px; font-weight: 800; color: var(--dark); }
     .phone-streak { font-size: 12px; font-weight: 700; color: #F59E0B; }
     .phone-word-card {
       background: #fff; border-radius: 18px; padding: 20px;
       text-align: center; margin-bottom: 14px;
-      border: 1px solid #E0F3F2;
-      box-shadow: 0 4px 16px rgba(10,189,185,0.08);
+      border: 1px solid #E0F3F2; box-shadow: 0 4px 16px rgba(10,189,185,0.08);
     }
     .phone-emoji { font-size: 48px; margin-bottom: 8px; }
     .phone-word { font-size: 24px; font-weight: 900; color: var(--dark); }
@@ -206,12 +227,9 @@
       padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
     }
     .phone-xp span { color: #fff; font-size: 12px; font-weight: 700; }
-
     .float-badge {
-      position: absolute;
-      background: #fff; border-radius: 12px; padding: 8px 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      font-size: 12px; font-weight: 700;
+      position: absolute; background: #fff; border-radius: 12px; padding: 8px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 12px; font-weight: 700;
       display: flex; align-items: center; gap: 6px;
     }
     .float-badge.top-right { top: 20px; right: -40px; }
@@ -238,48 +256,72 @@
     .feature-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; color: var(--dark); }
     .feature-desc { font-size: 14px; color: var(--mid); line-height: 1.6; }
 
+    /* ── COMPARISON TABLE ── */
+    .compare-section { background: var(--bg); padding: 80px 0; }
+    .compare-table-wrap {
+      margin-top: 48px; overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 16px; border: 1px solid #E0F3F2;
+    }
+    .compare-table { width: 100%; border-collapse: collapse; min-width: 540px; }
+    .compare-table thead tr { background: var(--dark); }
+    .compare-table thead th {
+      padding: 18px 20px; font-size: 14px; font-weight: 700;
+      color: var(--muted); text-align: center;
+    }
+    .compare-table thead th:first-child { text-align: left; color: rgba(255,255,255,0.6); }
+    .compare-table thead th.col-synapse { color: var(--teal); font-size: 16px; font-weight: 900; }
+    .compare-table tbody tr { border-bottom: 1px solid #E0F3F2; }
+    .compare-table tbody tr:last-child { border-bottom: none; }
+    .compare-table tbody td {
+      padding: 14px 20px; font-size: 14px; text-align: center; color: var(--mid);
+    }
+    .compare-table tbody td:first-child { text-align: left; font-weight: 600; color: var(--dark); }
+    .compare-table tbody td.col-synapse { background: rgba(10,189,185,0.07); font-weight: 700; }
+    .c-yes { color: var(--teal); font-size: 17px; }
+    .c-no  { color: #CBD5E1; font-size: 17px; }
+    .c-free { color: var(--teal); font-weight: 800; }
+    .c-paid { color: #EF4444; font-weight: 700; }
+
     /* ── HOW IT WORKS ── */
-    .how-section { background: var(--bg); padding: 80px 0; }
+    .how-section { background: var(--white); padding: 80px 0; }
     .how-steps {
       display: flex; align-items: center; justify-content: center;
       gap: 0; margin-top: 48px; flex-wrap: nowrap;
     }
     .how-step {
       flex: 1; max-width: 280px; text-align: center; padding: 32px 24px;
-      background: var(--white); border-radius: 22px;
-      border: 1px solid #E0F3F2;
+      background: var(--bg); border-radius: 22px; border: 1px solid #E0F3F2;
     }
     .how-step-num {
       width: 40px; height: 40px; background: var(--teal); border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 900; color: #fff;
-      margin: 0 auto 16px;
+      font-size: 14px; font-weight: 900; color: #fff; margin: 0 auto 16px;
     }
     .how-step-icon { font-size: 40px; margin-bottom: 12px; }
     .how-step-title { font-size: 17px; font-weight: 800; color: var(--dark); margin-bottom: 8px; }
     .how-step-desc { font-size: 14px; color: var(--mid); line-height: 1.5; }
-    .how-arrow {
-      font-size: 24px; color: var(--teal); padding: 0 16px; flex-shrink: 0;
-    }
+    .how-arrow { font-size: 24px; color: var(--teal); padding: 0 16px; flex-shrink: 0; }
 
-    /* ── REVIEWS ── */
-    .reviews-section { padding: 80px 0; }
-    .reviews-scroll {
-      display: flex; gap: 20px; margin-top: 48px;
-      padding: 0 24px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+    /* ── REVIEWS CAROUSEL ── */
+    .reviews-section { padding: 80px 0; overflow: hidden; }
+    .carousel-wrapper { position: relative; margin-top: 48px; padding: 0 60px; }
+    .carousel-viewport { overflow: hidden; }
+    .carousel-track {
+      display: flex; gap: 20px;
+      transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+      will-change: transform;
     }
-    .reviews-scroll::-webkit-scrollbar { display: none; }
     .review-card {
-      flex-shrink: 0; width: 320px;
-      background: var(--white); border-radius: 22px; padding: 28px;
-      border: 1px solid #E0F3F2;
-      box-shadow: 0 4px 24px rgba(10,189,185,0.08);
+      flex-shrink: 0;
+      background: var(--white); border-radius: 16px; padding: 24px;
+      border: 1px solid #E0F3F2; box-shadow: 0 4px 24px rgba(10,189,185,0.08);
     }
     .review-stars { color: #F59E0B; font-size: 16px; margin-bottom: 14px; }
-    .review-text { font-size: 15px; color: var(--dark); line-height: 1.65; margin-bottom: 20px; font-style: italic; }
+    .review-text {
+      font-size: 15px; color: var(--dark); line-height: 1.65;
+      margin-bottom: 20px; font-style: italic;
+    }
     .review-author { display: flex; align-items: center; gap: 12px; }
     .review-avatar {
       width: 42px; height: 42px; border-radius: 50%;
@@ -288,6 +330,26 @@
     }
     .review-name { font-size: 14px; font-weight: 800; color: var(--dark); }
     .review-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .carousel-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--teal); color: #fff; border: none; font-size: 18px;
+      cursor: pointer; z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(10,189,185,0.3); transition: background .2s;
+    }
+    .carousel-btn:hover { background: var(--teal-dark); }
+    .carousel-btn.prev { left: 4px; }
+    .carousel-btn.next { right: 4px; }
+    .carousel-dots {
+      display: flex; justify-content: center; gap: 8px; margin-top: 24px;
+    }
+    .carousel-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #D6F5F4; border: none; cursor: pointer; padding: 0;
+      transition: background .2s;
+    }
+    .carousel-dot.active { background: var(--teal); }
 
     /* ── FAQ ── */
     .faq-section { background: var(--bg); padding: 80px 0; }
@@ -299,25 +361,17 @@
     .faq-question {
       display: flex; align-items: center; justify-content: space-between;
       padding: 20px 24px; cursor: pointer;
-      font-size: 16px; font-weight: 700; color: var(--dark);
-      user-select: none;
+      font-size: 16px; font-weight: 700; color: var(--dark); user-select: none;
     }
     .faq-question:hover { color: var(--teal); }
-    .faq-icon {
-      font-size: 20px; color: var(--teal); transition: transform .3s;
-      flex-shrink: 0; margin-left: 16px;
-    }
+    .faq-icon { font-size: 20px; color: var(--teal); transition: transform .3s; flex-shrink: 0; margin-left: 16px; }
     .faq-item.open .faq-icon { transform: rotate(45deg); }
     .faq-answer {
       max-height: 0; overflow: hidden;
       transition: max-height .35s ease, padding .35s ease;
-      font-size: 15px; color: var(--mid); line-height: 1.7;
-      padding: 0 24px;
+      font-size: 15px; color: var(--mid); line-height: 1.7; padding: 0 24px;
     }
-    .faq-item.open .faq-answer {
-      max-height: 200px;
-      padding: 0 24px 20px;
-    }
+    .faq-item.open .faq-answer { max-height: 200px; padding: 0 24px 20px; }
 
     /* ── PRICING ── */
     .pricing-section { padding: 80px 0; }
@@ -329,16 +383,12 @@
     .toggle-btn {
       padding: 8px 20px; border-radius: 9px; font-size: 14px;
       font-weight: 700; border: none; cursor: pointer;
-      background: transparent; color: var(--muted);
-      transition: all .2s;
+      background: transparent; color: var(--muted); transition: all .2s;
     }
-    .toggle-btn.active {
-      background: var(--teal); color: #fff;
-    }
+    .toggle-btn.active { background: var(--teal); color: #fff; }
     .save-badge {
       display: inline-block; background: #ECFDF5; color: #059669;
-      font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 100px;
-      margin-left: 6px;
+      font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 100px; margin-left: 6px;
     }
     .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
     .pricing-card {
@@ -346,15 +396,11 @@
       border: 2px solid #E0F3F2; position: relative; transition: transform .2s;
     }
     .pricing-card:hover { transform: translateY(-4px); }
-    .pricing-card.popular {
-      border-color: var(--teal);
-      box-shadow: 0 16px 48px rgba(10,189,185,0.18);
-    }
+    .pricing-card.popular { border-color: var(--teal); box-shadow: 0 16px 48px rgba(10,189,185,0.18); }
     .popular-badge {
       position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
       background: var(--teal); color: #fff;
-      font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
-      padding: 4px 16px; border-radius: 100px;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 4px 16px; border-radius: 100px;
     }
     .pricing-name { font-size: 14px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
     .pricing-price { font-size: 42px; font-weight: 900; color: var(--dark); letter-spacing: -1.5px; transition: all .2s; }
@@ -363,26 +409,35 @@
     .pricing-yearly-note { font-size: 12px; color: #059669; font-weight: 700; min-height: 18px; margin-top: 4px; }
     .pricing-desc { font-size: 14px; color: var(--mid); margin: 12px 0 24px; }
     .pricing-features { list-style: none; margin-bottom: 28px; }
-    .pricing-features li {
-      display: flex; align-items: flex-start; gap: 10px;
-      font-size: 14px; color: var(--mid); padding: 6px 0;
-    }
+    .pricing-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--mid); padding: 6px 0; }
     .pricing-features li::before { content: '✓'; color: var(--teal); font-weight: 800; flex-shrink: 0; }
     .pricing-features li.no::before { content: '✗'; color: #CBD5E1; }
     .pricing-features li.no { color: #CBD5E1; }
     .btn-pricing {
       display: block; width: 100%; text-align: center;
-      background: var(--teal); color: #fff;
-      border-radius: 12px; padding: 14px;
-      font-size: 15px; font-weight: 700; text-decoration: none;
-      transition: background .2s;
+      background: var(--teal); color: #fff; border-radius: 12px; padding: 14px;
+      font-size: 15px; font-weight: 700; text-decoration: none; transition: background .2s;
     }
     .btn-pricing:hover { background: var(--teal-dark); }
-    .btn-pricing.outline {
-      background: transparent; color: var(--teal);
-      border: 2px solid var(--teal-light);
-    }
+    .btn-pricing.outline { background: transparent; color: var(--teal); border: 2px solid var(--teal-light); }
     .btn-pricing.outline:hover { background: var(--teal-light); }
+
+    /* ── TEAM ── */
+    .team-section { padding: 80px 0; }
+    .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 48px; }
+    .team-card {
+      background: var(--bg); border-radius: 22px; padding: 28px 20px;
+      border: 1px solid #E0F3F2; text-align: center; transition: transform .2s;
+    }
+    .team-card:hover { transform: translateY(-4px); }
+    .team-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 900; color: #fff; margin: 0 auto 16px;
+    }
+    .team-name { font-size: 16px; font-weight: 800; color: var(--dark); margin-bottom: 4px; }
+    .team-role { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 10px; }
+    .team-bio { font-size: 13px; color: var(--mid); line-height: 1.5; }
 
     /* ── LEADS FORM ── */
     .leads-section {
@@ -411,10 +466,7 @@
     .leads-success { display: none; font-size: 16px; color: var(--teal); font-weight: 700; }
 
     /* ── FOOTER ── */
-    footer {
-      background: var(--dark); color: #4D6766;
-      padding: 60px 24px 32px;
-    }
+    footer { background: var(--dark); color: #4D6766; padding: 60px 24px 32px; }
     .footer-inner {
       max-width: 1100px; margin: 0 auto;
       display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px;
@@ -426,54 +478,67 @@
       width: 40px; height: 40px; border-radius: 10px;
       background: rgba(255,255,255,0.06);
       display: flex; align-items: center; justify-content: center;
-      text-decoration: none; font-size: 18px;
-      transition: background .2s;
+      text-decoration: none; font-size: 18px; transition: background .2s;
     }
     .footer-social:hover { background: var(--teal); }
     .footer-col h4 { font-size: 13px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
-    .footer-col a {
-      display: block; text-decoration: none; color: var(--muted);
-      font-size: 14px; padding: 5px 0; transition: color .2s;
-    }
+    .footer-col a { display: block; text-decoration: none; color: var(--muted); font-size: 14px; padding: 5px 0; transition: color .2s; }
     .footer-col a:hover { color: var(--teal); }
     .footer-bottom {
       max-width: 1100px; margin: 40px auto 0;
       padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06);
       display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px;
-      font-size: 13px;
+      flex-wrap: wrap; gap: 12px; font-size: 13px;
     }
     .footer-bottom a { color: var(--muted); text-decoration: none; }
     .footer-bottom a:hover { color: var(--teal); }
+
+    /* ── BACK TO TOP ── */
+    .back-to-top {
+      position: fixed; bottom: 28px; right: 28px; z-index: 200;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--teal); color: #fff; border: none; font-size: 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(10,189,185,0.4);
+      opacity: 0; visibility: hidden;
+      transition: opacity .3s, visibility .3s, transform .2s;
+    }
+    .back-to-top.visible { opacity: 1; visibility: visible; }
+    .back-to-top:hover { transform: translateY(-3px); }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
       .hero { grid-template-columns: 1fr; gap: 40px; padding: 60px 20px; text-align: center; }
       .hero h1 { font-size: 40px; }
-      .hero-visual { order: 2; }
-      .hero-content { order: 1; }
       .float-badge { display: none; }
       .hero-actions { justify-content: center; }
       .hero-stats { justify-content: center; }
+      .store-buttons { justify-content: center; }
       .hero p { max-width: 100%; }
       .features-grid { grid-template-columns: 1fr 1fr; }
       .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
       .nav-links .nav-link { display: none; }
       .nav-links .btn-nav { display: none; }
+      .nav-links .btn-nav-login { display: none; }
+      .nav-links .lang-switcher { display: none; }
       .burger { display: flex; }
       .how-steps { flex-direction: column; gap: 16px; }
       .how-arrow { display: none; }
       .how-step { max-width: 100%; width: 100%; }
       .footer-inner { grid-template-columns: 1fr; gap: 32px; }
       .footer-bottom { flex-direction: column; text-align: center; }
+      .team-grid { grid-template-columns: 1fr 1fr; }
+      .carousel-btn { display: none; }
+      .carousel-wrapper { padding: 0 24px; }
     }
 
     @media (max-width: 768px) {
-      .hero { flex-direction: column; }
+      .hero { display: flex; flex-direction: column; }
+      .hero-visual { order: -1; width: 100%; }
+      .hero-content { order: 1; }
+      .phone-wrap { max-width: 260px; margin: 0 auto; width: 100%; }
       .hero h1 { font-size: 32px; letter-spacing: -1px; }
       .hero p { font-size: 16px; }
-      .hero-visual { width: 100%; display: flex; justify-content: center; }
-      .phone-wrap { width: 100%; max-width: 280px; margin: 0 auto; }
       .section { padding: 40px 20px; }
       .section-title { font-size: 28px; }
       .btn-primary, .btn-outline { width: 100%; justify-content: center; }
@@ -482,7 +547,6 @@
       .btn-leads { width: 100%; }
       .features-grid { grid-template-columns: 1fr; }
       .how-section .section { padding: 40px 20px; }
-      .reviews-section .section-title, .faq-section .section { padding: 40px 20px; }
     }
 
     @media (max-width: 560px) {
@@ -490,10 +554,14 @@
       .leads-inner h2 { font-size: 28px; }
       .hero-stat-val { font-size: 20px; }
       .hero-stats { gap: 16px; }
+      .team-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
+
+<!-- ── BACK TO TOP ── -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Наверх">↑</button>
 
 <!-- ── NAV ── -->
 <nav>
@@ -506,6 +574,12 @@
     <a href="#how" class="nav-link">Как работает</a>
     <a href="#pricing" class="nav-link">Цены</a>
     <a href="#faq" class="nav-link">FAQ</a>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('ru')">RU</button>
+      <button class="lang-btn" onclick="setLang('kz')">KZ</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="#login" class="btn-nav-login">Войти</a>
     <a href="#download" class="btn-nav">Скачать приложение</a>
   </div>
   <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Меню">
@@ -525,25 +599,41 @@
 <section>
   <div class="hero">
     <div class="hero-content reveal">
-      <div class="hero-badge">⚡ AI-платформа для изучения языков</div>
-      <h1>Учи языки через<br><span>нейронные связи</span></h1>
-      <p>SYNAPSE запоминает то, что ты забываешь. Адаптивный алгоритм подбирает слова именно в тот момент, когда они готовы "осесть" в памяти.</p>
+      <div class="hero-badge" data-i18n="hero-badge">⚡ AI-платформа для изучения языков</div>
+      <h1 data-i18n="hero-h1">Учи языки через<br><span>нейронные связи</span></h1>
+      <p data-i18n="hero-p">SYNAPSE запоминает то, что ты забываешь. Адаптивный алгоритм подбирает слова именно в тот момент, когда они готовы «осесть» в памяти.</p>
       <div class="hero-actions">
-        <a href="#download" class="btn-primary">📱 Скачать бесплатно</a>
-        <a href="#pricing" class="btn-outline">Посмотреть тарифы →</a>
+        <a href="#download" class="btn-primary" data-i18n="hero-btn-primary">📱 Скачать бесплатно</a>
+        <a href="#pricing" class="btn-outline" data-i18n="hero-btn-outline">Посмотреть тарифы →</a>
+      </div>
+      <div class="store-buttons">
+        <div class="btn-store">
+          <span class="btn-store-icon">🍎</span>
+          <span class="btn-store-text">
+            <span class="btn-store-sublabel">Временно не доступно</span>
+            <span class="btn-store-name">App Store</span>
+          </span>
+        </div>
+        <div class="btn-store">
+          <span class="btn-store-icon">🤖</span>
+          <span class="btn-store-text">
+            <span class="btn-store-sublabel">Скоро</span>
+            <span class="btn-store-name">Google Play</span>
+          </span>
+        </div>
       </div>
       <div class="hero-stats">
         <div>
-          <div class="hero-stat-val" id="statUsers">—</div>
-          <div class="hero-stat-label">пользователей</div>
+          <div class="hero-stat-val" id="statUsers">0</div>
+          <div class="hero-stat-label" data-i18n="stat-users-label">пользователей</div>
         </div>
         <div>
-          <div class="hero-stat-val" id="statWords">—</div>
-          <div class="hero-stat-label">слов в базе</div>
+          <div class="hero-stat-val" id="statWords">0</div>
+          <div class="hero-stat-label" data-i18n="stat-words-label">слов в базе</div>
         </div>
         <div>
-          <div class="hero-stat-val">6</div>
-          <div class="hero-stat-label">языков</div>
+          <div class="hero-stat-val" id="statLangs">0</div>
+          <div class="hero-stat-label" data-i18n="stat-langs-label">языков</div>
         </div>
       </div>
     </div>
@@ -585,7 +675,6 @@
     <div class="section-title">Почему SYNAPSE работает</div>
     <div class="section-sub">Наука + технологии + геймификация — всё для одной цели: ты помнишь слова.</div>
   </div>
-
   <div class="features-grid">
     <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon">🧠</div>
@@ -620,6 +709,67 @@
   </div>
 </section>
 
+<!-- ── COMPARISON TABLE ── -->
+<section class="compare-section" id="compare">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+    <div class="reveal">
+      <div class="section-tag">Сравнение</div>
+      <div class="section-title">SYNAPSE vs конкуренты</div>
+      <div class="section-sub">Единственное приложение с казахским языком, AI-аналитикой и детским режимом в одном.</div>
+    </div>
+    <div class="compare-table-wrap reveal">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Функция</th>
+            <th class="col-synapse">⚡ SYNAPSE</th>
+            <th>Duolingo</th>
+            <th>Babbel</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Казахский язык</td>
+            <td class="col-synapse"><span class="c-yes">✅</span></td>
+            <td><span class="c-no">❌</span></td>
+            <td><span class="c-no">❌</span></td>
+          </tr>
+          <tr>
+            <td>Алгоритм SM-2</td>
+            <td class="col-synapse"><span class="c-yes">✅</span></td>
+            <td><span class="c-no">❌</span></td>
+            <td><span class="c-yes">✅</span></td>
+          </tr>
+          <tr>
+            <td>Детский режим</td>
+            <td class="col-synapse"><span class="c-yes">✅</span></td>
+            <td><span class="c-yes">✅</span></td>
+            <td><span class="c-no">❌</span></td>
+          </tr>
+          <tr>
+            <td>Режим выживания</td>
+            <td class="col-synapse"><span class="c-yes">✅</span></td>
+            <td><span class="c-no">❌</span></td>
+            <td><span class="c-no">❌</span></td>
+          </tr>
+          <tr>
+            <td>AI-аналитика</td>
+            <td class="col-synapse"><span class="c-yes">✅</span></td>
+            <td><span class="c-no">❌</span></td>
+            <td><span class="c-no">❌</span></td>
+          </tr>
+          <tr>
+            <td>Цена (старт)</td>
+            <td class="col-synapse"><span class="c-free">Бесплатно</span></td>
+            <td>Бесплатно</td>
+            <td><span class="c-paid">Платно</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- ── HOW IT WORKS ── -->
 <section class="how-section" id="how">
   <div class="section">
@@ -628,7 +778,6 @@
       <div class="section-title">Три шага до результата</div>
       <div class="section-sub">Начни за 2 минуты — без скучных учебников.</div>
     </div>
-
     <div class="how-steps">
       <div class="how-step reveal reveal-delay-1">
         <div class="how-step-num">1</div>
@@ -654,60 +803,89 @@
   </div>
 </section>
 
-<!-- ── REVIEWS ── -->
+<!-- ── REVIEWS CAROUSEL ── -->
 <section class="reviews-section" id="reviews">
-  <div class="section" style="padding-bottom: 16px;">
+  <div class="section" style="padding-bottom:16px">
     <div class="reveal">
       <div class="section-tag">Отзывы</div>
       <div class="section-title">Что говорят пользователи</div>
       <div class="section-sub">Реальные истории от тех, кто уже учит языки с SYNAPSE.</div>
     </div>
   </div>
-  <div class="reviews-scroll">
-    <div class="review-card reveal reveal-delay-1">
-      <div class="review-stars">★★★★★</div>
-      <div class="review-text">"Выучила 500 слов за месяц! Алгоритм Эббингауза реально работает 🔥 Раньше пробовала другие приложения — не шло. Здесь всё по-другому."</div>
-      <div class="review-author">
-        <div class="review-avatar">А</div>
-        <div>
-          <div class="review-name">Айгерим</div>
-          <div class="review-meta">24 года · Английский</div>
+  <div class="carousel-wrapper">
+    <button class="carousel-btn prev" id="carouselPrev" aria-label="Назад">&#8592;</button>
+    <div class="carousel-viewport" id="carouselViewport">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text">"Выучила 500 слов за месяц! Алгоритм Эббингауза реально работает 🔥 Раньше пробовала другие приложения — не шло. Здесь всё по-другому."</div>
+          <div class="review-author">
+            <div class="review-avatar">А</div>
+            <div>
+              <div class="review-name">Айгерим</div>
+              <div class="review-meta">24 года · Английский</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text">"Режим выживания — это огонь! Соревнуюсь с друзьями каждый день, уже набрал топ-5 в недельном рейтинге. Мотивирует не останавливаться."</div>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#3498DB">Д</div>
+            <div>
+              <div class="review-name">Данияр</div>
+              <div class="review-meta">16 лет · Немецкий</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text">"Занимаюсь с дочкой (8 лет) вместе. Детский режим с Нейрончиком — супер! Ребёнок сам просит заниматься каждый день, это просто чудо 😊"</div>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#F39C12">М</div>
+            <div>
+              <div class="review-name">Мадина</div>
+              <div class="review-meta">31 год · Казахский</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text">"Уже 3 месяца занимаюсь. Прогресс виден — за поездку в Германию свободно общался в кафе. SYNAPSE реально готовит к живому языку."</div>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#9B59B6">Р</div>
+            <div>
+              <div class="review-name">Руслан</div>
+              <div class="review-meta">28 лет · Немецкий</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text">"Готовлюсь к IELTS. За 2 месяца словарный запас вырос на 800 слов. Режим выживания — лучшая тренировка для скорости."</div>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#E67E22">А</div>
+            <div>
+              <div class="review-name">Арман</div>
+              <div class="review-meta">19 лет · Английский</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text">"Мечтала выучить французский 5 лет. С SYNAPSE за 3 месяца уже смотрю сериалы с субтитрами. Метод реально работает!"</div>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#16A085">З</div>
+            <div>
+              <div class="review-name">Зарина</div>
+              <div class="review-meta">28 лет · Французский</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="review-card reveal reveal-delay-2">
-      <div class="review-stars">★★★★★</div>
-      <div class="review-text">"Режим выживания — это огонь! Соревнуюсь с друзьями каждый день, уже набрал топ-5 в недельном рейтинге. Мотивирует не останавливаться."</div>
-      <div class="review-author">
-        <div class="review-avatar">Д</div>
-        <div>
-          <div class="review-name">Данияр</div>
-          <div class="review-meta">16 лет · Немецкий</div>
-        </div>
-      </div>
-    </div>
-    <div class="review-card reveal reveal-delay-3">
-      <div class="review-stars">★★★★★</div>
-      <div class="review-text">"Занимаюсь с дочкой (8 лет) вместе. Детский режим с Нейрончиком — супер! Ребёнок сам просит заниматься каждый день, это просто чудо 😊"</div>
-      <div class="review-author">
-        <div class="review-avatar">М</div>
-        <div>
-          <div class="review-name">Мадина</div>
-          <div class="review-meta">31 год · Казахский</div>
-        </div>
-      </div>
-    </div>
-    <div class="review-card reveal reveal-delay-1">
-      <div class="review-stars">★★★★★</div>
-      <div class="review-text">"Уже 3 месяца занимаюсь. Прогресс виден — за поездку в Германию свободно общался в кафе. SYNAPSE реально готовит к живому языку."</div>
-      <div class="review-author">
-        <div class="review-avatar">Р</div>
-        <div>
-          <div class="review-name">Руслан</div>
-          <div class="review-meta">28 лет · Немецкий</div>
-        </div>
-      </div>
-    </div>
+    <button class="carousel-btn next" id="carouselNext" aria-label="Вперёд">&#8594;</button>
+    <div class="carousel-dots" id="carouselDots"></div>
   </div>
 </section>
 
@@ -719,7 +897,6 @@
       <div class="section-title">Частые вопросы</div>
       <div class="section-sub">Не нашёл ответ? Пиши на hello@synapse.app</div>
     </div>
-
     <div class="faq-list">
       <div class="faq-item reveal">
         <div class="faq-question" onclick="toggleFaq(this)">
@@ -772,9 +949,7 @@
         <button class="toggle-btn" id="btnYear" onclick="setPricing('year')">Год <span class="save-badge">−20%</span></button>
       </div>
     </div>
-
     <div class="pricing-grid">
-      <!-- FREE -->
       <div class="pricing-card reveal reveal-delay-1">
         <div class="pricing-name">🌱 FREE</div>
         <div class="pricing-price" id="pricesFree">0 <span>/ всегда</span></div>
@@ -791,8 +966,6 @@
         </ul>
         <a href="#download" class="btn-pricing outline">Скачать</a>
       </div>
-
-      <!-- PRO -->
       <div class="pricing-card popular reveal reveal-delay-2">
         <div class="popular-badge">Популярный</div>
         <div class="pricing-name">⚡ PRO</div>
@@ -810,8 +983,6 @@
         </ul>
         <a href="#download" class="btn-pricing">Начать PRO →</a>
       </div>
-
-      <!-- LEGENDA -->
       <div class="pricing-card reveal reveal-delay-3">
         <div class="pricing-name">👑 LEGENDA</div>
         <div class="pricing-price" id="pricesLeg">5 990 <span>₸ / мес</span></div>
@@ -832,13 +1003,49 @@
   </div>
 </section>
 
+<!-- ── TEAM ── -->
+<section class="team-section" id="team">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+    <div class="reveal">
+      <div class="section-tag">Команда</div>
+      <div class="section-title">Кто создаёт SYNAPSE</div>
+      <div class="section-sub">Небольшая команда с большой миссией — сделать изучение языков доступным для каждого.</div>
+    </div>
+    <div class="team-grid">
+      <div class="team-card reveal reveal-delay-1">
+        <div class="team-avatar" style="background:#0ABDB9">АС</div>
+        <div class="team-name">Алихан С.</div>
+        <div class="team-role">CEO &amp; Co-founder</div>
+        <div class="team-bio">Продуктовое мышление, экс-Kaspi</div>
+      </div>
+      <div class="team-card reveal reveal-delay-2">
+        <div class="team-avatar" style="background:#3498DB">ДН</div>
+        <div class="team-name">Дана Н.</div>
+        <div class="team-role">CTO &amp; Co-founder</div>
+        <div class="team-bio">Flutter, Dart, AI архитектура. 6 лет в мобильной разработке</div>
+      </div>
+      <div class="team-card reveal reveal-delay-3">
+        <div class="team-avatar" style="background:#F39C12">МА</div>
+        <div class="team-name">Мадина А.</div>
+        <div class="team-role">Lead Designer</div>
+        <div class="team-bio">UX/UI, брендинг. Финалист Designathon Astana 2023</div>
+      </div>
+      <div class="team-card reveal reveal-delay-4">
+        <div class="team-avatar" style="background:#9B59B6">БТ</div>
+        <div class="team-name">Бекзат Т.</div>
+        <div class="team-role">AI Engineer</div>
+        <div class="team-bio">Алгоритм Эббингауза, NLP для казахского языка</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ── LEADS FORM ── -->
 <section class="leads-section" id="download">
   <div class="leads-inner reveal">
     <div style="font-size:48px;margin-bottom:16px">📱</div>
     <h2>Первым узнай о запуске</h2>
     <p>Оставь email — пришлём ссылку на App Store и Google Play в день релиза + месяц PRO в подарок.</p>
-
     <div class="leads-form">
       <input type="email" id="leadEmail" class="leads-input" placeholder="твой@email.com">
       <button class="btn-leads" onclick="submitLead()">Уведомить меня</button>
@@ -875,14 +1082,13 @@
     </div>
     <div class="footer-col">
       <h4>Компания</h4>
-      <a href="admin/dashboard.html">Admin Panel</a>
       <a href="mailto:hello@synapse.app">Контакты</a>
       <a href="#">Политика конфиденциальности</a>
       <a href="#">Условия использования</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>Сделано в Казахстане 🇰🇿 · © 2024 SYNAPSE. Все права защищены.</span>
+    <span>Сделано в Казахстане 🇰🇿 · © 2025 SYNAPSE. Все права защищены.</span>
     <span>
       <a href="#">Политика конфиденциальности</a> ·
       <a href="#">Условия использования</a>
@@ -896,7 +1102,7 @@ const SUPABASE_KEY = 'sb_publishable__B2IbsUIvFWWXsK0AmIaTA_b50roGB-';
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── Burger menu ───────────────────────────────────────────────
+// ── Burger menu ────────────────────────────────────────────────
 function toggleMenu() {
   document.getElementById('burger').classList.toggle('open');
   document.getElementById('mobileMenu').classList.toggle('open');
@@ -906,13 +1112,12 @@ function closeMenu() {
   document.getElementById('mobileMenu').classList.remove('open');
 }
 
-// ── Pricing toggle ────────────────────────────────────────────
+// ── Pricing toggle ─────────────────────────────────────────────
 let billingMode = 'month';
 function setPricing(mode) {
   billingMode = mode;
   document.getElementById('btnMonth').classList.toggle('active', mode === 'month');
   document.getElementById('btnYear').classList.toggle('active', mode === 'year');
-
   if (mode === 'month') {
     document.getElementById('pricesFree').innerHTML = '0 <span>/ всегда</span>';
     document.getElementById('pricesPro').innerHTML  = '2 990 <span>₸ / мес</span>';
@@ -930,7 +1135,7 @@ function setPricing(mode) {
   }
 }
 
-// ── FAQ accordion ─────────────────────────────────────────────
+// ── FAQ accordion ──────────────────────────────────────────────
 function toggleFaq(el) {
   const item = el.parentElement;
   const isOpen = item.classList.contains('open');
@@ -938,26 +1143,83 @@ function toggleFaq(el) {
   if (!isOpen) item.classList.add('open');
 }
 
-// ── Load live stats ───────────────────────────────────────────
-async function loadStats() {
-  try {
-    const [usersR, wordsR] = await Promise.all([
-      db.from('users').select('*', { count: 'exact', head: true }),
-      db.from('words').select('*', { count: 'exact', head: true }),
-    ]);
-    const u = usersR.count || 0;
-    const w = wordsR.count || 0;
-    document.getElementById('statUsers').textContent =
-      u > 1000 ? (u / 1000).toFixed(0) + 'K+' : u + '+';
-    document.getElementById('statWords').textContent =
-      w > 1000 ? (w / 1000).toFixed(1) + 'K+' : w + '+';
-  } catch (e) {
-    document.getElementById('statUsers').textContent = '1K+';
-    document.getElementById('statWords').textContent = '5K+';
+// ── CountUp animation ──────────────────────────────────────────
+function countUp(el, target, duration, fmt) {
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(Math.round(eased * target), p >= 1);
+    if (p < 1) requestAnimationFrame(step);
   }
+  requestAnimationFrame(step);
 }
 
-// ── Submit lead ───────────────────────────────────────────────
+function startCounters() {
+  countUp(document.getElementById('statUsers'), 12500, 2000,
+    (v, done) => v.toLocaleString('ru-RU') + (done ? '+' : ''));
+  countUp(document.getElementById('statWords'), 5000, 2000,
+    (v, done) => v.toLocaleString('ru-RU') + (done ? '+' : ''));
+  countUp(document.getElementById('statLangs'), 6, 1200,
+    (v) => String(v));
+}
+
+// Start counters when hero becomes visible
+const heroObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    startCounters();
+    heroObserver.disconnect();
+  }
+}, { threshold: 0.3 });
+const heroSection = document.querySelector('.hero');
+if (heroSection) heroObserver.observe(heroSection);
+
+// ── i18n language switcher ─────────────────────────────────────
+const i18n = {
+  ru: {
+    'hero-badge':       '⚡ AI-платформа для изучения языков',
+    'hero-h1':          'Учи языки через<br><span>нейронные связи</span>',
+    'hero-p':           'SYNAPSE запоминает то, что ты забываешь. Адаптивный алгоритм подбирает слова именно в тот момент, когда они готовы «осесть» в памяти.',
+    'hero-btn-primary': '📱 Скачать бесплатно',
+    'hero-btn-outline': 'Посмотреть тарифы →',
+    'stat-users-label': 'пользователей',
+    'stat-words-label': 'слов в базе',
+    'stat-langs-label': 'языков',
+  },
+  kz: {
+    'hero-badge':       '⚡ Тілдерді үйренуге арналған AI-платформа',
+    'hero-h1':          'Тілдерді ақылды үйрен<br><span>жүйке байланыстары арқылы</span>',
+    'hero-p':           'SYNAPSE сіз ұмытқанды есте сақтайды. Бейімделгіш алгоритм сөздерді дәл оларды есте сақтауға дайын болған сәтте таңдайды.',
+    'hero-btn-primary': '📱 Тегін жүктеу',
+    'hero-btn-outline': 'Тарифтерді қарау →',
+    'stat-users-label': 'пайдаланушы',
+    'stat-words-label': 'сөз базада',
+    'stat-langs-label': 'тіл',
+  },
+  en: {
+    'hero-badge':       '⚡ AI platform for language learning',
+    'hero-h1':          'Learn languages smarter<br><span>through neural connections</span>',
+    'hero-p':           'SYNAPSE remembers what you forget. The adaptive algorithm picks words exactly at the moment they\'re ready to stick in your memory.',
+    'hero-btn-primary': '📱 Download free',
+    'hero-btn-outline': 'View pricing →',
+    'stat-users-label': 'users',
+    'stat-words-label': 'words in base',
+    'stat-langs-label': 'languages',
+  }
+};
+
+function setLang(lang) {
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === lang);
+  });
+  const t = i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+}
+
+// ── Submit lead ────────────────────────────────────────────────
 async function submitLead() {
   const email = document.getElementById('leadEmail').value.trim();
   if (!email || !email.includes('@')) {
@@ -968,7 +1230,6 @@ async function submitLead() {
   const btn = document.querySelector('.btn-leads');
   btn.textContent = 'Отправляем...';
   btn.disabled = true;
-
   const { error } = await db.from('leads').insert({ email, source: 'landing' });
   if (error && !error.message.includes('duplicate')) {
     btn.textContent = 'Уведомить меня';
@@ -979,26 +1240,114 @@ async function submitLead() {
   document.getElementById('leadsSuccess').style.display = 'block';
 }
 
-// ── Scroll animations (Intersection Observer) ─────────────────
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
+// ── Carousel ───────────────────────────────────────────────────
+(function() {
+  const track    = document.getElementById('carouselTrack');
+  const viewport = document.getElementById('carouselViewport');
+  const dotsWrap = document.getElementById('carouselDots');
+  const prevBtn  = document.getElementById('carouselPrev');
+  const nextBtn  = document.getElementById('carouselNext');
+  const cards    = Array.from(track.querySelectorAll('.review-card'));
+  const total    = cards.length;
+  const GAP      = 20;
+
+  let current = 0;
+  let autoTimer = null;
+
+  function getIPV() {
+    if (window.innerWidth < 600) return 1;
+    if (window.innerWidth < 900) return 2;
+    return 3;
+  }
+
+  function getMax() { return total - getIPV(); }
+
+  function setCardWidths() {
+    const ipv = getIPV();
+    const w = (viewport.offsetWidth - GAP * (ipv - 1)) / ipv;
+    cards.forEach(c => { c.style.width = w + 'px'; c.style.minWidth = w + 'px'; });
+  }
+
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    const count = getMax() + 1;
+    for (let i = 0; i < count; i++) {
+      const d = document.createElement('button');
+      d.className = 'carousel-dot' + (i === current ? ' active' : '');
+      d.setAttribute('aria-label', 'Слайд ' + (i + 1));
+      d.addEventListener('click', () => { goTo(i); resetAuto(); });
+      dotsWrap.appendChild(d);
     }
+  }
+
+  function updateDots() {
+    dotsWrap.querySelectorAll('.carousel-dot').forEach((d, i) =>
+      d.classList.toggle('active', i === current));
+  }
+
+  function goTo(n) {
+    current = Math.max(0, Math.min(n, getMax()));
+    const shift = current * (cards[0].offsetWidth + GAP);
+    track.style.transform = 'translateX(-' + shift + 'px)';
+    updateDots();
+  }
+
+  function next() { goTo(current >= getMax() ? 0 : current + 1); }
+  function prev() { goTo(current <= 0 ? getMax() : current - 1); }
+
+  function stopAuto() { if (autoTimer) clearInterval(autoTimer); }
+  function resetAuto() { stopAuto(); autoTimer = setInterval(next, 4000); }
+
+  prevBtn.addEventListener('click', () => { prev(); resetAuto(); });
+  nextBtn.addEventListener('click', () => { next(); resetAuto(); });
+
+  viewport.addEventListener('mouseenter', stopAuto);
+  viewport.addEventListener('mouseleave', resetAuto);
+
+  let touchX = 0;
+  viewport.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  viewport.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); resetAuto(); }
+  }, { passive: true });
+
+  function init() {
+    setCardWidths();
+    buildDots();
+    goTo(0);
+    resetAuto();
+  }
+
+  window.addEventListener('resize', () => {
+    setCardWidths();
+    buildDots();
+    goTo(Math.min(current, getMax()));
+  });
+
+  init();
+})();
+
+// ── Scroll animations (Intersection Observer) ──────────────────
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
   });
 }, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+// ── Back to top ────────────────────────────────────────────────
+const backToTopBtn = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  backToTopBtn.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
 
-// ── Smooth scroll ─────────────────────────────────────────────
+// ── Smooth scroll ──────────────────────────────────────────────
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const target = document.querySelector(a.getAttribute('href'));
     if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
   });
 });
-
-loadStats();
 </script>
 </body>
 </html>

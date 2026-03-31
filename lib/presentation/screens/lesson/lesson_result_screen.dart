@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
+import 'lesson_screen.dart';
 
 class LessonResultScreen extends StatelessWidget {
   final int correct;
   final int wrong;
   final int total;
   final bool isKidsMode;
+  final String name;
+  final int age;
+  final String language;
 
   const LessonResultScreen({
     super.key,
@@ -13,6 +17,9 @@ class LessonResultScreen extends StatelessWidget {
     required this.wrong,
     required this.total,
     this.isKidsMode = false,
+    this.name = 'Пользователь',
+    this.age = 13,
+    this.language = 'en',
   });
 
   int get xpEarned => correct * 10;
@@ -133,8 +140,8 @@ class LessonResultScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) => HomeScreen(
-                        name: 'Пользователь',
-                        age: isKidsMode ? 10 : 20,
+                        name: name,
+                        age: age,
                       ),
                     ),
                     (route) => false,
@@ -160,7 +167,12 @@ class LessonResultScreen extends StatelessWidget {
                   onPressed: () => Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => LessonScreen(isKidsMode: isKidsMode),
+                      builder: (_) => LessonScreen(
+                        isKidsMode: isKidsMode,
+                        language: language,
+                        name: name,
+                        age: age,
+                      ),
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -185,14 +197,6 @@ class LessonResultScreen extends StatelessWidget {
   }
 }
 
-// Добавь этот импорт в начало файла
-class LessonScreen extends StatelessWidget {
-  final bool isKidsMode;
-  const LessonScreen({super.key, this.isKidsMode = false});
-  @override
-  Widget build(BuildContext context) => const SizedBox();
-}
-
 class _StatBox extends StatelessWidget {
   final String label, value;
   final Color color;
@@ -205,9 +209,9 @@ class _StatBox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(children: [
           Text(value,

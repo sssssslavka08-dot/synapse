@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LeaderboardTab extends StatefulWidget {
   final String name;
@@ -12,7 +13,8 @@ class _LeaderboardTabState extends State<LeaderboardTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
   int _selectedLeague = 1;
-  late List<Map<String, dynamic>> _players;
+  List<Map<String, dynamic>> _players = [];
+  bool _loading = true;
 
   final List<String> _leagues = ['🥉 Бронза', '🥈 Серебро', '🥇 Золото'];
   final List<Color> _leagueColors = [
@@ -21,28 +23,118 @@ class _LeaderboardTabState extends State<LeaderboardTab>
     const Color(0xFFFFD700),
   ];
 
+  static const _mockPlayers = [
+    {'name': 'Айгерим К.', 'xp': 1250, 'streak': 14, 'avatar': '👩'},
+    {'name': 'Данияр М.', 'xp': 1180, 'streak': 9, 'avatar': '👨'},
+    {'name': 'Сабина Т.', 'xp': 980, 'streak': 21, 'avatar': '👩‍🦱'},
+    {'name': 'Алишер Н.', 'xp': 870, 'streak': 5, 'avatar': '🧑'},
+    {'name': 'Медина А.', 'xp': 820, 'streak': 12, 'avatar': '👩‍🦰'},
+    {'name': 'Темирлан Б.', 'xp': 790, 'streak': 3, 'avatar': '👦'},
+    {'name': 'Жансая О.', 'xp': 750, 'streak': 7, 'avatar': '👧'},
+    {'name': 'Нурлан С.', 'xp': 600, 'streak': 2, 'avatar': '🧑‍💻'},
+    {'name': 'Камила Р.', 'xp': 540, 'streak': 8, 'avatar': '👩‍💼'},
+  ];
+
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this, initialIndex: 1);
-    _players = [
-      {'name': 'Айгерим К.', 'xp': 1250, 'streak': 14, 'avatar': '👩'},
-      {'name': 'Данияр М.', 'xp': 1180, 'streak': 9, 'avatar': '👨'},
-      {'name': 'Сабина Т.', 'xp': 980, 'streak': 21, 'avatar': '👩‍🦱'},
-      {'name': 'Алишер Н.', 'xp': 870, 'streak': 5, 'avatar': '🧑'},
-      {'name': 'Медина А.', 'xp': 820, 'streak': 12, 'avatar': '👩‍🦰'},
-      {'name': 'Темирлан Б.', 'xp': 790, 'streak': 3, 'avatar': '👦'},
-      {'name': 'Жансая О.', 'xp': 750, 'streak': 7, 'avatar': '👧'},
-      {
-        'name': widget.name,
-        'xp': 650,
-        'streak': 7,
-        'avatar': '⭐',
-        'isMe': true
-      },
-      {'name': 'Нурлан С.', 'xp': 600, 'streak': 2, 'avatar': '🧑‍💻'},
-      {'name': 'Камила Р.', 'xp': 540, 'streak': 8, 'avatar': '👩‍💼'},
-    ];
+    _loadLeaderboard();
+  }
+
+  Future<void> _loadLeaderboard() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      final weekStart = _weekStart();
+
+      final rows = await Supabase.instance.client
+          .from('leaderboard')
+          .select('weekly_xp, users(name, streak, age)')
+          .eq('week_start', weekStart)
+          .order('weekly_xp', ascending: false)
+          .limit(20);
+
+      if (!mounted) return;
+
+      if (rows.isEmpty) {
+        _applyMockPlayers();
+        return;
+      }
+
+      final avatars = ['👩', '👨', '👩‍🦱', '🧑', '👩‍🦰', '👦', '👧', '🧑‍💻', '👩‍💼', '🧑‍🎓'];
+      final built = <Map<String, dynamic>>[];
+      bool hasMe = false;
+
+      for (int i = 0; i < rows.length; i++) {
+        final r = rows[i];
+        final user = r['users'] as Map<String, dynamic>?;
+        final name = user?['name'] as String? ?? 'Игрок';
+        final streak = (user?['streak'] ?? 0) as int;
+        final xp = (r['weekly_xp'] ?? 0) as int;
+        final isMe = (r['user_id'] == uid) ||
+            (uid != null && name == widget.name && !hasMe);
+        if (isMe) hasMe = true;
+        built.add({
+          'name': name,
+          'xp': xp,
+          'streak': streak,
+          'avatar': isMe ? '⭐' : avatars[i % avatars.length],
+          if (isMe) 'isMe': true,
+        });
+      }
+
+      // If current user not in top, append them from profile
+      if (!hasMe && uid != null) {
+        try {
+          final me = await Supabase.instance.client
+              .from('users')
+              .select('name, streak, xp')
+              .eq('id', uid)
+              .maybeSingle();
+          if (me != null) {
+            built.add({
+              'name': me['name'] ?? widget.name,
+              'xp': me['xp'] ?? 0,
+              'streak': me['streak'] ?? 0,
+              'avatar': '⭐',
+              'isMe': true,
+            });
+          }
+        } catch (_) {}
+      }
+
+      setState(() {
+        _players = built;
+        _loading = false;
+      });
+    } catch (_) {
+      if (mounted) _applyMockPlayers();
+    }
+  }
+
+  void _applyMockPlayers() {
+    final list = List<Map<String, dynamic>>.from(
+      _mockPlayers.map((p) => Map<String, dynamic>.from(p)),
+    );
+    // Insert current user
+    final meEntry = {
+      'name': widget.name,
+      'xp': 0,
+      'streak': 0,
+      'avatar': '⭐',
+      'isMe': true,
+    };
+    list.insert(list.length ~/ 2, meEntry);
+    setState(() {
+      _players = list;
+      _loading = false;
+    });
+  }
+
+  String _weekStart() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -118,6 +210,14 @@ class _LeaderboardTabState extends State<LeaderboardTab>
             ),
 
             // Топ 3 пьедестал
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: CircularProgressIndicator(color: Color(0xFF0ABDB9)),
+                ),
+              )
+            else if (_players.length >= 3)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(

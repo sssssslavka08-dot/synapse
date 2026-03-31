@@ -118,7 +118,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0ABDB9).withOpacity(0.1),
+                          color: const Color(0xFF0ABDB9).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: const Text('7 дней бесплатно',
@@ -187,7 +187,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: color.withOpacity(0.12),
+                                    color: color.withValues(alpha: 0.12),
                                     blurRadius: 16,
                                     offset: const Offset(0, 6),
                                   )
@@ -206,7 +206,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                     width: 44,
                                     height: 44,
                                     decoration: BoxDecoration(
-                                      color: color.withOpacity(0.12),
+                                      color: color.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Center(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DailyTab extends StatefulWidget {
   final String name;
@@ -19,13 +20,36 @@ class _DailyTabState extends State<DailyTab> {
   ];
 
   bool _frozen = false;
-  int _streak = 7;
+  int _streak = 0;
 
   int get _completedCount => _quests.where((q) => q['done'] == true).length;
 
   int get _totalXp => _quests
       .where((q) => q['done'] == true)
       .fold(0, (sum, q) => sum + (q['xp'] as int));
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStreak();
+  }
+
+  Future<void> _loadStreak() async {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+    try {
+      final data = await Supabase.instance.client
+          .from('users')
+          .select('streak')
+          .eq('id', uid)
+          .maybeSingle();
+      if (mounted) {
+        setState(() {
+          _streak = (data?['streak'] ?? 0) as int;
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
