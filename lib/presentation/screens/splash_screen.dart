@@ -42,45 +42,40 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
-    final user = Supabase.instance.client.auth.currentUser;
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
 
-    if (user != null) {
-      try {
+      if (user != null) {
         final data = await Supabase.instance.client
             .from('users')
             .select()
             .eq('id', user.id)
-            .maybeSingle();
+            .maybeSingle()
+            .timeout(const Duration(seconds: 8));
 
-        if (mounted) {
-          final language = data?['selected_language'] as String?;
-          final name = data?['name'] as String? ?? 'Пользователь';
-          final age = data?['age'] as int? ?? 13;
+        if (!mounted) return;
+        final language = data?['selected_language'] as String?;
+        final name = data?['name'] as String? ?? 'Пользователь';
+        final age = data?['age'] as int? ?? 13;
 
-          Widget destination;
-          if (language == null || language.isEmpty) {
-            // Язык не выбран — показываем приветственный экран
-            destination = WelcomeScreen(name: name, age: age);
-          } else {
-            // Язык уже выбран — сразу на главный экран
-            destination = HomeScreen(name: name, age: age);
-          }
+        final destination = (language == null || language.isEmpty)
+            ? WelcomeScreen(name: name, age: age)
+            : HomeScreen(name: name, age: age) as Widget;
 
-          Navigator.pushReplacement(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => destination,
-              transitionsBuilder: (_, anim, __, child) =>
-                  FadeTransition(opacity: anim, child: child),
-              transitionDuration: const Duration(milliseconds: 400),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) _goToOnboarding();
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => destination,
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+      } else {
+        _goToOnboarding();
       }
-    } else {
-      _goToOnboarding();
+    } catch (_) {
+      if (mounted) _goToOnboarding();
     }
   }
 

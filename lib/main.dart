@@ -7,13 +7,17 @@ import 'presentation/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
+  try {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    ).timeout(const Duration(seconds: 10));
+  } catch (_) {}
   if (!kIsWeb) {
-    await NotificationService.instance.init();
-    await NotificationService.instance.scheduleDailyReminder();
+    try {
+      await NotificationService.instance.init();
+      await NotificationService.instance.scheduleDailyReminder();
+    } catch (_) {}
   }
   runApp(const SynapseApp());
 }
