@@ -154,7 +154,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } catch (e) {
-      _showError('Google вход недоступен на симуляторе');
+      final msg = e.toString().contains('sign_in_canceled') ||
+              e.toString().contains('canceled')
+          ? 'Вход через Google отменён'
+          : 'Ошибка Google входа. Проверь интернет.';
+      _showError(msg);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -360,33 +364,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ]),
               const SizedBox(height: 20),
 
-              // Социальные кнопки
-              Row(children: [
-                Expanded(
-                    child: _SocialBtn(
-                  label: 'Google',
-                  icon: Icons.g_mobiledata_rounded,
-                  color: const Color(0xFFEA4335),
-                  onTap: _googleSignIn,
-                )),
-                const SizedBox(width: 10),
-                Expanded(
-                    child: _SocialBtn(
-                  label: 'Apple',
-                  icon: Icons.apple,
-                  color: Colors.black,
-                  onTap: () =>
-                      _showError('Apple вход — только на реальном устройстве'),
-                )),
-                const SizedBox(width: 10),
-                Expanded(
-                    child: _SocialBtn(
-                  label: 'VK',
-                  icon: Icons.chat_bubble_outline,
-                  color: const Color(0xFF0077FF),
-                  onTap: () => _showError('VK вход — скоро появится'),
-                )),
-              ]),
+              // Google кнопка
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _googleSignIn,
+                  icon: const Icon(Icons.g_mobiledata_rounded,
+                      color: Color(0xFFEA4335), size: 26),
+                  label: const Text('Войти через Google',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F1F1E),
+                      )),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFD6F5F4)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
 
               // Уже есть аккаунт
@@ -456,40 +455,3 @@ class _MethodTab extends StatelessWidget {
   }
 }
 
-class _SocialBtn extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-  const _SocialBtn({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFD6F5F4)),
-        ),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 6),
-          Text(label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-              )),
-        ]),
-      ),
-    );
-  }
-}

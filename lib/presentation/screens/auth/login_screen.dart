@@ -135,7 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      _showError('Google вход недоступен на симуляторе');
+      final msg = e.toString().contains('sign_in_canceled') ||
+              e.toString().contains('canceled')
+          ? 'Вход через Google отменён'
+          : 'Ошибка Google входа. Проверь интернет.';
+      _showError(msg);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

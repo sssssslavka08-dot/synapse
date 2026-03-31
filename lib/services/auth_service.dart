@@ -89,32 +89,51 @@ class AuthService {
     required int age,
     required String email,
   }) async {
-    await supabase.from('users').upsert({
-      'id': uid,
-      'name': name,
-      'age': age,
-      'email': email,
-      'streak': 0,
-      'xp': 0,
-      'words_learned': 0,
-      'selected_language': '',
-      'subscription_type': 'free',
-      'created_at': DateTime.now().toIso8601String(),
-      'last_active_at': DateTime.now().toIso8601String(),
-    });
+    try {
+      await supabase.from('users').upsert({
+        'id': uid,
+        'name': name,
+        'age': age,
+        'email': email,
+        'streak': 0,
+        'xp': 0,
+        'words_learned': 0,
+        'selected_language': '',
+        'subscription_type': 'free',
+        'created_at': DateTime.now().toIso8601String(),
+        'last_active_at': DateTime.now().toIso8601String(),
+      });
+    } catch (_) {
+      // таблица ещё не создана — продолжаем без сохранения профиля
+    }
   }
 
   // ── ПОЛУЧИТЬ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ─────────────
   Future<Map<String, dynamic>?> getUserData() async {
     final uid = currentUser?.id;
     if (uid == null) return null;
-    final data = await supabase
-        .from('users')
-        .select()
-        .eq('id', uid)
-        .maybeSingle();
-    return data;
+    try {
+      final data = await supabase
+          .from('users')
+          .select()
+          .eq('id', uid)
+          .maybeSingle();
+      return data ?? _defaultProfile(uid);
+    } catch (_) {
+      return _defaultProfile(uid);
+    }
   }
+
+  Map<String, dynamic> _defaultProfile(String uid) => {
+    'id': uid,
+    'name': currentUser?.email?.split('@').first ?? 'Пользователь',
+    'age': 13,
+    'xp': 0,
+    'streak': 0,
+    'words_learned': 0,
+    'selected_language': '',
+    'subscription_type': 'free',
+  };
 
   // ── ОБНОВИТЬ ЯЗЫК ОБУЧЕНИЯ ───────────────────
   Future<void> updateSelectedLanguage(String langCode) async {
