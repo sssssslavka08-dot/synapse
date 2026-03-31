@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/secrets.dart';
@@ -10,8 +11,10 @@ void main() async {
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
-  await NotificationService.instance.init();
-  await NotificationService.instance.scheduleDailyReminder();
+  if (!kIsWeb) {
+    await NotificationService.instance.init();
+    await NotificationService.instance.scheduleDailyReminder();
+  }
   runApp(const SynapseApp());
 }
 
