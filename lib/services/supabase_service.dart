@@ -206,12 +206,12 @@ class SupabaseService {
   // Обновить last_active + опционально streak
   Future<void> touchActivity({bool incrementStreak = false}) async {
     if (uid == null) return;
-    final update = {
+    final Map<String, dynamic> update = {
       'last_active_at': DateTime.now().toIso8601String(),
     };
     if (incrementStreak) {
       final profile = await getProfile();
-      update['streak'] = ((profile?['streak'] ?? 0) + 1).toString();
+      update['streak'] = ((profile?['streak'] ?? 0) as int) + 1;
     }
     await db.from('users').update(update).eq('id', uid!);
   }
@@ -434,11 +434,11 @@ class SupabaseService {
   }
 
   Future<void> _incrementWordsLearned() async {
-    // Используем RPC если нужна атомарность, иначе простой update
     if (uid == null) return;
     final p = await getProfile();
+    final current = (p?['words_learned'] ?? 0) as int;
     await db.from('users').update({
-      'xp': ((p?['xp'] ?? 0) as int),
+      'words_learned': current + 1,
     }).eq('id', uid!);
   }
 
@@ -454,6 +454,121 @@ class SupabaseService {
       'age_group': ageGroup,
       'week_number': weekNum,
     });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  FRIENDS — система друзей
+  // ═══════════════════════════════════════════════════════════
+
+  // Поиск пользователей по имени (исключая себя и уже-друзей)
+  Future<List<Map<String, dynamic>>> searchUsers(String query) async {
+    if (uid == null || query.trim().isEmpty) return [];
+    try {
+      final rows = await db
+          .from('users')
+          .select('id, name, xp, streak, selected_language')
+          .ilike('name', '%${query.trim()}%')
+          .neq('id', uid!)
+          .limit(20);
+      return List<Map<String, dynamic>>.from(rows);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // Отправить запрос дружбы
+  Future<void> sendFriendRequest(String friendId) async {
+    if (uid == null) return;
+    await db.from('friendships').upsert({
+      'user_id': uid!,
+      'friend_id': friendId,
+      'status': 'pending',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Принять запрос дружбы
+  Future<void> acceptFriendRequest(String requesterId) async {
+    if (uid == null) return;
+    await db
+        .from('friendships')
+        .update({'status': 'accepted'})
+        .eq('user_id', requesterId)
+        .eq('friend_id', uid!);
+    // Создаём обратную запись
+    await db.from('friendships').upsert({
+      'user_id': uid!,
+      'friend_id': requesterId,
+      'status': 'accepted',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Отклонить / удалить из друзей
+  Future<void> removeFriend(String friendId) async {
+    if (uid == null) return;
+    await db
+        .from('friendships')
+        .delete()
+        .eq('user_id', uid!)
+        .eq('friend_id', friendId);
+    await db
+        .from('friendships')
+        .delete()
+        .eq('user_id', friendId)
+        .eq('friend_id', uid!);
+  }
+
+  // Список друзей с их прогрессом
+  Future<List<Map<String, dynamic>>> getFriends() async {
+    if (uid == null) return [];
+    try {
+      final rows = await db
+          .from('friendships')
+          .select('friend_id, users!friendships_friend_id_fkey(id, name, xp, streak, selected_language, words_learned)')
+          .eq('user_id', uid!)
+          .eq('status', 'accepted');
+      return (rows as List)
+          .map((r) => Map<String, dynamic>.from(r['users'] as Map? ?? {}))
+          .where((u) => u.isNotEmpty)
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // Входящие запросы дружбы
+  Future<List<Map<String, dynamic>>> getPendingRequests() async {
+    if (uid == null) return [];
+    try {
+      final rows = await db
+          .from('friendships')
+          .select('user_id, users!friendships_user_id_fkey(id, name, xp, streak)')
+          .eq('friend_id', uid!)
+          .eq('status', 'pending');
+      return (rows as List)
+          .map((r) => Map<String, dynamic>.from(r['users'] as Map? ?? {}))
+          .where((u) => u.isNotEmpty)
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // Статус дружбы с конкретным пользователем
+  Future<String> friendshipStatus(String otherId) async {
+    if (uid == null) return 'none';
+    try {
+      final row = await db
+          .from('friendships')
+          .select('status')
+          .eq('user_id', uid!)
+          .eq('friend_id', otherId)
+          .maybeSingle();
+      return row?['status'] as String? ?? 'none';
+    } catch (_) {
+      return 'none';
+    }
   }
 
   // ISO-неделя текущего года: YYYYWW

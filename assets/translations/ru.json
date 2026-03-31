@@ -1,0 +1,17 @@
+{
+  "app_name": "SYNAPSE",
+  "continue": "Продолжить",
+  "back": "Назад",
+  "loading": "Загрузка...",
+  "error": "Ошибка",
+  "retry": "Повторить",
+  "save": "Сохранить",
+  "cancel": "Отмена",
+  "logout": "Выйти",
+  "settings": "Настройки",
+  "profile": "Профиль",
+  "leaderboard": "Рейтинг",
+  "daily": "Ежедневно",
+  "path": "Путь",
+  "feed": "Лента"
+}

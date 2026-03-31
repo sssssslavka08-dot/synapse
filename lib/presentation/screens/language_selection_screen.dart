@@ -163,7 +163,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? color.withOpacity(0.06)
+                              ? color.withValues(alpha: 0.06)
                               : Colors.white,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
@@ -178,7 +178,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                               width: 52,
                               height: 52,
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Center(
@@ -209,7 +209,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: isSelected
-                                          ? color.withOpacity(0.7)
+                                          ? color.withValues(alpha: 0.7)
                                           : const Color(0xFF8EAEAC),
                                     ),
                                   ),

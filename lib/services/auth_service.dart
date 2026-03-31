@@ -95,10 +95,10 @@ class AuthService {
       'age': age,
       'email': email,
       'streak': 0,
-      'total_xp': 0,
+      'xp': 0,
       'words_learned': 0,
-      'selected_language': 'ru',
-      'subscription_plan': 'free',
+      'selected_language': '',
+      'subscription_type': 'free',
       'created_at': DateTime.now().toIso8601String(),
       'last_active_at': DateTime.now().toIso8601String(),
     });
@@ -131,7 +131,7 @@ class AuthService {
     final uid = currentUser?.id;
     if (uid == null) return;
     await supabase.from('users').update({
-      'subscription_plan': plan,
+      'subscription_type': plan,
     }).eq('id', uid);
   }
 
@@ -146,7 +146,7 @@ class AuthService {
     if (data == null) return;
 
     await supabase.from('users').update({
-      'total_xp': (data['total_xp'] ?? 0) + xpToAdd,
+      'xp': (data['xp'] ?? 0) + xpToAdd,
       'words_learned': (data['words_learned'] ?? 0) + wordsLearned,
       'last_active_at': DateTime.now().toIso8601String(),
     }).eq('id', uid);

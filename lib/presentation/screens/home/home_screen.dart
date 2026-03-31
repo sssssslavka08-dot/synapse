@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/utils/level_system.dart';
 import 'tabs/daily_tab.dart';
 import 'tabs/leaderboard_tab.dart';
 import 'tabs/path_tab.dart';
@@ -14,9 +17,16 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 2; // Стартуем на "Путь"
-  int _pendingTasks = 3; // Невыполненные задания (из Supabase)
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin {
+  int _currentIndex = 2;
+  int _pendingTasks = 3;
+  bool _showLevelUp = false;
+  int _newLevel = 1;
+
+  late AnimationController _levelUpCtrl;
+  late Animation<double> _levelUpScale;
+  late Animation<double> _levelUpFade;
 
   late final List<Widget> _tabs;
 
@@ -26,19 +36,92 @@ class _HomeScreenState extends State<HomeScreen> {
     _tabs = [
       DailyTab(name: widget.name, isKids: widget.age <= 12),
       LeaderboardTab(name: widget.name),
-      PathTab(name: widget.name, isKids: widget.age <= 12),
+      PathTab(name: widget.name, isKids: widget.age <= 12, age: widget.age),
       FeedTab(),
       ProfileTab(name: widget.name, age: widget.age),
     ];
+
+    _levelUpCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
+    _levelUpScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+        CurvedAnimation(parent: _levelUpCtrl, curve: Curves.elasticOut));
+    _levelUpFade = Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(parent: _levelUpCtrl, curve: Curves.easeIn));
+
+    _checkLevelUp();
+  }
+
+  @override
+  void dispose() {
+    _levelUpCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkLevelUp() async {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+    try {
+      final data = await Supabase.instance.client
+          .from('users')
+          .select('xp')
+          .eq('id', uid)
+          .maybeSingle();
+      if (!mounted || data == null) return;
+      final xp = (data['xp'] ?? 0) as int;
+      final level = LevelSystem.levelFromXp(xp);
+      final prefs = await SharedPreferences.getInstance();
+      final lastLevel = prefs.getInt('last_known_level_$uid') ?? 1;
+      if (level > lastLevel) {
+        await prefs.setInt('last_known_level_$uid', level);
+        if (!mounted) return;
+        setState(() { _showLevelUp = true; _newLevel = level; });
+        _levelUpCtrl.forward();
+        Future.delayed(const Duration(seconds: 4), () {
+          if (mounted) {
+            _levelUpCtrl.reverse().then((_) {
+              if (mounted) setState(() => _showLevelUp = false);
+            });
+          }
+        });
+      } else {
+        await prefs.setInt('last_known_level_$uid', level);
+      }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4FEFE),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _tabs,
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _currentIndex,
+            children: _tabs,
+          ),
+          if (_showLevelUp)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  _levelUpCtrl.reverse().then((_) {
+                    if (mounted) setState(() => _showLevelUp = false);
+                  });
+                },
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  child: Center(
+                    child: FadeTransition(
+                      opacity: _levelUpFade,
+                      child: ScaleTransition(
+                        scale: _levelUpScale,
+                        child: _LevelUpCard(level: _newLevel),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       bottomNavigationBar: _BottomNav(
         currentIndex: _currentIndex,
@@ -46,9 +129,77 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (i) {
           setState(() {
             _currentIndex = i;
-            if (i == 0) _pendingTasks = 0; // сбрасываем badge при открытии
+            if (i == 0) _pendingTasks = 0;
           });
         },
+      ),
+    );
+  }
+}
+
+// ─── Карточка повышения уровня ─────────────────────────────────
+class _LevelUpCard extends StatelessWidget {
+  final int level;
+  const _LevelUpCard({required this.level});
+
+  @override
+  Widget build(BuildContext context) {
+    final emoji = LevelSystem.emojiForLevel(level);
+    final title = LevelSystem.titleForLevel(level);
+    return Container(
+      width: 280,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F1F1E),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+            color: const Color(0xFF0ABDB9).withValues(alpha: 0.6), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0ABDB9).withValues(alpha: 0.3),
+            blurRadius: 40,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 56)),
+          const SizedBox(height: 12),
+          const Text('НОВЫЙ ЭТАЖ!',
+              style: TextStyle(
+                  color: Color(0xFF0ABDB9),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2)),
+          const SizedBox(height: 8),
+          Text('Этаж $level',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1)),
+          Text(title,
+              style: const TextStyle(
+                  color: Color(0xFF8EAEAC),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 20),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0ABDB9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text('🎉 Продолжай учиться!',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13)),
+          ),
+        ],
       ),
     );
   }

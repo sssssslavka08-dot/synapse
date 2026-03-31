@@ -7,10 +7,14 @@ import 'lesson_result_screen.dart';
 class LessonScreen extends StatefulWidget {
   final bool isKidsMode;
   final String language; // 'en', 'kz', 'ru', 'de', 'fr', 'zh'
+  final String name;
+  final int age;
   const LessonScreen({
     super.key,
     this.isKidsMode = false,
     this.language = 'en',
+    this.name = 'Пользователь',
+    this.age = 13,
   });
 
   @override
@@ -191,6 +195,9 @@ class _LessonScreenState extends State<LessonScreen>
               wrong: _wrongCount,
               total: _words.length,
               isKidsMode: widget.isKidsMode,
+              language: widget.language,
+              name: widget.name,
+              age: widget.age,
             ),
           ),
         );
