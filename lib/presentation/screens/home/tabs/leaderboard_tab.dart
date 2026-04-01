@@ -45,21 +45,15 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   Future<void> _loadLeaderboard() async {
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
-      final weekStart = _weekStart();
 
       final rows = await Supabase.instance.client
-          .from('leaderboard')
-          .select('weekly_xp, users(name, streak, age)')
-          .eq('week_start', weekStart)
-          .order('weekly_xp', ascending: false)
+          .from('users')
+          .select('id, name, xp, streak')
+          .order('xp', ascending: false)
           .limit(20);
 
       if (!mounted) return;
-
-      if (rows.isEmpty) {
-        _applyMockPlayers();
-        return;
-      }
+      if (rows.isEmpty) { _applyMockPlayers(); return; }
 
       final avatars = ['👩', '👨', '👩‍🦱', '🧑', '👩‍🦰', '👦', '👧', '🧑‍💻', '👩‍💼', '🧑‍🎓'];
       final built = <Map<String, dynamic>>[];
@@ -67,46 +61,28 @@ class _LeaderboardTabState extends State<LeaderboardTab>
 
       for (int i = 0; i < rows.length; i++) {
         final r = rows[i];
-        final user = r['users'] as Map<String, dynamic>?;
-        final name = user?['name'] as String? ?? 'Игрок';
-        final streak = (user?['streak'] ?? 0) as int;
-        final xp = (r['weekly_xp'] ?? 0) as int;
-        final isMe = (r['user_id'] == uid) ||
-            (uid != null && name == widget.name && !hasMe);
+        final isMe = r['id'] == uid;
         if (isMe) hasMe = true;
         built.add({
-          'name': name,
-          'xp': xp,
-          'streak': streak,
+          'name': r['name'] ?? 'Игрок',
+          'xp': (r['xp'] ?? 0) as int,
+          'streak': (r['streak'] ?? 0) as int,
           'avatar': isMe ? '⭐' : avatars[i % avatars.length],
           if (isMe) 'isMe': true,
         });
       }
 
-      // If current user not in top, append them from profile
       if (!hasMe && uid != null) {
-        try {
-          final me = await Supabase.instance.client
-              .from('users')
-              .select('name, streak, xp')
-              .eq('id', uid)
-              .maybeSingle();
-          if (me != null) {
-            built.add({
-              'name': me['name'] ?? widget.name,
-              'xp': me['xp'] ?? 0,
-              'streak': me['streak'] ?? 0,
-              'avatar': '⭐',
-              'isMe': true,
-            });
-          }
-        } catch (_) {}
+        built.add({
+          'name': widget.name,
+          'xp': 0,
+          'streak': 0,
+          'avatar': '⭐',
+          'isMe': true,
+        });
       }
 
-      setState(() {
-        _players = built;
-        _loading = false;
-      });
+      setState(() { _players = built; _loading = false; });
     } catch (_) {
       if (mounted) _applyMockPlayers();
     }
@@ -129,12 +105,6 @@ class _LeaderboardTabState extends State<LeaderboardTab>
       _players = list;
       _loading = false;
     });
-  }
-
-  String _weekStart() {
-    final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    return '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
   }
 
   @override

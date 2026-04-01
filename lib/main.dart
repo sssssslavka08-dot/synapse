@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/secrets.dart';
+import 'core/theme/theme_notifier.dart';
 import 'services/notification_service.dart';
 import 'presentation/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await appTheme.load();
   try {
     await Supabase.initialize(
       url: supabaseUrl,
@@ -27,16 +29,20 @@ class SynapseApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SYNAPSE',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0ABDB9),
+    return ListenableBuilder(
+      listenable: appTheme,
+      builder: (_, __) => MaterialApp(
+        title: 'SYNAPSE',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: appTheme.primary,
+            primary: appTheme.primary,
+          ),
         ),
+        home: const SplashScreen(),
       ),
-      home: const SplashScreen(),
     );
   }
 }

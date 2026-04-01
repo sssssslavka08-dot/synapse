@@ -39,23 +39,30 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuth() async {
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(const Duration(milliseconds: 1800));
     if (!mounted) return;
 
     try {
-      final user = Supabase.instance.client.auth.currentUser;
+      final client = Supabase.instance.client;
+      // currentSession is more reliable than currentUser after restart
+      final session = client.auth.currentSession;
+      final user = session?.user ?? client.auth.currentUser;
 
-      if (user != null) {
-        final data = await Supabase.instance.client
-            .from('users')
-            .select()
-            .eq('id', user.id)
-            .maybeSingle()
-            .timeout(const Duration(seconds: 8));
+      if (user != null && session != null && !session.isExpired) {
+        Map<String, dynamic>? data;
+        try {
+          data = await client
+              .from('users')
+              .select()
+              .eq('id', user.id)
+              .maybeSingle()
+              .timeout(const Duration(seconds: 8));
+        } catch (_) {}
 
         if (!mounted) return;
         final language = data?['selected_language'] as String?;
-        final name = data?['name'] as String? ?? 'Пользователь';
+        final name = data?['name'] as String? ??
+            user.email?.split('@').first ?? 'Пользователь';
         final age = data?['age'] as int? ?? 13;
 
         final destination = (language == null || language.isEmpty)
