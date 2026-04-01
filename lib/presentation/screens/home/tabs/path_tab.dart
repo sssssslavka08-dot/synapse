@@ -212,6 +212,10 @@ class _PathTabState extends State<PathTab>
                     ),
                     const SizedBox(height: 16),
 
+                    // Нейрончик — помощник для детей
+                    _Neironchik(name: widget.name, xp: _xp),
+                    const SizedBox(height: 16),
+
                     // Сетка 5×5
                     AspectRatio(
                       aspectRatio: 1,
@@ -613,6 +617,122 @@ class _PathTabState extends State<PathTab>
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  Нейрончик — анимированный помощник для детей
+// ════════════════════════════════════════════════════════════
+class _Neironchik extends StatefulWidget {
+  final String name;
+  final int xp;
+  const _Neironchik({required this.name, required this.xp});
+
+  @override
+  State<_Neironchik> createState() => _NeironchikState();
+}
+
+class _NeironchikState extends State<_Neironchik>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _bounce;
+  int _phraseIdx = 0;
+
+  static const _phrases = [
+    'Привет! Я Нейрончик! 🧠\nГотов учиться?',
+    'Ты молодец! Продолжай! 💪',
+    'Каждый урок делает тебя умнее! ⚡',
+    'Сегодня отличный день для учёбы! 🌟',
+    'Нажми «Играть» — начнём урок! 🎮',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _phraseIdx = widget.xp % _phrases.length;
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 800));
+    _bounce = Tween<double>(begin: 0, end: -8).animate(
+        CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => setState(() => _phraseIdx = (_phraseIdx + 1) % _phrases.length),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0ABDB9), Color(0xFF3FCFCC)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0ABDB9).withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            AnimatedBuilder(
+              animation: _bounce,
+              builder: (_, __) => Transform.translate(
+                offset: Offset(0, _bounce.value),
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text('🧠', style: TextStyle(fontSize: 36)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Нейрончик',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      )),
+                  const SizedBox(height: 4),
+                  Text(
+                    _phrases[_phraseIdx],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.touch_app_rounded,
+                color: Colors.white54, size: 18),
           ],
         ),
       ),

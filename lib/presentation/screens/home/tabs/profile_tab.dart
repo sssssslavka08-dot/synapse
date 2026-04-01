@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/level_system.dart';
+import '../../../../core/theme/theme_notifier.dart';
 import '../../auth/login_screen.dart';
 import '../../subscription/subscription_screen.dart';
 import '../../language_select_screen.dart';
@@ -29,6 +30,12 @@ class _ProfileTabState extends State<ProfileTab> {
     'de': '🇩🇪 Немецкий',
     'fr': '🇫🇷 Французский',
     'zh': '🇨🇳 Китайский',
+    'es': '🇪🇸 Испанский',
+    'ja': '🇯🇵 Японский',
+    'tr': '🇹🇷 Турецкий',
+    'it': '🇮🇹 Итальянский',
+    'ko': '🇰🇷 Корейский',
+    'ar': '🇸🇦 Арабский',
   };
 
   @override
@@ -101,6 +108,140 @@ class _ProfileTabState extends State<ProfileTab> {
     }
   }
 
+  void _showThemePicker(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => ListenableBuilder(
+        listenable: appTheme,
+        builder: (_, __) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Цветовая тема', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 20),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.4,
+                ),
+                itemCount: AppThemeNotifier.themes.length,
+                itemBuilder: (_, i) {
+                  final t = AppThemeNotifier.themes[i];
+                  final selected = appTheme.current.name == t.name;
+                  return GestureDetector(
+                    onTap: () { appTheme.setTheme(i); Navigator.pop(ctx); },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      decoration: BoxDecoration(
+                        color: t.bg,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: selected ? t.primary : t.light,
+                          width: selected ? 2.5 : 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(width: 28, height: 28,
+                            decoration: BoxDecoration(color: t.primary, shape: BoxShape.circle),
+                            child: selected ? const Icon(Icons.check_rounded, color: Colors.white, size: 16) : null,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(t.name, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: t.primary)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditProfile(BuildContext ctx) {
+    final nameCtrl = TextEditingController(text: widget.name);
+    final ageCtrl = TextEditingController(text: widget.age.toString());
+    bool saving = false;
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (_, setS) => Padding(
+          padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(sheetCtx).viewInsets.bottom + 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Редактировать профиль', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Имя',
+                  prefixIcon: const Icon(Icons.person_outline),
+                  filled: true, fillColor: Colors.white,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFD6F5F4))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: appTheme.primary, width: 2)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: ageCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Возраст',
+                  prefixIcon: const Icon(Icons.cake_outlined),
+                  filled: true, fillColor: Colors.white,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFD6F5F4))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: appTheme.primary, width: 2)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity, height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: appTheme.primary, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  onPressed: saving ? null : () async {
+                    setS(() => saving = true);
+                    final uid = Supabase.instance.client.auth.currentUser?.id;
+                    if (uid != null) {
+                      try {
+                        await Supabase.instance.client.from('users').update({
+                          'name': nameCtrl.text.trim(),
+                          'age': int.tryParse(ageCtrl.text) ?? widget.age,
+                        }).eq('id', uid);
+                      } catch (_) {}
+                    }
+                    if (ctx.mounted) { Navigator.pop(sheetCtx); _loadStats(); }
+                  },
+                  child: saving
+                      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      : const Text('Сохранить', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final name = widget.name;
@@ -170,12 +311,29 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(name,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          )),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(name,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              )),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => _showEditProfile(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.edit_rounded, color: Colors.white70, size: 16),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 8),
                       // Значок уровня
                       Row(
@@ -497,6 +655,12 @@ class _ProfileTabState extends State<ProfileTab> {
                         title: 'Магазин',
                         value: '$xp монет',
                         onTap: () {},
+                      ),
+                      _SettingItem(
+                        icon: Icons.palette_outlined,
+                        title: 'Цветовая тема',
+                        value: appTheme.current.name,
+                        onTap: () => _showThemePicker(context),
                       ),
                       const SizedBox(height: 8),
                       _SettingItem(
