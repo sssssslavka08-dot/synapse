@@ -3,6 +3,20 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 final supabase = Supabase.instance.client;
 
+class GoogleSignInResult {
+  final bool isNewUser;
+  final String name;
+  final String email;
+  final String? photoUrl;
+
+  GoogleSignInResult({
+    required this.isNewUser,
+    required this.name,
+    required this.email,
+    this.photoUrl,
+  });
+}
+
 class AuthService {
   // Текущий пользователь
   User? get currentUser => supabase.auth.currentUser;
@@ -18,6 +32,7 @@ class AuthService {
     final response = await supabase.auth.signUp(
       email: email,
       password: password,
+      data: {'name': name, 'age': age},
     );
 
     if (response.user != null) {
@@ -43,7 +58,7 @@ class AuthService {
   }
 
   // ── ВХОД ЧЕРЕЗ GOOGLE ────────────────────────
-  Future<AuthResponse?> signInWithGoogle() async {
+  Future<GoogleSignInResult?> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn();
     final googleUser = await googleSignIn.signIn();
     if (googleUser == null) return null;
@@ -56,24 +71,48 @@ class AuthService {
       accessToken: googleAuth.accessToken,
     );
 
-    // Если новый пользователь — создаём профиль
-    if (response.user != null) {
-      final existing = await supabase
-          .from('users')
-          .select()
-          .eq('id', response.user!.id)
-          .maybeSingle();
+    if (response.user == null) return null;
 
-      if (existing == null) {
-        await _saveUserProfile(
-          uid: response.user!.id,
-          name: googleUser.displayName ?? 'Пользователь',
-          age: 0,
-          email: googleUser.email,
-        );
-      }
-    }
-    return response;
+    // Проверяем, новый ли пользователь
+    final existing = await supabase
+        .from('users')
+        .select()
+        .eq('id', response.user!.id)
+        .maybeSingle();
+
+    final isNew = existing == null;
+
+    return GoogleSignInResult(
+      isNewUser: isNew,
+      name: googleUser.displayName ?? existing?['name'] ?? 'Пользователь',
+      email: googleUser.email,
+      photoUrl: googleUser.photoUrl,
+    );
+  }
+
+  // ── СОХРАНИТЬ ПРОФИЛЬ GOOGLE ─────────────────
+  Future<void> saveGoogleProfile({
+    required String name,
+    required String email,
+    required int age,
+    String? photoUrl,
+  }) async {
+    final uid = currentUser?.id;
+    if (uid == null) return;
+    await supabase.from('users').upsert({
+      'id': uid,
+      'name': name,
+      'email': email,
+      'age': age,
+      if (photoUrl != null) 'photo_url': photoUrl,
+      'streak': 0,
+      'xp': 0,
+      'words_learned': 0,
+      'selected_language': '',
+      'subscription_type': 'free',
+      'created_at': DateTime.now().toIso8601String(),
+      'last_active_at': DateTime.now().toIso8601String(),
+    });
   }
 
   // ── ВЫХОД ────────────────────────────────────
