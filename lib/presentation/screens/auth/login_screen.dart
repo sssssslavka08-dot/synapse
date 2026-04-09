@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../services/auth_service.dart';
 import '../home/home_screen.dart';
 import 'register_screen.dart';
+import 'google_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -121,18 +122,32 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _googleLogin() async {
     setState(() => _isLoading = true);
     try {
-      final cred = await _authService.signInWithGoogle();
-      if (cred != null && mounted) {
-        final data = await _authService.getUserData();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => HomeScreen(
-              name: data?['name'] ?? 'Пользователь',
-              age: data?['age'] ?? 13,
+      final result = await _authService.signInWithGoogle();
+      if (result != null && mounted) {
+        if (result.isNewUser) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GoogleSetupScreen(
+                googleName: result.name,
+                googleEmail: result.email,
+                googlePhotoUrl: result.photoUrl,
+                isNewUser: true,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          final data = await _authService.getUserData();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => HomeScreen(
+                name: data?['name'] ?? result.name,
+                age: data?['age'] ?? 13,
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       final msg = e.toString().contains('sign_in_canceled') ||
