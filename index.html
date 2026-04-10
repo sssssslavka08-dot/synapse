@@ -550,12 +550,31 @@
     }
 
     @media (max-width: 560px) {
-      .section-title { font-size: 26px; }
-      .leads-inner h2 { font-size: 28px; }
+      .section-title { font-size: 22px; }
+      .section-sub { font-size: 14px; }
+      .leads-inner h2 { font-size: 24px; }
       .hero-stat-val { font-size: 20px; }
-      .hero-stats { gap: 16px; }
-      .team-grid { grid-template-columns: 1fr 1fr; }
+      .hero-stats { gap: 12px; flex-wrap: wrap; }
+      .team-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .feature-card { padding: 20px; }
+      .pricing-grid { padding: 0 4px; }
+      .compare-section .section { padding: 40px 12px; }
+      .compare-table { font-size: 13px; }
+      .compare-table th, .compare-table td { padding: 10px 8px; }
+      .faq-question { font-size: 14px; padding: 14px 16px; }
+      .faq-answer { font-size: 13px; padding: 0 16px; }
+      .footer-inner { padding: 0 16px; }
+      .hero-actions .btn-primary, .hero-actions .btn-outline { font-size: 15px; padding: 14px 20px; }
+      .phone-wrap { max-width: 220px; }
+      /* Download section mobile */
+      #download > div > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+      }
     }
+
+    /* Comparison table horizontal scroll on mobile */
+    .compare-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .compare-table { min-width: 480px; }
   </style>
 </head>
 <body>
@@ -1244,6 +1263,12 @@ const i18n = {
   }
 };
 
+const phoneWords = {
+  ru: { emoji:'🍎', word:'Apple',    trans:'ˈæp.əl',  correct:'Яблоко',  opts:['Апельсин','Груша','Банан'] },
+  kz: { emoji:'🐱', word:'Cat',      trans:'kæt',      correct:'Мысық',   opts:['Ит','Сиыр','Жылқы'] },
+  en: { emoji:'🌍', word:'Мир',      trans:'mir',      correct:'World',   opts:['Peace','Earth','Globe'] },
+};
+
 function setLang(lang) {
   document.querySelectorAll('.lang-btn').forEach(b => {
     b.classList.toggle('active', b.textContent.toLowerCase() === lang);
@@ -1253,6 +1278,18 @@ function setLang(lang) {
     const key = el.getAttribute('data-i18n');
     if (t[key] !== undefined) el.innerHTML = t[key];
   });
+  // Обновляем телефон-макет
+  const p = phoneWords[lang] || phoneWords.ru;
+  document.querySelector('.phone-emoji').textContent = p.emoji;
+  document.querySelector('.phone-word').textContent = p.word;
+  document.querySelector('.phone-trans').textContent = p.trans;
+  const opts = document.querySelectorAll('.phone-option');
+  if (opts.length >= 4) {
+    opts[0].textContent = '✓ ' + p.correct;
+    opts[1].textContent = p.opts[0];
+    opts[2].textContent = p.opts[1];
+    opts[3].textContent = p.opts[2];
+  }
 }
 
 // ── Submit lead ────────────────────────────────────────────────

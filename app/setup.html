@@ -342,27 +342,38 @@
     const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || 'Пользователь';
     const photo = meta.avatar_url || meta.picture || null;
 
-    const { error } = await sb.from('users').upsert({
-      id: currentUser.id,
+    // Сначала пробуем UPDATE (строка уже есть от триггера)
+    let { error } = await sb.from('users').update({
       name,
-      email: currentUser.email,
       age: selectedAge,
       photo_url: photo,
       selected_language: selectedLang,
-      streak: 0,
-      xp: 0,
-      words_learned: 0,
-      subscription_type: 'free',
-      created_at: new Date().toISOString(),
       last_active_at: new Date().toISOString(),
-    });
+    }).eq('id', currentUser.id);
+
+    // Если строки нет — делаем INSERT
+    if (error && (error.code === 'PGRST116' || error.message?.includes('0 rows'))) {
+      const res = await sb.from('users').insert({
+        id: currentUser.id,
+        name,
+        email: currentUser.email,
+        age: selectedAge,
+        photo_url: photo,
+        selected_language: selectedLang,
+        streak: 0, xp: 0, words_learned: 0,
+        subscription_type: 'free',
+        created_at: new Date().toISOString(),
+        last_active_at: new Date().toISOString(),
+      });
+      error = res.error;
+    }
 
     if (error) {
       btn.disabled = false;
       btn.textContent = 'Начать обучение 🚀';
       const msg = document.getElementById('lang-msg');
       msg.className = 'msg error';
-      msg.textContent = 'Ошибка сохранения. Попробуй ещё раз.';
+      msg.textContent = `Ошибка: ${error.message || 'Попробуй ещё раз'}`;
       return;
     }
 
