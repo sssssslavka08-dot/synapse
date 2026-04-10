@@ -506,10 +506,15 @@
   // Init
   (async () => {
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      window.location.href = '/app/';
-      return;
+    if (!session) { window.location.href = '/app/'; return; }
+
+    // Если setup не завершён — отправляем на setup
+    const { data: profile } = await sb.from('users')
+      .select('age, selected_language').eq('id', session.user.id).maybeSingle();
+    if (!profile?.age || !profile?.selected_language) {
+      window.location.href = '/app/setup.html'; return;
     }
+
     await loadDashboard(session.user);
   })();
 </script>

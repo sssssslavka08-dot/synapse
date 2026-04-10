@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SYNAPSE — Настройка профиля</title>
+  <meta name="robots" content="noindex">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #0ABDB9; --teal-dark: #059692; --teal-light: #E0F9F8;
+      --dark: #0F1F1E; --mid: #4D6766; --muted: #8EAEAC;
+      --bg: #F4FEFE; --border: #D6F5F4; --error: #EF4444;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); min-height: 100vh; display: flex; flex-direction: column;
+    }
+    nav {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 36px; height: 36px; background: var(--teal); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .logo-text { font-size: 18px; font-weight: 800; color: var(--dark); }
+    .step-indicator { display: flex; align-items: center; gap: 8px; }
+    .step { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+    .step.done { background: var(--teal); color: #fff; }
+    .step.active { background: var(--teal-light); color: var(--teal); border: 2px solid var(--teal); }
+    .step.pending { background: var(--border); color: var(--muted); }
+    .step-line { width: 24px; height: 2px; background: var(--border); }
+    .step-line.done { background: var(--teal); }
+
+    main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 24px; }
+
+    /* ── STEPS ── */
+    .step-page { display: none; width: 100%; max-width: 520px; }
+    .step-page.active { display: block; }
+
+    .step-title { font-size: 26px; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+    .step-sub { font-size: 15px; color: var(--muted); margin-bottom: 32px; }
+
+    /* Profile card (Google info) */
+    .google-card {
+      background: #fff; border-radius: 20px; border: 1px solid var(--border);
+      padding: 24px; display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+    }
+    .g-avatar {
+      width: 56px; height: 56px; border-radius: 50%; background: var(--teal);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; color: #fff; overflow: hidden; flex-shrink: 0;
+    }
+    .g-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .g-info { flex: 1; }
+    .g-name { font-size: 17px; font-weight: 700; color: var(--dark); }
+    .g-email { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .g-badge { font-size: 11px; font-weight: 700; background: var(--teal-light); color: var(--teal); padding: 3px 10px; border-radius: 100px; margin-top: 6px; display: inline-block; }
+
+    /* Age input */
+    .age-field { margin-bottom: 16px; }
+    .age-field label { display: block; font-size: 13px; font-weight: 600; color: var(--mid); margin-bottom: 8px; }
+    .age-input {
+      width: 100%; padding: 16px; border: 1.5px solid var(--border); border-radius: 14px;
+      font-size: 20px; font-weight: 700; text-align: center; color: var(--dark);
+      outline: none; transition: border-color .2s; background: #fff; font-family: inherit;
+    }
+    .age-input:focus { border-color: var(--teal); }
+    .age-hint {
+      margin-top: 12px; padding: 14px 16px; border-radius: 12px;
+      font-size: 14px; font-weight: 600; display: none; animation: fadeIn .3s;
+    }
+    .age-hint.kids { background: rgba(10,189,185,0.08); color: var(--teal); border: 1px solid rgba(10,189,185,0.2); display: block; }
+    .age-hint.adult { background: rgba(15,31,30,0.05); color: var(--mid); border: 1px solid var(--border); display: block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Language grid */
+    .lang-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px;
+    }
+    .lang-card {
+      background: #fff; border: 2px solid var(--border); border-radius: 16px;
+      padding: 16px 12px; text-align: center; cursor: pointer;
+      transition: all .2s; user-select: none;
+    }
+    .lang-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+    .lang-card.selected { border-color: var(--teal); background: var(--teal-light); }
+    .lang-flag { font-size: 28px; margin-bottom: 6px; }
+    .lang-name { font-size: 13px; font-weight: 600; color: var(--dark); }
+    .lang-code { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Button */
+    .btn {
+      width: 100%; padding: 15px; border-radius: 14px; border: none;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: all .2s; font-family: inherit;
+    }
+    .btn-primary { background: var(--teal); color: #fff; box-shadow: 0 6px 20px rgba(10,189,185,0.3); }
+    .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 500; margin-bottom: 16px; display: none; }
+    .msg.error { background: #FEF2F2; color: var(--error); border: 1px solid #FECACA; display: block; }
+
+    .spinner { width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Loading */
+    #loading { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 16px; }
+    .spinner-lg { width: 44px; height: 44px; border: 4px solid var(--teal-light); border-top-color: var(--teal); border-radius: 50%; animation: spin .8s linear infinite; }
+
+    @media (max-width: 480px) {
+      .lang-grid { grid-template-columns: repeat(2, 1fr); }
+      .step-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div style="font-size:36px;">🧠</div>
+  <div class="spinner-lg"></div>
+</div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">🧠</div>
+    <span class="logo-text">SYNAPSE</span>
+  </a>
+  <div class="step-indicator">
+    <div class="step done" id="s1">1</div>
+    <div class="step-line done" id="sl1"></div>
+    <div class="step active" id="s2">2</div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step pending" id="s3">3</div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ── STEP 1: Age ── -->
+  <div class="step-page active" id="page-age">
+    <h1 class="step-title">Укажи свой возраст</h1>
+    <p class="step-sub">AI настроит интерфейс специально под тебя</p>
+
+    <div class="google-card" id="google-card">
+      <div class="g-avatar" id="g-avatar"></div>
+      <div class="g-info">
+        <div class="g-name" id="g-name">...</div>
+        <div class="g-email" id="g-email">...</div>
+        <span class="g-badge">Google аккаунт</span>
+      </div>
+    </div>
+
+    <div id="age-msg" class="msg"></div>
+
+    <div class="age-field">
+      <label>Сколько тебе лет?</label>
+      <input type="number" class="age-input" id="age-input" placeholder="—" min="5" max="99" oninput="onAgeInput()">
+    </div>
+    <div id="age-hint" class="age-hint"></div>
+
+    <br>
+    <button class="btn btn-primary" id="age-btn" onclick="goToLang()" disabled>
+      Далее →
+    </button>
+  </div>
+
+  <!-- ── STEP 2: Language ── -->
+  <div class="step-page" id="page-lang">
+    <h1 class="step-title">Какой язык хочешь учить?</h1>
+    <p class="step-sub">Можешь сменить позже в профиле</p>
+
+    <div id="lang-msg" class="msg"></div>
+
+    <div class="lang-grid">
+      <div class="lang-card" onclick="selectLang('en', this)">
+        <div class="lang-flag">🇬🇧</div>
+        <div class="lang-name">Английский</div>
+        <div class="lang-code">English</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('kz', this)">
+        <div class="lang-flag">🇰🇿</div>
+        <div class="lang-name">Казахский</div>
+        <div class="lang-code">Қазақша</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('de', this)">
+        <div class="lang-flag">🇩🇪</div>
+        <div class="lang-name">Немецкий</div>
+        <div class="lang-code">Deutsch</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('fr', this)">
+        <div class="lang-flag">🇫🇷</div>
+        <div class="lang-name">Французский</div>
+        <div class="lang-code">Français</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('zh', this)">
+        <div class="lang-flag">🇨🇳</div>
+        <div class="lang-name">Китайский</div>
+        <div class="lang-code">中文</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('es', this)">
+        <div class="lang-flag">🇪🇸</div>
+        <div class="lang-name">Испанский</div>
+        <div class="lang-code">Español</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('ja', this)">
+        <div class="lang-flag">🇯🇵</div>
+        <div class="lang-name">Японский</div>
+        <div class="lang-code">日本語</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('tr', this)">
+        <div class="lang-flag">🇹🇷</div>
+        <div class="lang-name">Турецкий</div>
+        <div class="lang-code">Türkçe</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('it', this)">
+        <div class="lang-flag">🇮🇹</div>
+        <div class="lang-name">Итальянский</div>
+        <div class="lang-code">Italiano</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('ko', this)">
+        <div class="lang-flag">🇰🇷</div>
+        <div class="lang-name">Корейский</div>
+        <div class="lang-code">한국어</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('ar', this)">
+        <div class="lang-flag">🇸🇦</div>
+        <div class="lang-name">Арабский</div>
+        <div class="lang-code">العربية</div>
+      </div>
+      <div class="lang-card" onclick="selectLang('ru', this)">
+        <div class="lang-flag">🇷🇺</div>
+        <div class="lang-name">Русский</div>
+        <div class="lang-code">Русский</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="lang-btn" onclick="saveProfile()" disabled>
+      Начать обучение 🚀
+    </button>
+  </div>
+
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://kdeewwoxeamxaciuaipl.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_dzYwO_CqfZgbiDp_e_fzow_CzIi2tEa';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let selectedAge = 0;
+  let selectedLang = '';
+
+  // Init
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/app/'; return; }
+
+    currentUser = session.user;
+
+    // Check if setup already done
+    const { data: profile } = await sb.from('users')
+      .select('age, selected_language').eq('id', currentUser.id).maybeSingle();
+
+    if (profile?.age && profile?.selected_language) {
+      window.location.href = '/app/dashboard.html';
+      return;
+    }
+
+    // Fill Google info
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || 'Пользователь';
+    const email = currentUser.email || '';
+    const photo = meta.avatar_url || meta.picture || '';
+
+    document.getElementById('g-name').textContent = name;
+    document.getElementById('g-email').textContent = email;
+
+    const av = document.getElementById('g-avatar');
+    if (photo) {
+      av.innerHTML = `<img src="${photo}" alt="avatar">`;
+    } else {
+      av.textContent = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    document.getElementById('loading').style.display = 'none';
+  })();
+
+  // Age input
+  function onAgeInput() {
+    const val = parseInt(document.getElementById('age-input').value);
+    const hint = document.getElementById('age-hint');
+    const btn = document.getElementById('age-btn');
+
+    if (!val || val < 5 || val > 99) {
+      hint.className = 'age-hint';
+      btn.disabled = true;
+      return;
+    }
+
+    selectedAge = val;
+    btn.disabled = false;
+
+    if (val <= 12) {
+      hint.className = 'age-hint kids';
+      hint.textContent = '🤖 Детский режим: Нейрончик + мини-игры Feed Neuron и Word Builder';
+    } else {
+      hint.className = 'age-hint adult';
+      hint.textContent = '📊 Взрослый режим: граф знаний, Survival Mode, статистика';
+    }
+  }
+
+  // Step 1 → Step 2
+  function goToLang() {
+    if (!selectedAge) return;
+    document.getElementById('page-age').classList.remove('active');
+    document.getElementById('page-lang').classList.add('active');
+    // Update step indicator
+    document.getElementById('s2').className = 'step done';
+    document.getElementById('sl2').className = 'step-line done';
+    document.getElementById('s3').className = 'step active';
+  }
+
+  // Language select
+  function selectLang(code, el) {
+    document.querySelectorAll('.lang-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedLang = code;
+    document.getElementById('lang-btn').disabled = false;
+  }
+
+  // Save and go to dashboard
+  async function saveProfile() {
+    if (!selectedLang) return;
+    const btn = document.getElementById('lang-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || 'Пользователь';
+    const photo = meta.avatar_url || meta.picture || null;
+
+    const { error } = await sb.from('users').upsert({
+      id: currentUser.id,
+      name,
+      email: currentUser.email,
+      age: selectedAge,
+      photo_url: photo,
+      selected_language: selectedLang,
+      streak: 0,
+      xp: 0,
+      words_learned: 0,
+      subscription_type: 'free',
+      created_at: new Date().toISOString(),
+      last_active_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = 'Начать обучение 🚀';
+      const msg = document.getElementById('lang-msg');
+      msg.className = 'msg error';
+      msg.textContent = 'Ошибка сохранения. Попробуй ещё раз.';
+      return;
+    }
+
+    window.location.href = '/app/dashboard.html';
+  }
+</script>
+</body>
+</html>

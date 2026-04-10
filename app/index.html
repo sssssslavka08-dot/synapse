@@ -263,16 +263,27 @@
   const SUPABASE_KEY = 'sb_publishable_dzYwO_CqfZgbiDp_e_fzow_CzIi2tEa';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // Редирект в зависимости от состояния профиля
+  async function redirectUser(session) {
+    const { data: profile } = await sb.from('users')
+      .select('age, selected_language').eq('id', session.user.id).maybeSingle();
+    if (!profile?.age || !profile?.selected_language) {
+      window.location.href = '/app/setup.html';
+    } else {
+      window.location.href = '/app/dashboard.html';
+    }
+  }
+
   // Проверяем сессию при загрузке
   (async () => {
     const { data: { session } } = await sb.auth.getSession();
-    if (session) window.location.href = '/app/dashboard.html';
+    if (session) await redirectUser(session);
   })();
 
   // Обрабатываем редирект от Google OAuth
-  sb.auth.onAuthStateChange((event, session) => {
+  sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
-      window.location.href = '/app/dashboard.html';
+      await redirectUser(session);
     }
   });
 
