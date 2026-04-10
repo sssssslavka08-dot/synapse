@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SYNAPSE — Войти</title>
+  <meta name="robots" content="noindex">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #0ABDB9; --teal-dark: #059692; --teal-light: #E0F9F8;
+      --dark: #0F1F1E; --mid: #4D6766; --muted: #8EAEAC;
+      --bg: #F4FEFE; --border: #D6F5F4; --error: #EF4444; --success: #10B981;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 36px; height: 36px; background: var(--teal);
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 18px;
+    }
+    .logo-text { font-size: 18px; font-weight: 800; color: var(--dark); }
+    .back-link {
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+      font-weight: 500; transition: color .2s;
+    }
+    .back-link:hover { color: var(--teal); }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 40px 24px;
+    }
+    .card {
+      background: #fff; border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(10,189,185,0.08);
+      border: 1px solid var(--border);
+      width: 100%; max-width: 440px;
+      padding: 40px;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex; background: var(--bg);
+      border-radius: 14px; padding: 4px;
+      margin-bottom: 32px; border: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1; text-align: center; padding: 11px;
+      border-radius: 10px; font-size: 15px; font-weight: 600;
+      cursor: pointer; border: none; background: transparent;
+      color: var(--muted); transition: all .2s;
+    }
+    .tab.active { background: #fff; color: var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+    /* ── FORM ── */
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+
+    .form-title { font-size: 24px; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+    .form-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: var(--mid); margin-bottom: 6px; }
+    .field input {
+      width: 100%; padding: 13px 16px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-size: 15px; background: #fff; color: var(--dark);
+      outline: none; transition: border-color .2s;
+      font-family: inherit;
+    }
+    .field input:focus { border-color: var(--teal); }
+    .field input.error { border-color: var(--error); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .age-hint {
+      margin-top: 8px; padding: 10px 14px;
+      border-radius: 10px; font-size: 13px; font-weight: 500;
+      display: none; animation: fadeIn .3s;
+    }
+    .age-hint.kids { background: rgba(10,189,185,0.08); color: var(--teal); display: block; }
+    .age-hint.adult { background: rgba(15,31,30,0.06); color: var(--mid); display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .btn {
+      width: 100%; padding: 14px; border-radius: 14px; border: none;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: all .2s; font-family: inherit; margin-top: 8px;
+    }
+    .btn-primary { background: var(--teal); color: #fff; box-shadow: 0 6px 20px rgba(10,189,185,0.3); }
+    .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; color: var(--muted); font-size: 13px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .btn-google {
+      width: 100%; padding: 13px; border-radius: 14px;
+      border: 1.5px solid var(--border); background: #fff;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      color: var(--dark); transition: all .2s; font-family: inherit;
+    }
+    .btn-google:hover { border-color: var(--teal); background: var(--bg); }
+    .google-icon { width: 20px; height: 20px; }
+
+    /* ── MESSAGES ── */
+    .msg {
+      padding: 12px 16px; border-radius: 10px;
+      font-size: 14px; font-weight: 500; margin-bottom: 16px;
+      display: none; animation: fadeIn .3s;
+    }
+    .msg.error { background: #FEF2F2; color: var(--error); border: 1px solid #FECACA; display: block; }
+    .msg.success { background: #F0FDF4; color: var(--success); border: 1px solid #BBF7D0; display: block; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 20px;
+      font-size: 13px; color: var(--muted);
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      .card { padding: 28px 24px; border-radius: 20px; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">🧠</div>
+    <span class="logo-text">SYNAPSE</span>
+  </a>
+  <a href="/" class="back-link">← На главную</a>
+</nav>
+
+<main>
+  <div class="card">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Войти</button>
+      <button class="tab" onclick="switchTab('register')">Регистрация</button>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div class="form-section active" id="section-login">
+      <h1 class="form-title">Добро пожаловать!</h1>
+      <p class="form-subtitle">Войди в свой аккаунт SYNAPSE</p>
+
+      <div id="login-msg" class="msg"></div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="hello@example.com">
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+
+      <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+        Войти →
+      </button>
+
+      <div class="divider">или</div>
+
+      <button class="btn-google" onclick="doGoogleLogin()">
+        <svg class="google-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Войти через Google
+      </button>
+    </div>
+
+    <!-- ── REGISTER ── -->
+    <div class="form-section" id="section-register">
+      <h1 class="form-title">Создать аккаунт</h1>
+      <p class="form-subtitle">AI настроит приложение под тебя</p>
+
+      <div id="reg-msg" class="msg"></div>
+
+      <div class="field">
+        <label>Имя</label>
+        <input type="text" id="reg-name" placeholder="Твоё имя">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="hello@example.com">
+        </div>
+        <div class="field">
+          <label>Возраст</label>
+          <input type="number" id="reg-age" placeholder="Возраст" min="5" max="99" oninput="updateAgeHint()">
+        </div>
+      </div>
+      <div id="age-hint" class="age-hint"></div>
+      <div class="field">
+        <label>Пароль</label>
+        <input type="password" id="reg-pass" placeholder="Минимум 6 символов">
+      </div>
+
+      <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">
+        Зарегистрироваться →
+      </button>
+
+      <div class="divider">или</div>
+
+      <button class="btn-google" onclick="doGoogleLogin()">
+        <svg class="google-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84z"/>
+        </svg>
+        Зарегистрироваться через Google
+      </button>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <p>Продолжая, вы соглашаетесь с <a href="#">Условиями использования</a> и <a href="#">Политикой конфиденциальности</a></p>
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://kdeewwoxeamxaciuaipl.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_dzYwO_CqfZgbiDp_e_fzow_CzIi2tEa';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Проверяем сессию при загрузке
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) window.location.href = '/app/dashboard.html';
+  })();
+
+  // Обрабатываем редирект от Google OAuth
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      window.location.href = '/app/dashboard.html';
+    }
+  });
+
+  // ── TABS ──
+  const tabs = document.querySelectorAll('.tab');
+  function switchTab(name) {
+    tabs.forEach((t, i) => t.classList.toggle('active', i === (name === 'login' ? 0 : 1)));
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    clearMessages();
+  }
+
+  function clearMessages() {
+    document.querySelectorAll('.msg').forEach(m => { m.className = 'msg'; m.textContent = ''; });
+  }
+
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.className = 'msg ' + type;
+    el.textContent = text;
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? '<span class="spinner"></span>' : btn.dataset.label;
+  }
+
+  // Сохраняем оригинальные лейблы
+  document.getElementById('login-btn').dataset.label = 'Войти →';
+  document.getElementById('reg-btn').dataset.label = 'Зарегистрироваться →';
+
+  // ── AGE HINT ──
+  function updateAgeHint() {
+    const age = parseInt(document.getElementById('reg-age').value);
+    const hint = document.getElementById('age-hint');
+    if (!age || age < 5) { hint.className = 'age-hint'; return; }
+    if (age <= 12) {
+      hint.className = 'age-hint kids';
+      hint.textContent = '🤖 Детский режим: Нейрончик + мини-игры';
+    } else {
+      hint.className = 'age-hint adult';
+      hint.textContent = '📊 Взрослый режим: граф знаний + статистика';
+    }
+  }
+
+  // ── LOGIN ──
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    clearMessages();
+
+    if (!email || !pass) { showMsg('login-msg', 'Заполни все поля', 'error'); return; }
+
+    setLoading('login-btn', true);
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    setLoading('login-btn', false);
+
+    if (error) {
+      const msg = error.message.includes('Invalid login') || error.message.includes('invalid_credentials')
+        ? 'Неверный email или пароль'
+        : error.message.includes('Email not confirmed')
+        ? 'Подтверди email перед входом'
+        : 'Ошибка входа. Попробуй ещё раз.';
+      showMsg('login-msg', msg, 'error');
+    }
+    // onAuthStateChange перенаправит на dashboard
+  }
+
+  // ── REGISTER ──
+  async function doRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const age = parseInt(document.getElementById('reg-age').value);
+    const pass = document.getElementById('reg-pass').value;
+    clearMessages();
+
+    if (!name || !email || !age || !pass) { showMsg('reg-msg', 'Заполни все поля', 'error'); return; }
+    if (pass.length < 6) { showMsg('reg-msg', 'Пароль минимум 6 символов', 'error'); return; }
+    if (age < 5 || age > 99) { showMsg('reg-msg', 'Укажи корректный возраст', 'error'); return; }
+
+    setLoading('reg-btn', true);
+    const { error } = await sb.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { name, age } }
+    });
+    setLoading('reg-btn', false);
+
+    if (error) {
+      const msg = error.message.includes('already registered') || error.message.includes('already been registered')
+        ? 'Этот email уже зарегистрирован'
+        : error.message.includes('weak_password')
+        ? 'Пароль слишком простой'
+        : 'Ошибка регистрации. Попробуй ещё раз.';
+      showMsg('reg-msg', msg, 'error');
+    } else {
+      showMsg('reg-msg', '✅ Аккаунт создан! Проверь email для подтверждения.', 'success');
+    }
+  }
+
+  // ── GOOGLE ──
+  async function doGoogleLogin() {
+    await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/app/dashboard.html' }
+    });
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const active = document.querySelector('.form-section.active').id;
+    if (active === 'section-login') doLogin();
+    else doRegister();
+  });
+</script>
+</body>
+</html>
