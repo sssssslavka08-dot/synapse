@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
+import '../../../services/daily_tasks_service.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  WordBuilderScreen — Детская игра: собери слово из букв
@@ -192,6 +193,10 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
   }
 
   void _showResult() {
+    DailyTasksService.updateProgress(taskType: 'play_game', count: 1);
+    if (_score > 0) {
+      DailyTasksService.updateProgress(taskType: 'correct_answers', count: _score);
+    }
     showDialog(
       context: context,
       barrierDismissible: false,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../services/daily_tasks_service.dart';
 
 class DailyTab extends StatefulWidget {
   final String name;
@@ -11,44 +12,39 @@ class DailyTab extends StatefulWidget {
 }
 
 class _DailyTabState extends State<DailyTab> {
-  final List<Map<String, dynamic>> _quests = [
-    {'title': 'Выучить 5 слов', 'xp': 20, 'done': false, 'icon': '📚'},
-    {'title': 'Пройти 1 урок', 'xp': 30, 'done': false, 'icon': '🎯'},
-    {'title': 'Прослушать диалог', 'xp': 15, 'done': false, 'icon': '🎧'},
-    {'title': 'Повторить слова', 'xp': 10, 'done': false, 'icon': '🔄'},
-    {'title': 'Сыграть в мини-игру', 'xp': 25, 'done': false, 'icon': '🎮'},
-  ];
-
-  bool _frozen = false;
+  List<Map<String, dynamic>> _tasks = [];
   int _streak = 0;
+  int _coins = 0;
+  bool _loading = true;
 
-  int get _completedCount => _quests.where((q) => q['done'] == true).length;
-
-  int get _totalXp => _quests
-      .where((q) => q['done'] == true)
-      .fold(0, (sum, q) => sum + (q['xp'] as int));
+  int get _completedCount => _tasks.where((t) => t['is_completed'] == true).length;
+  int get _totalXp => _tasks.where((t) => t['is_completed'] == true)
+      .fold(0, (s, t) => s + (t['xp_reward'] as int? ?? 0));
 
   @override
   void initState() {
     super.initState();
-    _loadStreak();
+    _load();
   }
 
-  Future<void> _loadStreak() async {
-    final uid = Supabase.instance.client.auth.currentUser?.id;
-    if (uid == null) return;
+  Future<void> _load() async {
+    setState(() => _loading = true);
     try {
-      final data = await Supabase.instance.client
-          .from('users')
-          .select('streak')
-          .eq('id', uid)
-          .maybeSingle();
-      if (mounted) {
-        setState(() {
-          _streak = (data?['streak'] ?? 0) as int;
-        });
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      final tasks = await DailyTasksService.getTodayTasks();
+
+      int streak = 0, coins = 0;
+      if (uid != null) {
+        final data = await Supabase.instance.client
+            .from('users').select('streak, coins').eq('id', uid).maybeSingle();
+        streak = data?['streak'] as int? ?? 0;
+        coins  = data?['coins']  as int? ?? 0;
       }
-    } catch (_) {}
+
+      if (mounted) setState(() { _tasks = tasks; _streak = streak; _coins = coins; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -56,243 +52,244 @@ class _DailyTabState extends State<DailyTab> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4FEFE),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Шапка
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Ежедневные задания',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F1F1E),
-                            )),
-                        Text('${_completedCount}/${_quests.length} выполнено',
-                            style: const TextStyle(
-                                color: Color(0xFF8EAEAC), fontSize: 13)),
-                      ]),
-                  // Streak badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color:
-                              const Color(0xFFFF6B35).withValues(alpha: 0.3)),
-                    ),
-                    child: Row(children: [
-                      const Text('🔥', style: TextStyle(fontSize: 20)),
-                      const SizedBox(width: 6),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('$_streak',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 18,
-                                  color: Color(0xFFFF6B35),
-                                )),
-                            const Text('дней',
-                                style: TextStyle(
-                                    fontSize: 10, color: Color(0xFF8EAEAC))),
+        child: RefreshIndicator(
+          onRefresh: _load,
+          color: const Color(0xFF0ABDB9),
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF0ABDB9)))
+              : SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Шапка ─────────────────────────────
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('Ежедневные задания',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF0F1F1E))),
+                            Text('Обновление через ${DailyTasksService.timeUntilReset()}',
+                                style: const TextStyle(color: Color(0xFF8EAEAC), fontSize: 12)),
                           ]),
-                    ]),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Прогресс дня
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0ABDB9), Color(0xFF3FCFCC)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Прогресс дня',
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 13)),
-                        Text('+$_totalXp XP заработано',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            )),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: _completedCount / _quests.length,
-                        backgroundColor: Colors.white30,
-                        valueColor: const AlwaysStoppedAnimation(Colors.white),
-                        minHeight: 10,
+                          _StatBadge(emoji: '🔥', value: '$_streak', label: 'дней'),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _completedCount == _quests.length
-                          ? '🎉 Все задания выполнены!'
-                          : 'Осталось ${_quests.length - _completedCount} задания',
-                      style:
-                          const TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
-              // Список заданий
-              const Text('Задания на сегодня',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F1F1E),
-                  )),
-              const SizedBox(height: 12),
-
-              ..._quests.asMap().entries.map((entry) {
-                final i = entry.key;
-                final q = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: GestureDetector(
-                    onTap: () =>
-                        setState(() => _quests[i]['done'] = !q['done']),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: q['done']
-                            ? const Color(0xFF0ABDB9).withValues(alpha: 0.08)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: q['done']
-                              ? const Color(0xFF0ABDB9).withValues(alpha: 0.3)
-                              : const Color(0xFFE0F3F2),
-                        ),
-                      ),
-                      child: Row(children: [
-                        Text(q['icon'], style: const TextStyle(fontSize: 24)),
-                        const SizedBox(width: 14),
+                      // ── Монеты + прогресс ─────────────────
+                      Row(children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(q['title'],
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: q['done']
-                                        ? const Color(0xFF8EAEAC)
-                                        : const Color(0xFF0F1F1E),
-                                    decoration: q['done']
-                                        ? TextDecoration.lineThrough
-                                        : null,
-                                  )),
-                              Text('+${q['xp']} XP',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF0ABDB9),
-                                    fontWeight: FontWeight.w500,
-                                  )),
-                            ],
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [Color(0xFF0ABDB9), Color(0xFF3FCFCC)]),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                                const Text('Прогресс дня', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                                Text('+$_totalXp XP', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+                              ]),
+                              const SizedBox(height: 10),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: LinearProgressIndicator(
+                                  value: _tasks.isEmpty ? 0 : _completedCount / _tasks.length,
+                                  backgroundColor: Colors.white30,
+                                  valueColor: const AlwaysStoppedAnimation(Colors.white),
+                                  minHeight: 8,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _completedCount == _tasks.length && _tasks.isNotEmpty
+                                    ? '🎉 Все задания выполнены!'
+                                    : '$_completedCount/${_tasks.length} выполнено',
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                            ]),
                           ),
                         ),
+                        const SizedBox(width: 12),
                         Container(
-                          width: 28,
-                          height: 28,
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: q['done']
-                                ? const Color(0xFF0ABDB9)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: q['done']
-                                  ? const Color(0xFF0ABDB9)
-                                  : const Color(0xFFD6F5F4),
-                              width: 2,
-                            ),
+                            color: const Color(0xFFFFF8E1),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFFFD54F).withValues(alpha: 0.5)),
                           ),
-                          child: q['done']
-                              ? const Icon(Icons.check_rounded,
-                                  color: Colors.white, size: 16)
-                              : null,
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            const Text('🪙', style: TextStyle(fontSize: 28)),
+                            const SizedBox(height: 4),
+                            Text('$_coins', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B))),
+                            const Text('монет', style: TextStyle(fontSize: 10, color: Color(0xFF8EAEAC))),
+                          ]),
                         ),
                       ]),
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
-              // Кнопка заморозки
-              GestureDetector(
-                onTap: () => setState(() => _frozen = !_frozen),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _frozen
-                        ? const Color(0xFF3498DB).withValues(alpha: 0.1)
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: _frozen
-                          ? const Color(0xFF3498DB)
-                          : const Color(0xFFE0F3F2),
-                    ),
-                  ),
-                  child: Row(children: [
-                    const Text('🧊', style: TextStyle(fontSize: 28)),
-                    const SizedBox(width: 14),
-                    Expanded(
-                        child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _frozen ? 'Заморозка активна ✓' : 'Заморозить streak',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: _frozen
-                                ? const Color(0xFF3498DB)
-                                : const Color(0xFF0F1F1E),
+                      // ── Список заданий ────────────────────
+                      const Text('Задания на сегодня',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF0F1F1E))),
+                      const SizedBox(height: 12),
+
+                      if (_tasks.isEmpty)
+                        _EmptyState(onRetry: _load)
+                      else
+                        ..._tasks.map((task) => _TaskCard(task: task)),
+
+                      const SizedBox(height: 20),
+
+                      // ── Заморозка ────────────────────────
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE0F3F2)),
+                        ),
+                        child: Row(children: [
+                          const Text('🧊', style: TextStyle(fontSize: 28)),
+                          const SizedBox(width: 14),
+                          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Заморозить streak', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F1F1E))),
+                            Text('Пропусти день без потери прогресса', style: TextStyle(fontSize: 12, color: Color(0xFF8EAEAC))),
+                          ])),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text('10 🪙', style: TextStyle(color: Color(0xFF3498DB), fontWeight: FontWeight.w700, fontSize: 13)),
                           ),
-                        ),
-                        const Text(
-                          'Пропусти день без потери прогресса',
-                          style:
-                              TextStyle(fontSize: 12, color: Color(0xFF8EAEAC)),
-                        ),
-                      ],
-                    )),
-                  ]),
+                        ]),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
   }
+}
+
+// ── Карточка задания ──────────────────────────────────────────
+class _TaskCard extends StatelessWidget {
+  final Map<String, dynamic> task;
+  const _TaskCard({required this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    final done = task['is_completed'] == true;
+    final current = task['current_count'] as int? ?? 0;
+    final target = task['target_count'] as int? ?? 1;
+    final progress = (current / target).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: done ? const Color(0xFF0ABDB9).withValues(alpha: 0.07) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: done ? const Color(0xFF0ABDB9).withValues(alpha: 0.3) : const Color(0xFFE0F3F2),
+          ),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Text(task['task_icon'] as String? ?? '📌', style: const TextStyle(fontSize: 26)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                task['task_title'] as String? ?? '',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: done ? const Color(0xFF8EAEAC) : const Color(0xFF0F1F1E),
+                  decoration: done ? TextDecoration.lineThrough : null,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(children: [
+                Text('+${task['xp_reward']} XP', style: const TextStyle(fontSize: 12, color: Color(0xFF0ABDB9), fontWeight: FontWeight.w500)),
+                const SizedBox(width: 8),
+                Text('+${task['coin_reward']} 🪙', style: const TextStyle(fontSize: 12, color: Color(0xFFF59E0B), fontWeight: FontWeight.w500)),
+              ]),
+            ])),
+            if (done)
+              Container(
+                width: 32, height: 32,
+                decoration: BoxDecoration(color: const Color(0xFF0ABDB9), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+              )
+            else
+              Text('$current/$target', style: const TextStyle(fontSize: 13, color: Color(0xFF8EAEAC), fontWeight: FontWeight.w600)),
+          ]),
+          if (!done && target > 1) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: const Color(0xFFE0F3F2),
+                valueColor: const AlwaysStoppedAnimation(Color(0xFF0ABDB9)),
+                minHeight: 5,
+              ),
+            ),
+          ],
+        ]),
+      ),
+    );
+  }
+}
+
+class _StatBadge extends StatelessWidget {
+  final String emoji, value, label;
+  const _StatBadge({required this.emoji, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.3)),
+    ),
+    child: Row(children: [
+      Text(emoji, style: const TextStyle(fontSize: 20)),
+      const SizedBox(width: 6),
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Color(0xFFFF6B35))),
+        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF8EAEAC))),
+      ]),
+    ]),
+  );
+}
+
+class _EmptyState extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _EmptyState({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(children: [
+        const Text('📋', style: TextStyle(fontSize: 48)),
+        const SizedBox(height: 12),
+        const Text('Задания загружаются...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF4D6766))),
+        const SizedBox(height: 8),
+        const Text('Убедись что SQL таблица создана в Supabase', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: Color(0xFF8EAEAC))),
+        const SizedBox(height: 16),
+        TextButton(onPressed: onRetry, child: const Text('Попробовать снова')),
+      ]),
+    ),
+  );
 }
