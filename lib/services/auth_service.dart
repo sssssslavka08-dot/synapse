@@ -35,15 +35,26 @@ class AuthService {
       data: {'name': name, 'age': age},
     );
 
-    if (response.user != null) {
-      await _saveUserProfile(
-        uid: response.user!.id,
-        name: name,
-        age: age,
-        email: email,
-      );
+    // Если email не подтверждён (например, фейковый от телефона) —
+    // сразу логинимся чтобы не блокировать пользователя
+    AuthResponse result = response;
+    if (response.session == null && response.user != null) {
+      try {
+        result = await supabase.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
+      } catch (_) {
+        // Если signIn не удался — возвращаем оригинальный response
+        result = response;
+      }
     }
-    return response;
+
+    final uid = result.user?.id ?? response.user?.id;
+    if (uid != null) {
+      await _saveUserProfile(uid: uid, name: name, age: age, email: email);
+    }
+    return result;
   }
 
   // ── ВХОД ПО EMAIL ────────────────────────────

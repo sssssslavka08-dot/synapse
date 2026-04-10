@@ -109,9 +109,9 @@ class _LoginScreenState extends State<LoginScreen> {
       String msg = 'Неверный номер или пароль';
       if (e.toString().contains('invalid_credentials') ||
           e.toString().contains('Invalid login')) {
-        msg = 'Неверные данные для входа';
+        msg = 'Неверный номер/email или пароль';
       } else if (e.toString().contains('Email not confirmed')) {
-        msg = 'Подтверди email перед входом';
+        msg = 'Аккаунт не подтверждён. Попроси администратора или пересоздай аккаунт.';
       }
       _showError(msg);
     } finally {
