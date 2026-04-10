@@ -80,7 +80,7 @@ class AuthService {
   // ── ВХОД ЧЕРЕЗ GOOGLE ────────────────────────
   Future<GoogleSignInResult?> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn(
-      serverClientId: '977191459044-43gcsqjsrlt9lqb14p2l4v01buq9h9pu.apps.googleusercontent.com',
+      serverClientId: '644143023283-bd8s43q4jhsmjk4kc3l6ndjuanh693gj.apps.googleusercontent.com',
     );
     final googleUser = await googleSignIn.signIn();
     if (googleUser == null) return null;
@@ -140,7 +140,7 @@ class AuthService {
   // ── ВЫХОД ────────────────────────────────────
   Future<void> signOut() async {
     await GoogleSignIn(
-      serverClientId: '977191459044-43gcsqjsrlt9lqb14p2l4v01buq9h9pu.apps.googleusercontent.com',
+      serverClientId: '644143023283-bd8s43q4jhsmjk4kc3l6ndjuanh693gj.apps.googleusercontent.com',
     ).signOut();
     await supabase.auth.signOut();
   }
