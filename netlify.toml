@@ -1,6 +1,13 @@
 [build]
   publish = "."
 
+# Файлы в /app/ отдаются напрямую (реальные HTML файлы)
+# Лендинг SPA — всё остальное на index.html
+[[redirects]]
+  from = "/app/*"
+  to = "/app/:splat"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

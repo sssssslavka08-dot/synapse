@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SYNAPSE — Личный кабинет</title>
+  <meta name="robots" content="noindex">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #0ABDB9; --teal-dark: #059692; --teal-light: #E0F9F8;
+      --dark: #0F1F1E; --dark2: #1E3332; --mid: #4D6766; --muted: #8EAEAC;
+      --bg: #F4FEFE; --border: #D6F5F4; --white: #fff;
+      --success: #10B981; --gold: #FFD700; --silver: #9EA0A5; --bronze: #CD7F32;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--dark); min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+      padding: 0 24px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 38px; height: 38px; background: var(--teal);
+      border-radius: 11px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px;
+    }
+    .logo-text { font-size: 19px; font-weight: 800; color: var(--dark); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 6px 14px;
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--teal); display: flex; align-items: center;
+      justify-content: center; font-size: 14px; font-weight: 700;
+      color: #fff; overflow: hidden; flex-shrink: 0;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .nav-name { font-size: 14px; font-weight: 600; color: var(--dark); }
+    .btn-logout {
+      background: transparent; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 8px 16px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--muted); transition: all .2s; font-family: inherit;
+    }
+    .btn-logout:hover { border-color: #EF4444; color: #EF4444; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+    .page-title {
+      font-size: 28px; font-weight: 800; color: var(--dark);
+      margin-bottom: 4px; letter-spacing: -0.5px;
+    }
+    .page-sub { font-size: 15px; color: var(--muted); margin-bottom: 32px; }
+
+    /* ── PROFILE CARD ── */
+    .profile-card {
+      background: linear-gradient(135deg, var(--dark2) 0%, var(--dark) 100%);
+      border-radius: 24px; padding: 32px; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 24px; position: relative; overflow: hidden;
+    }
+    .profile-card::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; background: rgba(10,189,185,0.12);
+      border-radius: 50%;
+    }
+    .profile-card::after {
+      content: ''; position: absolute; bottom: -60px; right: 60px;
+      width: 160px; height: 160px; background: rgba(10,189,185,0.06);
+      border-radius: 50%;
+    }
+    .profile-avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--teal); display: flex; align-items: center;
+      justify-content: center; font-size: 32px; font-weight: 800;
+      color: #fff; border: 3px solid rgba(255,255,255,0.2);
+      overflow: hidden; flex-shrink: 0; z-index: 1;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-info { flex: 1; z-index: 1; }
+    .profile-name { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .profile-email { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 12px; }
+    .profile-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(10,189,185,0.25); border: 1px solid rgba(10,189,185,0.4);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 13px; font-weight: 700; color: var(--teal);
+    }
+    .level-bar-wrap { margin-top: 14px; }
+    .level-bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 6px;
+    }
+    .level-bar {
+      height: 6px; background: rgba(255,255,255,0.1);
+      border-radius: 100px; overflow: hidden;
+    }
+    .level-bar-fill {
+      height: 100%; background: var(--teal);
+      border-radius: 100px; transition: width 1s ease;
+    }
+    .profile-xp {
+      text-align: right; z-index: 1; flex-shrink: 0;
+    }
+    .xp-value { font-size: 36px; font-weight: 900; color: var(--teal); line-height: 1; }
+    .xp-label { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+    /* ── STATS GRID ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--white); border-radius: 20px;
+      border: 1px solid var(--border); padding: 24px;
+      text-align: center; transition: transform .2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-icon { font-size: 28px; margin-bottom: 10px; }
+    .stat-value { font-size: 32px; font-weight: 900; color: var(--dark); line-height: 1; }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+    .stat-streak .stat-value { color: #F59E0B; }
+    .stat-words .stat-value { color: var(--teal); }
+    .stat-league .stat-value { font-size: 20px; }
+
+    /* ── TWO COL ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--white); border-radius: 20px;
+      border: 1px solid var(--border); padding: 24px;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 700; color: var(--dark);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── LANGUAGES ── */
+    .lang-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--bg);
+    }
+    .lang-item:last-child { border-bottom: none; }
+    .lang-left { display: flex; align-items: center; gap: 10px; }
+    .lang-flag { font-size: 22px; }
+    .lang-name { font-size: 14px; font-weight: 600; color: var(--dark); }
+    .lang-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 100px; background: var(--teal-light); color: var(--teal);
+    }
+
+    /* ── DOWNLOAD ── */
+    .download-card {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      border-radius: 20px; padding: 28px; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .download-card h3 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .download-card p { font-size: 14px; color: rgba(255,255,255,0.75); }
+    .btn-download {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--teal); border-radius: 14px;
+      padding: 14px 24px; font-size: 15px; font-weight: 700;
+      text-decoration: none; white-space: nowrap; transition: transform .2s;
+      flex-shrink: 0;
+    }
+    .btn-download:hover { transform: translateY(-1px); }
+
+    /* ── QUESTS ── */
+    .quest-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 0; border-bottom: 1px solid var(--bg);
+    }
+    .quest-item:last-child { border-bottom: none; }
+    .quest-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: var(--bg); display: flex; align-items: center;
+      justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .quest-info { flex: 1; }
+    .quest-name { font-size: 14px; font-weight: 600; color: var(--dark); }
+    .quest-xp { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .quest-xp span { color: var(--teal); font-weight: 700; }
+
+    /* ── SKELETON ── */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── LOADING OVERLAY ── */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; flex-direction: column; gap: 16px;
+    }
+    .spinner-large {
+      width: 48px; height: 48px; border: 4px solid var(--teal-light);
+      border-top-color: var(--teal); border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: var(--muted); font-weight: 500; }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+      .profile-card { flex-direction: column; text-align: center; }
+      .profile-xp { text-align: center; }
+      .download-card { flex-direction: column; text-align: center; }
+      .btn-download { width: 100%; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .container { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading">
+  <div style="font-size:36px;">🧠</div>
+  <div class="spinner-large"></div>
+  <p class="loading-text">Загружаем профиль...</p>
+</div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon">🧠</div>
+    <span class="logo-text">SYNAPSE</span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-user">
+      <div class="avatar" id="nav-avatar"></div>
+      <span class="nav-name" id="nav-name">...</span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Выйти</button>
+  </div>
+</nav>
+
+<div class="container" id="main-content" style="display:none;">
+
+  <p class="page-title" id="greeting">Добро пожаловать!</p>
+  <p class="page-sub">Твой прогресс и статистика</p>
+
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <div class="profile-avatar" id="profile-avatar"></div>
+    <div class="profile-info">
+      <div class="profile-name" id="profile-name">...</div>
+      <div class="profile-email" id="profile-email">...</div>
+      <div class="profile-badge" id="level-badge">⭐ Уровень 1 · Новичок</div>
+      <div class="level-bar-wrap">
+        <div class="level-bar-label">
+          <span id="level-current">0 XP</span>
+          <span id="level-next">до следующего уровня</span>
+        </div>
+        <div class="level-bar">
+          <div class="level-bar-fill" id="level-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-xp">
+      <div class="xp-value" id="xp-value">0</div>
+      <div class="xp-label">очков опыта</div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card stat-streak">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value" id="stat-streak">0</div>
+      <div class="stat-label">дней серии</div>
+    </div>
+    <div class="stat-card stat-words">
+      <div class="stat-icon">📚</div>
+      <div class="stat-value" id="stat-words">0</div>
+      <div class="stat-label">слов выучено</div>
+    </div>
+    <div class="stat-card stat-league">
+      <div class="stat-icon" id="league-icon">🥉</div>
+      <div class="stat-value" id="stat-league">Бронза</div>
+      <div class="stat-label">текущая лига</div>
+    </div>
+  </div>
+
+  <!-- Download APK -->
+  <div class="download-card">
+    <div>
+      <h3>📱 Скачай мобильное приложение</h3>
+      <p>Учи языки в любом месте — уроки, игры, уведомления</p>
+    </div>
+    <a href="https://github.com/sssssslavka08-dot/synapse/releases/latest" target="_blank" class="btn-download">
+      ⬇️ Скачать APK
+    </a>
+  </div>
+
+  <!-- Two column -->
+  <div class="two-col">
+
+    <!-- Daily quests -->
+    <div class="card">
+      <div class="card-title">📋 Ежедневные задания</div>
+      <div class="quest-item">
+        <div class="quest-icon">📖</div>
+        <div class="quest-info">
+          <div class="quest-name">Выучи 5 слов</div>
+          <div class="quest-xp">Награда: <span>+20 XP</span></div>
+        </div>
+      </div>
+      <div class="quest-item">
+        <div class="quest-icon">🎯</div>
+        <div class="quest-info">
+          <div class="quest-name">Пройди 1 урок</div>
+          <div class="quest-xp">Награда: <span>+30 XP</span></div>
+        </div>
+      </div>
+      <div class="quest-item">
+        <div class="quest-icon">🔊</div>
+        <div class="quest-info">
+          <div class="quest-name">Прослушай диалог</div>
+          <div class="quest-xp">Награда: <span>+15 XP</span></div>
+        </div>
+      </div>
+      <div class="quest-item">
+        <div class="quest-icon">🔁</div>
+        <div class="quest-info">
+          <div class="quest-name">Повтори слова (SM-2)</div>
+          <div class="quest-xp">Награда: <span>+10 XP</span></div>
+        </div>
+      </div>
+      <div class="quest-item">
+        <div class="quest-icon">🎮</div>
+        <div class="quest-info">
+          <div class="quest-name">Сыграй в мини-игру</div>
+          <div class="quest-xp">Награда: <span>+25 XP</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Language & info -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="card">
+        <div class="card-title">🌍 Язык изучения</div>
+        <div id="lang-info">
+          <div class="lang-item">
+            <div class="lang-left">
+              <span class="lang-flag" id="lang-flag">🌐</span>
+              <span class="lang-name" id="lang-name">Не выбран</span>
+            </div>
+            <span class="lang-badge">Активный</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ℹ️ О системе обучения</div>
+        <p style="font-size:13px; color:var(--mid); line-height:1.7;">
+          SYNAPSE использует алгоритм <strong>SM-2</strong> — научно обоснованный метод интервального повторения. Слова показываются в оптимальный момент до забывания, что сокращает время запоминания на <strong>40%</strong>.
+        </p>
+        <div style="margin-top:12px; padding:10px 14px; background:var(--bg); border-radius:10px; font-size:12px; color:var(--muted);">
+          📊 Алгоритм Эббингауза · 12 языков · 10 уровней
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎮 Мини-игры</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="padding:10px 14px; background:var(--bg); border-radius:10px; font-size:13px; font-weight:600; color:var(--dark);">
+            ⚔️ Survival Mode — 60 сек, 3 жизни
+          </div>
+          <div style="padding:10px 14px; background:var(--bg); border-radius:10px; font-size:13px; font-weight:600; color:var(--dark);">
+            🤖 Feed Neuron — детский режим
+          </div>
+          <div style="padding:10px 14px; background:var(--bg); border-radius:10px; font-size:13px; font-weight:600; color:var(--dark);">
+            🔤 Word Builder — собери слово
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--muted); margin-top:12px;">
+          Доступны в мобильном приложении
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://kdeewwoxeamxaciuaipl.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_dzYwO_CqfZgbiDp_e_fzow_CzIi2tEa';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const LEVELS = [0,150,350,650,1000,1500,2200,3000,4200,5800];
+  const LEVEL_NAMES = ['Новичок','Ученик','Практикант','Знаток','Мастер','Профи','Эксперт','Легенда','Гранд-Мастер','SYNAPSE'];
+  const LANG_MAP = {
+    'en':'🇬🇧 Английский','kz':'🇰🇿 Казахский','ru':'🇷🇺 Русский',
+    'de':'🇩🇪 Немецкий','fr':'🇫🇷 Французский','zh':'🇨🇳 Китайский',
+    'es':'🇪🇸 Испанский','ja':'🇯🇵 Японский','tr':'🇹🇷 Турецкий',
+    'it':'🇮🇹 Итальянский','ko':'🇰🇷 Корейский','ar':'🇸🇦 Арабский'
+  };
+
+  function getLevelInfo(xp) {
+    let level = 1;
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+      if (xp >= LEVELS[i]) { level = i + 1; break; }
+    }
+    const current = LEVELS[level - 1];
+    const next = LEVELS[level] || LEVELS[LEVELS.length - 1];
+    const progress = level >= LEVELS.length ? 100 : Math.round((xp - current) / (next - current) * 100);
+    return { level, name: LEVEL_NAMES[level - 1], progress, next, current, xpToNext: next - xp };
+  }
+
+  function getInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  function setAvatar(el, photoUrl, name) {
+    if (photoUrl) {
+      el.innerHTML = `<img src="${photoUrl}" alt="avatar" onerror="this.parentNode.textContent='${getInitials(name)}'">`;
+    } else {
+      el.textContent = getInitials(name);
+    }
+  }
+
+  function getLeagueInfo(xp) {
+    if (xp >= 1500) return { name: 'Золото', icon: '🥇' };
+    if (xp >= 500) return { name: 'Серебро', icon: '🥈' };
+    return { name: 'Бронза', icon: '🥉' };
+  }
+
+  async function loadDashboard(user) {
+    // Загружаем данные из таблицы users
+    const { data: profile } = await sb.from('users')
+      .select('*').eq('id', user.id).maybeSingle();
+
+    const name = profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Пользователь';
+    const xp = profile?.xp || 0;
+    const streak = profile?.streak || 0;
+    const wordsLearned = profile?.words_learned || 0;
+    const photoUrl = profile?.photo_url || user.user_metadata?.avatar_url;
+    const lang = profile?.selected_language || '';
+
+    // Nav
+    document.getElementById('nav-name').textContent = name.split(' ')[0];
+    setAvatar(document.getElementById('nav-avatar'), photoUrl, name);
+
+    // Greeting
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
+    document.getElementById('greeting').textContent = `${greet}, ${name.split(' ')[0]}! 👋`;
+
+    // Profile card
+    setAvatar(document.getElementById('profile-avatar'), photoUrl, name);
+    document.getElementById('profile-name').textContent = name;
+    document.getElementById('profile-email').textContent = user.email;
+    document.getElementById('xp-value').textContent = xp.toLocaleString('ru');
+
+    // Level
+    const lvl = getLevelInfo(xp);
+    document.getElementById('level-badge').textContent = `⭐ Уровень ${lvl.level} · ${lvl.name}`;
+    document.getElementById('level-current').textContent = `${xp} XP`;
+    document.getElementById('level-next').textContent = lvl.level < 10
+      ? `ещё ${lvl.xpToNext} XP до уровня ${lvl.level + 1}`
+      : 'Максимальный уровень!';
+    setTimeout(() => {
+      document.getElementById('level-bar').style.width = lvl.progress + '%';
+    }, 300);
+
+    // Stats
+    document.getElementById('stat-streak').textContent = streak;
+    document.getElementById('stat-words').textContent = wordsLearned.toLocaleString('ru');
+    const league = getLeagueInfo(xp);
+    document.getElementById('stat-league').textContent = league.name;
+    document.getElementById('league-icon').textContent = league.icon;
+
+    // Language
+    if (lang && LANG_MAP[lang]) {
+      const [flag, ...nameParts] = LANG_MAP[lang].split(' ');
+      document.getElementById('lang-flag').textContent = flag;
+      document.getElementById('lang-name').textContent = nameParts.join(' ');
+    }
+
+    // Show content
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+  }
+
+  async function doLogout() {
+    await sb.auth.signOut();
+    window.location.href = '/app/';
+  }
+
+  // Init
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      window.location.href = '/app/';
+      return;
+    }
+    await loadDashboard(session.user);
+  })();
+</script>
+</body>
+</html>

@@ -579,7 +579,7 @@
       <button class="lang-btn" onclick="setLang('kz')">KZ</button>
       <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-    <a href="#login" class="btn-nav-login">Войти</a>
+    <a href="/app/" class="btn-nav-login">Войти</a>
     <a href="#download" class="btn-nav">Скачать приложение</a>
   </div>
   <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Меню">
@@ -592,6 +592,7 @@
   <a href="#how" onclick="closeMenu()">Как работает</a>
   <a href="#pricing" onclick="closeMenu()">Цены</a>
   <a href="#faq" onclick="closeMenu()">FAQ</a>
+  <a href="/app/" onclick="closeMenu()">🔑 Войти / Регистрация</a>
   <a href="#download" onclick="closeMenu()">📱 Скачать бесплатно</a>
 </div>
 
@@ -603,7 +604,7 @@
       <h1 data-i18n="hero-h1">Учи языки через<br><span>нейронные связи</span></h1>
       <p data-i18n="hero-p">SYNAPSE запоминает то, что ты забываешь. Адаптивный алгоритм подбирает слова именно в тот момент, когда они готовы «осесть» в памяти.</p>
       <div class="hero-actions">
-        <a href="#download" class="btn-primary" data-i18n="hero-btn-primary">📱 Скачать бесплатно</a>
+        <a href="/app/" class="btn-primary" data-i18n="hero-btn-primary">🚀 Начать бесплатно</a>
         <a href="#pricing" class="btn-outline" data-i18n="hero-btn-outline">Посмотреть тарифы →</a>
       </div>
       <div class="store-buttons">
@@ -1040,18 +1041,53 @@
   </div>
 </section>
 
-<!-- ── LEADS FORM ── -->
-<section class="leads-section" id="download">
-  <div class="leads-inner reveal">
-    <div style="font-size:48px;margin-bottom:16px">📱</div>
-    <h2>Первым узнай о запуске</h2>
-    <p>Оставь email — пришлём ссылку на App Store и Google Play в день релиза + месяц PRO в подарок.</p>
-    <div class="leads-form">
-      <input type="email" id="leadEmail" class="leads-input" placeholder="твой@email.com">
-      <button class="btn-leads" onclick="submitLead()">Уведомить меня</button>
+<!-- ── DOWNLOAD SECTION ── -->
+<section id="download" style="padding: 80px 0; background: var(--bg);">
+  <div style="max-width:1100px; margin:0 auto; padding:0 24px;">
+
+    <div class="reveal" style="text-align:center; margin-bottom:48px;">
+      <div class="section-tag">Начать бесплатно</div>
+      <h2 class="section-title">Доступно везде</h2>
+      <p class="section-sub" style="margin:0 auto;">Мобильное приложение и веб-версия — выбери удобный способ</p>
     </div>
-    <div class="leads-note">Только важные письма. Без спама. Отписка в 1 клик.</div>
-    <div class="leads-success" id="leadsSuccess">✅ Отлично! Ты в списке первых. Скоро напишем!</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:800px; margin:0 auto;" class="reveal">
+
+      <!-- Web app card -->
+      <div style="background:#fff; border-radius:24px; border:2px solid var(--teal); padding:32px; text-align:center; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:12px; right:12px; background:var(--teal); color:#fff; font-size:11px; font-weight:800; padding:4px 12px; border-radius:100px;">ДОСТУПНО СЕЙЧАС</div>
+        <div style="font-size:48px; margin-bottom:16px;">🌐</div>
+        <h3 style="font-size:20px; font-weight:800; margin-bottom:8px;">Веб-кабинет</h3>
+        <p style="font-size:14px; color:var(--muted); margin-bottom:24px; line-height:1.6;">Войди или зарегистрируйся прямо сейчас. Доступно в браузере без установки.</p>
+        <a href="/app/" style="display:block; background:var(--teal); color:#fff; border-radius:14px; padding:14px 24px; font-size:15px; font-weight:700; text-decoration:none; transition:all .2s; box-shadow:0 6px 20px rgba(10,189,185,0.3);">
+          Войти / Зарегистрироваться →
+        </a>
+      </div>
+
+      <!-- Android card -->
+      <div style="background:#fff; border-radius:24px; border:1px solid var(--border); padding:32px; text-align:center;">
+        <div style="font-size:48px; margin-bottom:16px;">📱</div>
+        <h3 style="font-size:20px; font-weight:800; margin-bottom:8px;">Android APK</h3>
+        <p style="font-size:14px; color:var(--muted); margin-bottom:24px; line-height:1.6;">Полный функционал: уроки, игры, уведомления, офлайн-режим.</p>
+        <a href="https://github.com/sssssslavka08-dot/synapse/releases/latest" target="_blank" style="display:block; background:var(--dark); color:#fff; border-radius:14px; padding:14px 24px; font-size:15px; font-weight:700; text-decoration:none; transition:all .2s;">
+          ⬇️ Скачать APK
+        </a>
+        <p style="font-size:12px; color:var(--muted); margin-top:12px;">Android 7.0+</p>
+      </div>
+
+    </div>
+
+    <!-- Email subscribe -->
+    <div class="reveal" style="text-align:center; margin-top:48px; padding:32px; background:#fff; border-radius:20px; border:1px solid var(--border); max-width:560px; margin-left:auto; margin-right:auto; margin-top:32px;">
+      <p style="font-size:15px; font-weight:700; margin-bottom:4px;">🍎 iOS — скоро в App Store</p>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Оставь email — пришлём ссылку в день релиза + месяц PRO в подарок</p>
+      <div class="leads-form">
+        <input type="email" id="leadEmail" class="leads-input" placeholder="твой@email.com">
+        <button class="btn-leads" onclick="submitLead()">Уведомить</button>
+      </div>
+      <div class="leads-success" id="leadsSuccess">✅ Отлично! Ты в списке первых.</div>
+    </div>
+
   </div>
 </section>
 
