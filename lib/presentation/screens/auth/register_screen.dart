@@ -125,13 +125,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       String msg = 'Ошибка регистрации';
-      if (e.toString().contains('already registered') ||
-          e.toString().contains('already been registered')) {
-        msg = 'Этот аккаунт уже существует';
-      } else if (e.toString().contains('weak_password')) {
-        msg = 'Пароль слишком простой';
-      } else if (e.toString().contains('invalid')) {
+      final err = e.toString().toLowerCase();
+      if (err.contains('already registered') || err.contains('already been registered')) {
+        msg = 'Аккаунт уже существует. Попробуй войти.';
+      } else if (err.contains('weak_password') || err.contains('password')) {
+        msg = 'Пароль слишком простой (минимум 6 символов)';
+      } else if (err.contains('invalid') && err.contains('email')) {
         msg = 'Неверный формат email';
+      } else if (err.contains('network') || err.contains('connection')) {
+        msg = 'Нет подключения к интернету';
+      } else {
+        msg = 'Ошибка: ${e.toString().replaceAll('AuthException: ', '')}';
       }
       _showError(msg);
     } finally {

@@ -29,28 +29,37 @@ class AuthService {
     required String name,
     required int age,
   }) async {
-    final response = await supabase.auth.signUp(
-      email: email,
-      password: password,
-      data: {'name': name, 'age': age},
-    );
+    AuthResponse result;
 
-    // Если email не подтверждён (например, фейковый от телефона) —
-    // сразу логинимся чтобы не блокировать пользователя
-    AuthResponse result = response;
-    if (response.session == null && response.user != null) {
-      try {
+    try {
+      result = await supabase.auth.signUp(
+        email: email,
+        password: password,
+        data: {'name': name, 'age': age},
+      );
+
+      // Если сессии нет — пробуем войти (подтверждение отключено, но пользователь уже существует)
+      if (result.session == null) {
         result = await supabase.auth.signInWithPassword(
           email: email,
           password: password,
         );
-      } catch (_) {
-        // Если signIn не удался — возвращаем оригинальный response
-        result = response;
+      }
+    } on AuthException catch (e) {
+      // Пользователь уже есть — просто логинимся
+      if (e.message.contains('already registered') ||
+          e.message.contains('already been registered') ||
+          e.statusCode == '422') {
+        result = await supabase.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
+      } else {
+        rethrow;
       }
     }
 
-    final uid = result.user?.id ?? response.user?.id;
+    final uid = result.user?.id;
     if (uid != null) {
       await _saveUserProfile(uid: uid, name: name, age: age, email: email);
     }
