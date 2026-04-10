@@ -41,32 +41,21 @@ jobs:
       - name: Setup release keystore
         run: |
           echo '${{ secrets.KEYSTORE_BASE64 }}' | base64 -d > android/app/release.keystore
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEYSTORE_ALIAS }}
+          storeFile=release.keystore
+          EOF
 
       - name: Get dependencies
         run: flutter pub get
 
       - name: Build APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-        run: |
-          flutter build apk --release \
-            --dart-define=KEYSTORE_PATH=release.keystore \
-            -P "android.injected.signing.store.file=$(pwd)/android/app/release.keystore" \
-            -P "android.injected.signing.store.password=$KEYSTORE_PASSWORD" \
-            -P "android.injected.signing.key.alias=$KEYSTORE_ALIAS" \
-            -P "android.injected.signing.key.password=$KEYSTORE_PASSWORD"
+        run: flutter build apk --release
 
       - name: Build App Bundle
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-        run: |
-          flutter build appbundle --release \
-            -P "android.injected.signing.store.file=$(pwd)/android/app/release.keystore" \
-            -P "android.injected.signing.store.password=$KEYSTORE_PASSWORD" \
-            -P "android.injected.signing.key.alias=$KEYSTORE_ALIAS" \
-            -P "android.injected.signing.key.password=$KEYSTORE_PASSWORD"
+        run: flutter build appbundle --release
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
