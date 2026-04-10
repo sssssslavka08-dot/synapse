@@ -246,6 +246,7 @@ class _ProfileTabState extends State<ProfileTab> {
   Widget build(BuildContext context) {
     final name = widget.name;
     final xp = _userData?['xp'] as int? ?? 0;
+    final coins = _userData?['coins'] as int? ?? 0;
     final streak = _userData?['streak'] as int? ?? 0;
     final plan = _userData?['subscription_type'] as String? ?? 'free';
     final level = LevelSystem.levelFromXp(xp);
@@ -653,7 +654,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       _SettingItem(
                         icon: Icons.storefront_outlined,
                         title: 'Магазин',
-                        value: '$xp монет',
+                        value: '$coins 🪙',
                         onTap: () {},
                       ),
                       _SettingItem(

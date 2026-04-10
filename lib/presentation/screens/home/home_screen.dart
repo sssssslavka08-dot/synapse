@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/utils/level_system.dart';
+import '../../widgets/neuronchik.dart';
 import 'tabs/daily_tab.dart';
 import 'tabs/leaderboard_tab.dart';
 import 'tabs/path_tab.dart';
@@ -98,6 +99,18 @@ class _HomeScreenState extends State<HomeScreen>
           IndexedStack(
             index: _currentIndex,
             children: _tabs,
+          ),
+          // Нейрончик
+          Positioned(
+            bottom: 90,
+            right: 16,
+            child: NeuronchikWidget(
+              mood: _currentIndex == 0
+                  ? NeuronchikMood.cheering
+                  : _currentIndex == 2
+                      ? NeuronchikMood.happy
+                      : NeuronchikMood.happy,
+            ),
           ),
           if (_showLevelUp)
             Positioned.fill(

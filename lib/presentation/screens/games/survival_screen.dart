@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
+import '../../../services/daily_tasks_service.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  SurvivalScreen — Режим выживания (возраст > 12)
@@ -210,6 +211,11 @@ class _SurvivalScreenState extends State<SurvivalScreen>
     // Сохраняем XP
     if (_xp > 0) {
       SupabaseService.instance.addWeeklyXp(_xp);
+    }
+    // Трекинг ежедневных заданий
+    DailyTasksService.updateProgress(taskType: 'play_game', count: 1);
+    if (_score > 0) {
+      DailyTasksService.updateProgress(taskType: 'correct_answers', count: _score);
     }
   }
 
