@@ -51,3 +51,4 @@ lib/config/secrets.dart
 GoogleService-Info.plist
 google-services.json
 firebase_options.dart
+.vercel

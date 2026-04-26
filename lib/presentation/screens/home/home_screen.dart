@@ -25,11 +25,22 @@ class _HomeScreenState extends State<HomeScreen>
   bool _showLevelUp = false;
   int _newLevel = 1;
 
+  // Neuronchik greeting (kids only)
+  bool _showGreeting = false;
+  bool _greetingToCorner = false;
+
   late AnimationController _levelUpCtrl;
   late Animation<double> _levelUpScale;
   late Animation<double> _levelUpFade;
 
   late final List<Widget> _tabs;
+
+  static const _greetings = [
+    'Привет! Я рад тебя видеть! 🎉',
+    'О, ты вернулся! Учимся? 🚀',
+    'Ура! Снова вместе! ⭐',
+    'Привет-привет! Погнали учить! 🧠',
+  ];
 
   @override
   void initState() {
@@ -50,6 +61,34 @@ class _HomeScreenState extends State<HomeScreen>
         CurvedAnimation(parent: _levelUpCtrl, curve: Curves.easeIn));
 
     _checkLevelUp();
+    if (widget.age <= 12) _checkNeuronchikGreeting();
+  }
+
+  Future<void> _checkNeuronchikGreeting() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().split('T').first;
+    final last = prefs.getString('neuronchik_greeting_date') ?? '';
+    if (last != today) {
+      await prefs.setString('neuronchik_greeting_date', today);
+      if (!mounted) return;
+      setState(() => _showGreeting = true);
+      // через 2.5с начинаем двигать в угол
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        if (mounted) setState(() => _greetingToCorner = true);
+      });
+      // через 3.8с убираем оверлей — обычный угловой Нейрончик берёт управление
+      Future.delayed(const Duration(milliseconds: 3800), () {
+        if (mounted) setState(() => _showGreeting = false);
+      });
+    }
+  }
+
+  void _dismissGreeting() {
+    if (!_showGreeting) return;
+    setState(() => _greetingToCorner = true);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _showGreeting = false);
+    });
   }
 
   @override
@@ -100,18 +139,100 @@ class _HomeScreenState extends State<HomeScreen>
             index: _currentIndex,
             children: _tabs,
           ),
-          // Нейрончик
-          Positioned(
-            bottom: 90,
-            right: 16,
-            child: NeuronchikWidget(
-              mood: _currentIndex == 0
-                  ? NeuronchikMood.cheering
-                  : _currentIndex == 2
-                      ? NeuronchikMood.happy
-                      : NeuronchikMood.happy,
+          // Нейрончик в углу (скрыт пока показывается приветствие)
+          if (!_showGreeting)
+            Positioned(
+              bottom: 90,
+              right: 16,
+              child: NeuronchikWidget(
+                mood: _currentIndex == 0
+                    ? NeuronchikMood.cheering
+                    : NeuronchikMood.happy,
+              ),
             ),
-          ),
+
+          // Greeting анимация (только для детей, раз в день)
+          if (_showGreeting)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _dismissGreeting,
+                behavior: HitTestBehavior.translucent,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 600),
+                  color: _greetingToCorner
+                      ? Colors.transparent
+                      : Colors.black.withValues(alpha: 0.45),
+                  child: Stack(
+                    children: [
+                      // Greeting bubble (исчезает при движении в угол)
+                      if (!_greetingToCorner)
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  _greetings[DateTime.now().day % _greetings.length],
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0F1F1E),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              NeuronchikWidget(
+                                mood: NeuronchikMood.excited,
+                                size: 180,
+                                isKidsMode: true,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Нажми, чтобы продолжить',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // Нейрончик движется в угол
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 1200),
+                        curve: Curves.easeInOut,
+                        bottom: _greetingToCorner ? 90 : null,
+                        right: _greetingToCorner ? 16 : null,
+                        top: _greetingToCorner ? null : 0,
+                        left: _greetingToCorner ? null : 0,
+                        child: _greetingToCorner
+                            ? NeuronchikWidget(
+                                mood: NeuronchikMood.happy,
+                                size: 64,
+                                isKidsMode: true,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           if (_showLevelUp)
             Positioned.fill(
               child: GestureDetector(

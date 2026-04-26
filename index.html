@@ -598,7 +598,7 @@
       <button class="lang-btn" onclick="setLang('kz')">KZ</button>
       <button class="lang-btn" onclick="setLang('en')">EN</button>
     </div>
-    <a href="/app/" class="btn-nav-login">Войти</a>
+    <a href="/flutter/" class="btn-nav-login">Войти</a>
     <a href="#download" class="btn-nav">Скачать приложение</a>
   </div>
   <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Меню">
@@ -611,7 +611,7 @@
   <a href="#how" onclick="closeMenu()">Как работает</a>
   <a href="#pricing" onclick="closeMenu()">Цены</a>
   <a href="#faq" onclick="closeMenu()">FAQ</a>
-  <a href="/app/" onclick="closeMenu()">🔑 Войти / Регистрация</a>
+  <a href="/flutter/" onclick="closeMenu()">🔑 Войти / Регистрация</a>
   <a href="#download" onclick="closeMenu()">📱 Скачать бесплатно</a>
 </div>
 
@@ -623,7 +623,7 @@
       <h1 data-i18n="hero-h1">Учи языки через<br><span>нейронные связи</span></h1>
       <p data-i18n="hero-p">SYNAPSE запоминает то, что ты забываешь. Адаптивный алгоритм подбирает слова именно в тот момент, когда они готовы «осесть» в памяти.</p>
       <div class="hero-actions">
-        <a href="/app/" class="btn-primary" data-i18n="hero-btn-primary">🚀 Начать бесплатно</a>
+        <a href="/flutter/" class="btn-primary" data-i18n="hero-btn-primary">🚀 Начать бесплатно</a>
         <a href="#pricing" class="btn-outline" data-i18n="hero-btn-outline">Посмотреть тарифы →</a>
       </div>
       <div class="store-buttons">
@@ -792,7 +792,7 @@
 
 <!-- ── HOW IT WORKS ── -->
 <section class="how-section" id="how">
-  <div class="section">
+  <div class="section" style="padding-top:0;padding-bottom:0">
     <div class="reveal">
       <div class="section-tag">Как это работает</div>
       <div class="section-title">Три шага до результата</div>
@@ -825,7 +825,7 @@
 
 <!-- ── REVIEWS CAROUSEL ── -->
 <section class="reviews-section" id="reviews">
-  <div class="section" style="padding-bottom:16px">
+  <div class="section" style="padding-top:0;padding-bottom:0">
     <div class="reveal">
       <div class="section-tag">Отзывы</div>
       <div class="section-title">Что говорят пользователи</div>
@@ -911,7 +911,7 @@
 
 <!-- ── FAQ ── -->
 <section class="faq-section" id="faq">
-  <div class="section">
+  <div class="section" style="padding-top:0;padding-bottom:0">
     <div class="reveal">
       <div class="section-tag">FAQ</div>
       <div class="section-title">Частые вопросы</div>
@@ -1031,30 +1031,12 @@
       <div class="section-title">Кто создаёт SYNAPSE</div>
       <div class="section-sub">Небольшая команда с большой миссией — сделать изучение языков доступным для каждого.</div>
     </div>
-    <div class="team-grid">
-      <div class="team-card reveal reveal-delay-1">
-        <div class="team-avatar" style="background:#0ABDB9">АС</div>
-        <div class="team-name">Алихан С.</div>
-        <div class="team-role">CEO &amp; Co-founder</div>
-        <div class="team-bio">Продуктовое мышление, экс-Kaspi</div>
-      </div>
-      <div class="team-card reveal reveal-delay-2">
-        <div class="team-avatar" style="background:#3498DB">ДН</div>
-        <div class="team-name">Дана Н.</div>
-        <div class="team-role">CTO &amp; Co-founder</div>
-        <div class="team-bio">Flutter, Dart, AI архитектура. 6 лет в мобильной разработке</div>
-      </div>
-      <div class="team-card reveal reveal-delay-3">
-        <div class="team-avatar" style="background:#F39C12">МА</div>
-        <div class="team-name">Мадина А.</div>
-        <div class="team-role">Lead Designer</div>
-        <div class="team-bio">UX/UI, брендинг. Финалист Designathon Astana 2023</div>
-      </div>
-      <div class="team-card reveal reveal-delay-4">
-        <div class="team-avatar" style="background:#9B59B6">БТ</div>
-        <div class="team-name">Бекзат Т.</div>
-        <div class="team-role">AI Engineer</div>
-        <div class="team-bio">Алгоритм Эббингауза, NLP для казахского языка</div>
+    <div style="max-width:320px;margin:0 auto;">
+      <div class="team-card reveal reveal-delay-1" style="text-align:center;padding:36px 32px;">
+        <div class="team-avatar" style="background:var(--dark);margin:0 auto 16px;width:80px;height:80px;font-size:24px;letter-spacing:1px;">ВА</div>
+        <div class="team-name" style="font-size:20px;margin-bottom:6px;">Вячеслав А.</div>
+        <div class="team-role" style="color:var(--teal);font-weight:700;margin-bottom:12px;">Developer &amp; Leader</div>
+        <div class="team-bio">Full-stack разработка · Flutter · AI интеграция · Архитектура платформы</div>
       </div>
     </div>
   </div>
@@ -1078,8 +1060,8 @@
         <div style="font-size:48px; margin-bottom:16px;">🌐</div>
         <h3 style="font-size:20px; font-weight:800; margin-bottom:8px;">Веб-кабинет</h3>
         <p style="font-size:14px; color:var(--muted); margin-bottom:24px; line-height:1.6;">Войди или зарегистрируйся прямо сейчас. Доступно в браузере без установки.</p>
-        <a href="/app/" style="display:block; background:var(--teal); color:#fff; border-radius:14px; padding:14px 24px; font-size:15px; font-weight:700; text-decoration:none; transition:all .2s; box-shadow:0 6px 20px rgba(10,189,185,0.3);">
-          Войти / Зарегистрироваться →
+        <a href="/flutter/" style="display:block; background:var(--teal); color:#fff; border-radius:14px; padding:14px 24px; font-size:15px; font-weight:700; text-decoration:none; transition:all .2s; box-shadow:0 6px 20px rgba(10,189,185,0.3);">
+          Открыть веб-приложение →
         </a>
       </div>
 

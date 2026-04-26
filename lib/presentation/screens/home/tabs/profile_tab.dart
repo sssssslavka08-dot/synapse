@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/level_system.dart';
 import '../../../../core/theme/theme_notifier.dart';
+import '../../../../core/achievements/achievement_checker.dart';
 import '../../auth/login_screen.dart';
 import '../../subscription/subscription_screen.dart';
 import '../../language_select_screen.dart';
 import '../../friends/friends_screen.dart';
+import '../../shop/shop_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   final String name;
@@ -18,10 +20,11 @@ class ProfileTab extends StatefulWidget {
 
 class _ProfileTabState extends State<ProfileTab> {
   Map<String, dynamic>? _userData;
-  Map<String, int> _weekActivity = {}; // день → XP
+  Map<String, int> _weekActivity = {};
   String _weakCategory = '—';
   int _totalDays = 0;
   bool _loadingStats = true;
+  List<Achievement> _achievements = [];
 
   static const _langNames = {
     'en': '🇬🇧 Английский',
@@ -98,10 +101,27 @@ class _ProfileTabState extends State<ProfileTab> {
         }
       }
 
+      final xp = user?['xp'] as int? ?? 0;
+      final wordsLearned = user?['words_learned'] as int? ?? 0;
+      final plan = user?['subscription_type'] as String? ?? 'free';
+      int correctCount = 0;
+      for (final row in (progress as List)) {
+        correctCount += (row['correct_count'] as int? ?? 0);
+      }
+
       setState(() {
         _userData = user;
         _weekActivity = activity;
         _loadingStats = false;
+        _achievements = AchievementChecker.compute(
+          xp: xp,
+          streak: streak,
+          wordsLearned: wordsLearned,
+          totalDays: _totalDays,
+          plan: plan,
+          correctCount: correctCount,
+          totalLessons: progress.length,
+        );
       });
     } catch (_) {
       setState(() => _loadingStats = false);
@@ -253,15 +273,6 @@ class _ProfileTabState extends State<ProfileTab> {
     final levelTitle = LevelSystem.titleForLevel(level);
     final levelEmoji = LevelSystem.emojiForLevel(level);
     final levelProgress = LevelSystem.progressInLevel(xp);
-
-    final badges = [
-      {'emoji': '🔥', 'title': '7 дней подряд'},
-      {'emoji': '📚', 'title': '50 слов'},
-      {'emoji': '⚡', 'title': 'Первый урок'},
-      {'emoji': '🌟', 'title': 'Топ-10'},
-      {'emoji': '🎯', 'title': 'Меткий стрелок'},
-      {'emoji': '🏆', 'title': 'Чемпион'},
-    ];
 
     final stats = [
       {'label': 'Всего XP', 'value': '$xp', 'icon': '⚡'},
@@ -563,12 +574,26 @@ class _ProfileTabState extends State<ProfileTab> {
                       const SizedBox(height: 24),
 
                       // ── Достижения ──────────────────────
-                      const Text('Достижения',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF0F1F1E),
-                          )),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Достижения',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F1F1E),
+                              )),
+                          if (_achievements.isNotEmpty)
+                            Text(
+                              '${_achievements.where((a) => a.earned).length}/${_achievements.length}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF0ABDB9),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
+                      ),
                       const SizedBox(height: 12),
                       GridView.count(
                         shrinkWrap: true,
@@ -577,30 +602,59 @@ class _ProfileTabState extends State<ProfileTab> {
                         mainAxisSpacing: 10,
                         crossAxisSpacing: 10,
                         childAspectRatio: 0.9,
-                        children: badges
-                            .map((b) => Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                        color: const Color(0xFFE0F3F2)),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Text(b['emoji']!,
-                                          style: const TextStyle(
-                                              fontSize: 28)),
-                                      const SizedBox(height: 4),
-                                      Text(b['title']!,
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            color: Color(0xFF8EAEAC),
-                                          )),
-                                    ],
+                        children: (_achievements.isEmpty
+                                ? List.generate(
+                                    6,
+                                    (i) => Achievement(
+                                      id: 'placeholder_$i',
+                                      emoji: '🔒',
+                                      title: '...',
+                                      description: '',
+                                      earned: false,
+                                    ))
+                                : _achievements)
+                            .map((a) => Opacity(
+                                  opacity: a.earned ? 1.0 : 0.35,
+                                  child: Tooltip(
+                                    message: a.description,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: a.earned
+                                            ? const Color(0xFFE8FDF9)
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: a.earned
+                                              ? const Color(0xFFA8E6E3)
+                                              : const Color(0xFFE0F3F2),
+                                          width: a.earned ? 1.5 : 1,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(a.earned ? a.emoji : '🔒',
+                                              style: const TextStyle(
+                                                  fontSize: 26)),
+                                          const SizedBox(height: 4),
+                                          Text(a.title,
+                                              textAlign: TextAlign.center,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: a.earned
+                                                    ? FontWeight.w600
+                                                    : FontWeight.w400,
+                                                color: a.earned
+                                                    ? const Color(0xFF0F3D3B)
+                                                    : const Color(0xFF8EAEAC),
+                                              )),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ))
                             .toList(),
@@ -655,7 +709,10 @@ class _ProfileTabState extends State<ProfileTab> {
                         icon: Icons.storefront_outlined,
                         title: 'Магазин',
                         value: '$coins 🪙',
-                        onTap: () {},
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ShopScreen()),
+                        ).then((_) => _loadStats()),
                       ),
                       _SettingItem(
                         icon: Icons.palette_outlined,
@@ -676,7 +733,7 @@ class _ProfileTabState extends State<ProfileTab> {
                               age: widget.age,
                             ),
                           ),
-                        ),
+                        ).then((_) => _loadStats()),
                       ),
                       const SizedBox(height: 8),
 

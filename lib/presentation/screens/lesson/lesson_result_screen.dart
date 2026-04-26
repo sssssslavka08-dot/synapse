@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../services/daily_tasks_service.dart';
+import '../../widgets/task_completed_overlay.dart';
 import '../home/home_screen.dart';
 import 'lesson_screen.dart';
 
@@ -71,6 +72,8 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
     final all = [...completedLesson, ...completedWords, ...completedAnswers];
     if (all.isNotEmpty && mounted) {
       setState(() => _completedTasks = all);
+      // Плюс анимированный оверлей сверху для мгновенного фидбека
+      TaskCompletedOverlay.showAll(context, all);
     }
   }
 

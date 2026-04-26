@@ -20,22 +20,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
-  final _ageCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscurePass = true;
   bool _isLoading = false;
-  int _age = 0;
+  DateTime? _birthDate;
+
+  int get _age {
+    if (_birthDate == null) return 0;
+    final now = DateTime.now();
+    int age = now.year - _birthDate!.year;
+    if (now.month < _birthDate!.month ||
+        (now.month == _birthDate!.month && now.day < _birthDate!.day)) {
+      age--;
+    }
+    return age;
+  }
 
   String get _profileHint {
-    if (_age == 0) return '';
-    if (_age <= 12) return '👶 Детский режим: Нейрончик + мини-игры';
-    return '📊 Взрослый режим: граф знаний + статистика';
+    if (_birthDate == null) return '';
+    final age = _age;
+    if (age < 13) return '🤖 Детский режим: Нейрончик + мини-игры + яркий UI';
+    return '📊 Взрослый режим: граф знаний + детальная статистика';
   }
 
   Color get _profileColor =>
-      _age <= 12 ? const Color(0xFF0ABDB9) : const Color(0xFF1E3332);
+      _age < 13 ? const Color(0xFFFF6B35) : const Color(0xFF0ABDB9);
 
-  // Маска телефона +7 (___) ___-__-__
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final initial = _birthDate ?? DateTime(now.year - 10, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(now.year - 100),
+      lastDate: DateTime(now.year - 3),
+      locale: const Locale('ru'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF0ABDB9),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF0F1F1E),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) setState(() => _birthDate = picked);
+  }
+
   void _onPhoneChanged(String v) {
     final digits = v.replaceAll(RegExp(r'[^0-9]'), '');
     final d = digits.startsWith('7')
@@ -48,7 +84,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (d.length >= 4) f += ') ${d.substring(4, d.length.clamp(4, 7))}';
     if (d.length >= 7) f += '-${d.substring(7, d.length.clamp(7, 9))}';
     if (d.length >= 9) f += '-${d.substring(9, d.length.clamp(9, 11))}';
-    if (d.length >= 4 && d.length < 4) f += ')';
 
     if (f != _phoneCtrl.text) {
       _phoneCtrl.value = TextEditingValue(
@@ -82,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    if (_nameCtrl.text.isEmpty || _age == 0) {
+    if (_nameCtrl.text.isEmpty || _birthDate == null) {
       _showError('Заполни все поля');
       return;
     }
@@ -105,11 +140,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ? _emailCtrl.text.trim()
           : '${_phoneCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')}@synapse.kz';
 
+      final age = _age;
       await _authService.registerWithEmail(
         email: email,
         password: _passCtrl.text,
         name: _nameCtrl.text.trim(),
-        age: _age,
+        age: age,
+        birthDate: _birthDate,
       );
 
       if (mounted) {
@@ -118,7 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           MaterialPageRoute(
             builder: (_) => LanguageSelectScreen(
               name: _nameCtrl.text,
-              age: _age,
+              age: age,
             ),
           ),
         );
@@ -126,7 +163,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       String msg = 'Ошибка регистрации';
       final err = e.toString().toLowerCase();
-      if (err.contains('already registered') || err.contains('already been registered')) {
+      if (err.contains('already registered') ||
+          err.contains('already been registered')) {
         msg = 'Аккаунт уже существует. Попробуй войти.';
       } else if (err.contains('weak_password') || err.contains('password')) {
         msg = 'Пароль слишком простой (минимум 6 символов)';
@@ -174,10 +212,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
     } catch (e) {
-      final msg = e.toString().contains('sign_in_canceled') ||
-              e.toString().contains('canceled')
-          ? 'Вход через Google отменён'
-          : 'Ошибка Google входа. Проверь интернет.';
+      final msg =
+          e.toString().contains('sign_in_canceled') ||
+                  e.toString().contains('canceled')
+              ? 'Вход через Google отменён'
+              : 'Ошибка Google входа. Проверь интернет.';
       _showError(msg);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -195,12 +234,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  String _formatDate(DateTime d) {
+    final months = [
+      '', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+    ];
+    return '${d.day} ${months[d.month]} ${d.year}';
+  }
+
   @override
   void dispose() {
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
     _nameCtrl.dispose();
-    _ageCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
   }
@@ -217,7 +263,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               const SizedBox(height: 16),
 
-              // Логотип
               Row(children: [
                 Container(
                   width: 40,
@@ -231,8 +276,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(width: 10),
                 const Text('SYNAPSE',
-                    style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                    style: TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.w800)),
               ]),
               const SizedBox(height: 32),
 
@@ -270,7 +315,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Телефон с маской ИЛИ Email
               if (_method == AuthMethod.phone)
                 TextField(
                   controller: _phoneCtrl,
@@ -286,8 +330,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration:
-                      _inputDec('Электронная почта', Icons.email_outlined),
+                  decoration: _inputDec(
+                      'Электронная почта', Icons.email_outlined),
                 ),
               const SizedBox(height: 14),
 
@@ -298,15 +342,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Возраст
-              TextField(
-                controller: _ageCtrl,
-                keyboardType: TextInputType.number,
-                onChanged: (v) => setState(() => _age = int.tryParse(v) ?? 0),
-                decoration: _inputDec(
-                  'Возраст',
-                  Icons.cake_outlined,
-                  hint: 'Влияет на интерфейс',
+              // Дата рождения — picker
+              GestureDetector(
+                onTap: _pickBirthDate,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 18),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _birthDate != null
+                          ? const Color(0xFF0ABDB9)
+                          : const Color(0xFFD6F5F4),
+                      width: _birthDate != null ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.cake_outlined,
+                          color: _birthDate != null
+                              ? const Color(0xFF0ABDB9)
+                              : const Color(0xFF8EAEAC),
+                          size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _birthDate != null
+                              ? _formatDate(_birthDate!)
+                              : 'Дата рождения',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _birthDate != null
+                                ? const Color(0xFF0F1F1E)
+                                : const Color(0xFF8EAEAC),
+                          ),
+                        ),
+                      ),
+                      if (_birthDate != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _profileColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${_age} лет',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _profileColor,
+                            ),
+                          ),
+                        )
+                      else
+                        const Icon(Icons.calendar_today_outlined,
+                            color: Color(0xFF8EAEAC), size: 18),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -318,7 +412,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 decoration: _inputDec('Пароль', Icons.lock_outline).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePass ? Icons.visibility_off : Icons.visibility,
+                      _obscurePass
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                       color: const Color(0xFF8EAEAC),
                     ),
                     onPressed: () =>
@@ -327,8 +423,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
 
-              // Превью профиля
-              if (_age >= 5) ...[
+              // Превью режима
+              if (_birthDate != null) ...[
                 const SizedBox(height: 14),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -372,19 +468,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Разделитель
               const Row(children: [
                 Expanded(child: Divider(color: Color(0xFFD6F5F4))),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   child: Text('или войти через',
-                      style: TextStyle(color: Color(0xFF8EAEAC), fontSize: 13)),
+                      style: TextStyle(
+                          color: Color(0xFF8EAEAC), fontSize: 13)),
                 ),
                 Expanded(child: Divider(color: Color(0xFFD6F5F4))),
               ]),
               const SizedBox(height: 20),
 
-              // Google кнопка
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -408,13 +503,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Уже есть аккаунт
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Text('Уже есть аккаунт? ',
-                    style: TextStyle(color: Color(0xFF8EAEAC), fontSize: 14)),
+                    style: TextStyle(
+                        color: Color(0xFF8EAEAC), fontSize: 14)),
                 GestureDetector(
                   onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen())),
+                      MaterialPageRoute(
+                          builder: (_) => const LoginScreen())),
                   child: const Text('Войти',
                       style: TextStyle(
                         color: Color(0xFF0ABDB9),
@@ -474,4 +570,3 @@ class _MethodTab extends StatelessWidget {
     );
   }
 }
-

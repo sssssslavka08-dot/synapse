@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
+import '../../../services/daily_tasks_service.dart';
+import '../../widgets/task_completed_overlay.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  FeedNeuronScreen — Детская мини-игра (возраст ≤ 12)
@@ -165,7 +167,26 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
     }
   }
 
-  void _showResult() {
+  void _showResult() async {
+    // Трекинг ежедневных заданий
+    final completedPlay = await DailyTasksService.updateProgress(
+      taskType: 'play_game',
+      count: 1,
+    );
+    List<Map<String, dynamic>> completedAnswers = [];
+    if (_score > 0) {
+      completedAnswers = await DailyTasksService.updateProgress(
+        taskType: 'correct_answers',
+        count: _score,
+      );
+    }
+    if (!mounted) return;
+    final all = [...completedPlay, ...completedAnswers];
+    if (all.isNotEmpty) {
+      // Не ждём — анимация на фоне, пока показываем диалог
+      TaskCompletedOverlay.showAll(context, all);
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,

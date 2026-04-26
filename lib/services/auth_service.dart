@@ -1,7 +1,16 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 final supabase = Supabase.instance.client;
+
+// Web OAuth Client ID (из Google Cloud → OAuth consent).
+// Тот же ClientID должен стоять в Supabase → Authentication → Google.
+// Не секретный, но чтобы не дублировать — вынесено в одну константу.
+// Web OAuth ClientID проекта SYNAPSY в Google Cloud.
+// Тот же ID должен быть указан в Supabase → Authentication → Google → Client ID.
+const String _googleServerClientId =
+    'REDACTED';
 
 class GoogleSignInResult {
   final bool isNewUser;
@@ -28,6 +37,7 @@ class AuthService {
     required String password,
     required String name,
     required int age,
+    DateTime? birthDate,
   }) async {
     AuthResponse result;
 
@@ -61,7 +71,8 @@ class AuthService {
 
     final uid = result.user?.id;
     if (uid != null) {
-      await _saveUserProfile(uid: uid, name: name, age: age, email: email);
+      await _saveUserProfile(
+          uid: uid, name: name, age: age, email: email, birthDate: birthDate);
     }
     return result;
   }
@@ -79,23 +90,38 @@ class AuthService {
 
   // ── ВХОД ЧЕРЕЗ GOOGLE ────────────────────────
   Future<GoogleSignInResult?> signInWithGoogle() async {
+    if (kIsWeb) {
+      // На вебе нативный GoogleSignIn не работает — используем OAuth редирект
+      await supabase.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'https://synapse-nine-brown.vercel.app/flutter/',
+      );
+      return null; // редирект произойдёт, результат придёт через onAuthStateChange
+    }
+
+    // Нативный поток (Android)
     final googleSignIn = GoogleSignIn(
-      serverClientId: '644143023283-bd8s43q4jhsmjk4kc3l6ndjuanh693gj.apps.googleusercontent.com',
+      serverClientId: _googleServerClientId,
     );
     final googleUser = await googleSignIn.signIn();
     if (googleUser == null) return null;
 
     final googleAuth = await googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    if (idToken == null) {
+      throw Exception(
+        'Google: не удалось получить idToken. Проверь serverClientId и настройки OAuth.',
+      );
+    }
 
     final response = await supabase.auth.signInWithIdToken(
       provider: OAuthProvider.google,
-      idToken: googleAuth.idToken!,
+      idToken: idToken,
       accessToken: googleAuth.accessToken,
     );
 
     if (response.user == null) return null;
 
-    // Проверяем, новый ли пользователь
     final existing = await supabase
         .from('users')
         .select()
@@ -129,6 +155,7 @@ class AuthService {
       if (photoUrl != null) 'photo_url': photoUrl,
       'streak': 0,
       'xp': 0,
+      'coins': 0,
       'words_learned': 0,
       'selected_language': '',
       'subscription_type': 'free',
@@ -139,9 +166,9 @@ class AuthService {
 
   // ── ВЫХОД ────────────────────────────────────
   Future<void> signOut() async {
-    await GoogleSignIn(
-      serverClientId: '644143023283-bd8s43q4jhsmjk4kc3l6ndjuanh693gj.apps.googleusercontent.com',
-    ).signOut();
+    try {
+      await GoogleSignIn(serverClientId: _googleServerClientId).signOut();
+    } catch (_) {}
     await supabase.auth.signOut();
   }
 
@@ -151,6 +178,7 @@ class AuthService {
     required String name,
     required int age,
     required String email,
+    DateTime? birthDate,
   }) async {
     try {
       await supabase.from('users').upsert({
@@ -158,8 +186,11 @@ class AuthService {
         'name': name,
         'age': age,
         'email': email,
+        if (birthDate != null)
+          'birth_date': birthDate.toIso8601String().split('T').first,
         'streak': 0,
         'xp': 0,
+        'coins': 0,
         'words_learned': 0,
         'selected_language': '',
         'subscription_type': 'free',

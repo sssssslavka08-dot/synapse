@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
 import '../../../services/daily_tasks_service.dart';
+import '../../widgets/task_completed_overlay.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  SurvivalScreen — Режим выживания (возраст > 12)
@@ -212,10 +213,26 @@ class _SurvivalScreenState extends State<SurvivalScreen>
     if (_xp > 0) {
       SupabaseService.instance.addWeeklyXp(_xp);
     }
-    // Трекинг ежедневных заданий
-    DailyTasksService.updateProgress(taskType: 'play_game', count: 1);
+    // Трекинг ежедневных заданий + overlay
+    _trackDailyTasks();
+  }
+
+  Future<void> _trackDailyTasks() async {
+    final completedPlay = await DailyTasksService.updateProgress(
+      taskType: 'play_game',
+      count: 1,
+    );
+    List<Map<String, dynamic>> completedAnswers = [];
     if (_score > 0) {
-      DailyTasksService.updateProgress(taskType: 'correct_answers', count: _score);
+      completedAnswers = await DailyTasksService.updateProgress(
+        taskType: 'correct_answers',
+        count: _score,
+      );
+    }
+    if (!mounted) return;
+    final all = [...completedPlay, ...completedAnswers];
+    if (all.isNotEmpty) {
+      TaskCompletedOverlay.showAll(context, all);
     }
   }
 

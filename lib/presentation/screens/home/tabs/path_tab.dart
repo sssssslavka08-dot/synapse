@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/theme/kids_theme.dart';
 import '../../../../core/utils/level_system.dart';
+import '../../courses/course_list_screen.dart';
 import '../../lesson/lesson_screen.dart';
 
 class PathTab extends StatefulWidget {
@@ -166,28 +168,59 @@ class _PathTabState extends State<PathTab>
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: _startLesson,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => CourseListScreen(isKidsMode: true),
+                        )),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white38),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('📚', style: TextStyle(fontSize: 16)),
+                              SizedBox(width: 6),
+                              Text('Курсы',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14)),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('▶️', style: TextStyle(fontSize: 16)),
-                          SizedBox(width: 6),
-                          Text('Играть!',
-                              style: TextStyle(
-                                  color: Color(0xFF0ABDB9),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14)),
-                        ],
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _startLesson,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('▶️', style: TextStyle(fontSize: 16)),
+                              SizedBox(width: 6),
+                              Text('Играть!',
+                                  style: TextStyle(
+                                      color: Color(0xFF0ABDB9),
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14)),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -395,29 +428,56 @@ class _PathTabState extends State<PathTab>
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: _startLesson,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0ABDB9),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFF0ABDB9).withValues(alpha: 0.4),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          )
-                        ],
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => CourseListScreen(isKidsMode: false),
+                        )),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A3332),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFF0ABDB9).withValues(alpha: 0.3)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('📚', style: TextStyle(fontSize: 16)),
+                              SizedBox(width: 6),
+                              Text('Курсы', style: TextStyle(color: Color(0xFF0ABDB9), fontWeight: FontWeight.w700, fontSize: 13)),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: const Text('Урок',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14)),
-                    ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _startLesson,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0ABDB9),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    const Color(0xFF0ABDB9).withValues(alpha: 0.4),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              )
+                            ],
+                          ),
+                          child: const Text('Урок',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14)),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

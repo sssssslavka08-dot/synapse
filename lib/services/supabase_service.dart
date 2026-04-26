@@ -100,9 +100,15 @@ class SupabaseService {
     if (googleUser == null) return null;
 
     final googleAuth = await googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    if (idToken == null) {
+      throw Exception(
+        'Google: не удалось получить idToken. Проверь настройки OAuth.',
+      );
+    }
     final res = await db.auth.signInWithIdToken(
       provider: OAuthProvider.google,
-      idToken: googleAuth.idToken!,
+      idToken: idToken,
       accessToken: googleAuth.accessToken,
     );
 
@@ -155,6 +161,8 @@ class SupabaseService {
       'selected_language': selectedLanguage,
       'streak': 0,
       'xp': 0,
+      'coins': 0,
+      'words_learned': 0,
       'subscription_type': 'free',
       'created_at': DateTime.now().toIso8601String(),
       'last_active_at': DateTime.now().toIso8601String(),
@@ -184,6 +192,26 @@ class SupabaseService {
     }).eq('id', uid!);
   }
 
+  // Обновить родной язык
+  Future<void> updateNativeLanguage(String langCode) async {
+    if (uid == null) return;
+    try {
+      await db.from('users').update({
+        'native_language': langCode,
+      }).eq('id', uid!);
+    } catch (_) {}
+  }
+
+  // Обновить дополнительные языки PRO (через запятую: "de,fr")
+  Future<void> updateProLanguages(List<String> langs) async {
+    if (uid == null) return;
+    try {
+      await db.from('users').update({
+        'pro_languages': langs.join(','),
+      }).eq('id', uid!);
+    } catch (_) {}
+  }
+
   // Обновить подписку
   Future<void> updateSubscription(String planType) async {
     if (uid == null) return;
@@ -201,6 +229,47 @@ class SupabaseService {
           : DateTime.now().add(const Duration(days: 30)).toIso8601String(),
       'is_active': true,
     });
+  }
+
+  // Выдать бонусы подписки Legenda
+  Future<void> grantLegendaRewards() async {
+    if (uid == null) return;
+    try {
+      await db.from('users').update({
+        'nick_prefix': 'LEGENDA',
+        'nick_prefix_color': 'purple_neon',
+        'equipped_frame': 'neon_purple',
+      }).eq('id', uid!);
+
+      // Добавляем в инвентарь
+      await db.from('user_inventory').upsert({
+        'user_id': uid,
+        'item_id': 'frame_neon_purple',
+        'item_type': 'frame',
+        'purchased_at': DateTime.now().toIso8601String(),
+        'is_equipped': true,
+      });
+    } catch (_) {}
+  }
+
+  // Обновить дату рождения (DOB)
+  Future<void> updateBirthDate(DateTime dob) async {
+    if (uid == null) return;
+    final age = _calculateAge(dob);
+    await db.from('users').update({
+      'birth_date': dob.toIso8601String().split('T').first,
+      'age': age,
+    }).eq('id', uid!);
+  }
+
+  static int _calculateAge(DateTime dob) {
+    final now = DateTime.now();
+    int age = now.year - dob.year;
+    if (now.month < dob.month ||
+        (now.month == dob.month && now.day < dob.day)) {
+      age--;
+    }
+    return age;
   }
 
   // Обновить last_active + опционально streak

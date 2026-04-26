@@ -3,6 +3,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
 import '../../../services/daily_tasks_service.dart';
+import '../../widgets/task_completed_overlay.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  WordBuilderScreen — Детская игра: собери слово из букв
@@ -192,11 +193,24 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
     });
   }
 
-  void _showResult() {
-    DailyTasksService.updateProgress(taskType: 'play_game', count: 1);
+  void _showResult() async {
+    final completedPlay = await DailyTasksService.updateProgress(
+      taskType: 'play_game',
+      count: 1,
+    );
+    List<Map<String, dynamic>> completedAnswers = [];
     if (_score > 0) {
-      DailyTasksService.updateProgress(taskType: 'correct_answers', count: _score);
+      completedAnswers = await DailyTasksService.updateProgress(
+        taskType: 'correct_answers',
+        count: _score,
+      );
     }
+    if (!mounted) return;
+    final all = [...completedPlay, ...completedAnswers];
+    if (all.isNotEmpty) {
+      TaskCompletedOverlay.showAll(context, all);
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,

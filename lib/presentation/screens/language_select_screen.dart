@@ -23,6 +23,8 @@ class LanguageSelectScreen extends StatefulWidget {
 
 class _LanguageSelectScreenState extends State<LanguageSelectScreen>
     with SingleTickerProviderStateMixin {
+  int _step = 1; // 1 = native lang, 2 = learning lang
+  String? _nativeLang;
   String? _selected;
   bool _isLoading = false;
   late AnimationController _listController;
@@ -154,9 +156,22 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen>
   }
 
   Future<void> _confirm() async {
-    if (_selected == null || _isLoading) return;
+    if (_isLoading) return;
+
+    if (_step == 1) {
+      if (_nativeLang == null) return;
+      setState(() {
+        _step = 2;
+        _listController.forward(from: 0);
+      });
+      return;
+    }
+
+    // Step 2 — save both languages and navigate
+    if (_selected == null) return;
     setState(() => _isLoading = true);
     try {
+      await SupabaseService.instance.updateNativeLanguage(_nativeLang!);
       await SupabaseService.instance.updateLanguage(_selected!);
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -187,13 +202,19 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isStep1 = _step == 1;
+    final currentSelected = isStep1 ? _nativeLang : _selected;
     return Scaffold(
       backgroundColor: const Color(0xFFF4FEFE),
       body: SafeArea(
         child: Column(
           children: [
             // ── Шапка ──────────────────────────────────────
-            _Header(name: widget.name),
+            _Header(
+              name: widget.name,
+              step: _step,
+              onBack: isStep1 ? null : () => setState(() { _step = 1; _listController.forward(from: 0); }),
+            ),
 
             // ── Список языков ───────────────────────────────
             Expanded(
@@ -202,7 +223,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen>
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                 itemCount: _langs.length,
                 itemBuilder: (ctx, i) {
-                  final delay = i * 0.1;
+                  final delay = i * 0.06;
                   return AnimatedBuilder(
                     animation: _listController,
                     builder: (_, child) {
@@ -220,9 +241,14 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen>
                     },
                     child: _LangCard(
                       lang: _langs[i],
-                      isSelected: _selected == _langs[i].code,
-                      onTap: () =>
-                          setState(() => _selected = _langs[i].code),
+                      isSelected: currentSelected == _langs[i].code,
+                      onTap: () {
+                        if (isStep1) {
+                          setState(() => _nativeLang = _langs[i].code);
+                        } else {
+                          setState(() => _selected = _langs[i].code);
+                        }
+                      },
                     ),
                   );
                 },
@@ -231,9 +257,10 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen>
 
             // ── Кнопка подтверждения ────────────────────────
             _BottomButton(
-              enabled: _selected != null,
+              enabled: currentSelected != null,
               isLoading: _isLoading,
               onTap: _confirm,
+              label: isStep1 ? 'Далее →' : 'Начать обучение →',
             ),
           ],
         ),
@@ -260,7 +287,9 @@ class _Lang {
 // ─── Шапка ──────────────────────────────────────────────────
 class _Header extends StatelessWidget {
   final String name;
-  const _Header({required this.name});
+  final int step;
+  final VoidCallback? onBack;
+  const _Header({required this.name, required this.step, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -269,8 +298,24 @@ class _Header extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Логотип
+          // Логотип + back
           Row(children: [
+            if (onBack != null) ...[
+              GestureDetector(
+                onTap: onBack,
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8FAFA),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: Color(0xFF0ABDB9), size: 16),
+                ),
+              ),
+              const SizedBox(width: 10),
+            ],
             Container(
               width: 38,
               height: 38,
@@ -284,6 +329,23 @@ class _Header extends StatelessWidget {
             const SizedBox(width: 9),
             const Text('SYNAPSE',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const Spacer(),
+            // Step indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0ABDB9).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$step / 2',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0ABDB9),
+                ),
+              ),
+            ),
           ]),
           const SizedBox(height: 24),
 
@@ -297,20 +359,31 @@ class _Header extends StatelessWidget {
                 letterSpacing: -0.5,
                 height: 1.2,
               ),
-              children: [
-                TextSpan(text: 'Привет, $name!\n'),
-                const TextSpan(
-                  text: 'Что учим? ',
-                  style: TextStyle(color: Color(0xFF0ABDB9)),
-                ),
-                const TextSpan(text: '👇'),
-              ],
+              children: step == 1
+                  ? [
+                      TextSpan(text: 'Привет, $name!\n'),
+                      const TextSpan(
+                        text: 'Родной язык? ',
+                        style: TextStyle(color: Color(0xFF0ABDB9)),
+                      ),
+                      const TextSpan(text: '🌍'),
+                    ]
+                  : [
+                      const TextSpan(text: 'Отлично!\n'),
+                      const TextSpan(
+                        text: 'Что учим? ',
+                        style: TextStyle(color: Color(0xFF0ABDB9)),
+                      ),
+                      const TextSpan(text: '👇'),
+                    ],
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Выбери язык — AI настроит программу под тебя',
-            style: TextStyle(fontSize: 14, color: Color(0xFF4D6766)),
+          Text(
+            step == 1
+                ? 'AI адаптирует объяснения под твой язык'
+                : 'Выбери язык — AI настроит программу под тебя',
+            style: const TextStyle(fontSize: 14, color: Color(0xFF4D6766)),
           ),
         ],
       ),
@@ -440,10 +513,13 @@ class _BottomButton extends StatelessWidget {
   final bool enabled;
   final bool isLoading;
   final VoidCallback onTap;
-  const _BottomButton(
-      {required this.enabled,
-      required this.isLoading,
-      required this.onTap});
+  final String label;
+  const _BottomButton({
+    required this.enabled,
+    required this.isLoading,
+    required this.onTap,
+    this.label = 'Начать обучение →',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -473,9 +549,9 @@ class _BottomButton extends StatelessWidget {
                     child: CircularProgressIndicator(
                         strokeWidth: 2.5, color: Colors.white),
                   )
-                : const Text(
-                    'Начать обучение →',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                : Text(
+                    label,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
           ),
         ),

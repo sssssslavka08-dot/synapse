@@ -1,7 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DailyTasksService {
   static final _db = Supabase.instance.client;
+
+  // Подписчики (например DailyTab) перечитывают задания при изменении.
+  // Инкрементируется после каждого successful updateProgress/reward.
+  static final ValueNotifier<int> tasksUpdatedNotifier = ValueNotifier<int>(0);
 
   static const _templates = [
     {'type': 'complete_lesson',         'title': 'Пройти 1 урок',              'icon': '🎯', 'target': 1,  'xp': 30, 'coins': 10},
@@ -108,9 +113,14 @@ class DailyTasksService {
         completed.add(Map<String, dynamic>.from(task));
         await _rewardUser(
           xp: task['xp_reward'] as int? ?? 0,
-          coins: task['coin_reward'] as int? ?? 0,
+          coins: task['coin_reward' ] as int? ?? 0,
         );
       }
+    }
+
+    // Уведомляем подписчиков (DailyTab и т.п.), что данные изменились
+    if (tasks.isNotEmpty) {
+      tasksUpdatedNotifier.value++;
     }
 
     return completed;
