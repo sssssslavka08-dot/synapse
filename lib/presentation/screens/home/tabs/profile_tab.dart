@@ -54,78 +54,83 @@ class _ProfileTabState extends State<ProfileTab> {
       return;
     }
 
+    // Загружаем профиль отдельно — он критичен, всегда должен обновиться
+    Map<String, dynamic>? user;
     try {
-      // Данные профиля
-      final user = await Supabase.instance.client
+      user = await Supabase.instance.client
           .from('users')
           .select()
           .eq('id', uid)
           .maybeSingle();
+    } catch (_) {}
 
-      // Прогресс
-      final progress = await Supabase.instance.client
+    // Сразу применяем данные профиля, чтобы подписка показалась немедленно
+    if (user != null) {
+      setState(() => _userData = user);
+    }
+
+    // Прогресс — загружаем отдельно, его сбой не должен сбрасывать профиль
+    List progress = [];
+    try {
+      progress = await Supabase.instance.client
           .from('progress')
           .select('wrong_count, correct_count, next_review, words(category)')
           .eq('user_id', uid);
+    } catch (_) {}
 
-      // Считаем слабую категорию
-      final catErrors = <String, int>{};
-      for (final row in (progress as List)) {
-        final cat = (row['words'] as Map?)?['category'] as String? ?? 'other';
-        final wrong = row['wrong_count'] as int? ?? 0;
-        catErrors[cat] = (catErrors[cat] ?? 0) + wrong;
-      }
-      if (catErrors.isNotEmpty) {
-        _weakCategory = catErrors.entries
-            .reduce((a, b) => a.value > b.value ? a : b)
-            .key;
-      }
-
-      // Активность по дням (заглушка на основе streak)
-      final streak = user?['streak'] as int? ?? 0;
-      final activity = <String, int>{};
-      final days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-      final today = DateTime.now().weekday - 1;
-      for (int i = 0; i < 7; i++) {
-        final daysAgo = (today - i + 7) % 7;
-        activity[days[daysAgo]] = i < streak
-            ? 20 + (i * 15 % 80)
-            : 0;
-      }
-
-      // Дней с регистрации
-      if (user?['created_at'] != null) {
-        final created = DateTime.tryParse(user!['created_at'] as String);
-        if (created != null) {
-          _totalDays = DateTime.now().difference(created).inDays + 1;
-        }
-      }
-
-      final xp = user?['xp'] as int? ?? 0;
-      final wordsLearned = user?['words_learned'] as int? ?? 0;
-      final plan = user?['subscription_type'] as String? ?? 'free';
-      int correctCount = 0;
-      for (final row in (progress as List)) {
-        correctCount += (row['correct_count'] as int? ?? 0);
-      }
-
-      setState(() {
-        _userData = user;
-        _weekActivity = activity;
-        _loadingStats = false;
-        _achievements = AchievementChecker.compute(
-          xp: xp,
-          streak: streak,
-          wordsLearned: wordsLearned,
-          totalDays: _totalDays,
-          plan: plan,
-          correctCount: correctCount,
-          totalLessons: progress.length,
-        );
-      });
-    } catch (_) {
-      setState(() => _loadingStats = false);
+    // Считаем слабую категорию
+    final catErrors = <String, int>{};
+    for (final row in progress) {
+      final cat = (row['words'] as Map?)?['category'] as String? ?? 'other';
+      final wrong = row['wrong_count'] as int? ?? 0;
+      catErrors[cat] = (catErrors[cat] ?? 0) + wrong;
     }
+    if (catErrors.isNotEmpty) {
+      _weakCategory = catErrors.entries
+          .reduce((a, b) => a.value > b.value ? a : b)
+          .key;
+    }
+
+    // Активность по дням
+    final streak = user?['streak'] as int? ?? 0;
+    final activity = <String, int>{};
+    final days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    final today = DateTime.now().weekday - 1;
+    for (int i = 0; i < 7; i++) {
+      final daysAgo = (today - i + 7) % 7;
+      activity[days[daysAgo]] = i < streak ? 20 + (i * 15 % 80) : 0;
+    }
+
+    // Дней с регистрации
+    if (user?['created_at'] != null) {
+      final created = DateTime.tryParse(user!['created_at'] as String);
+      if (created != null) {
+        _totalDays = DateTime.now().difference(created).inDays + 1;
+      }
+    }
+
+    final xp = user?['xp'] as int? ?? 0;
+    final wordsLearned = user?['words_learned'] as int? ?? 0;
+    final plan = user?['subscription_type'] as String? ?? 'free';
+    int correctCount = 0;
+    for (final row in progress) {
+      correctCount += (row['correct_count'] as int? ?? 0);
+    }
+
+    setState(() {
+      _userData = user;
+      _weekActivity = activity;
+      _loadingStats = false;
+      _achievements = AchievementChecker.compute(
+        xp: xp,
+        streak: streak,
+        wordsLearned: wordsLearned,
+        totalDays: _totalDays,
+        plan: plan,
+        correctCount: correctCount,
+        totalLessons: progress.length,
+      );
+    });
   }
 
   void _showThemePicker(BuildContext ctx) {

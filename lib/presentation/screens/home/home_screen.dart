@@ -29,6 +29,9 @@ class _HomeScreenState extends State<HomeScreen>
   bool _showGreeting = false;
   bool _greetingToCorner = false;
 
+  // Robot greeting (all users, once per day)
+  bool _showRobotGreeting = false;
+
   late AnimationController _levelUpCtrl;
   late Animation<double> _levelUpScale;
   late Animation<double> _levelUpFade;
@@ -62,6 +65,21 @@ class _HomeScreenState extends State<HomeScreen>
 
     _checkLevelUp();
     if (widget.age <= 12) _checkNeuronchikGreeting();
+    _checkRobotGreeting();
+  }
+
+  Future<void> _checkRobotGreeting() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().split('T').first;
+    final last = prefs.getString('robot_greeting_date') ?? '';
+    if (last != today) {
+      await prefs.setString('robot_greeting_date', today);
+      if (!mounted) return;
+      setState(() => _showRobotGreeting = true);
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _showRobotGreeting = false);
+      });
+    }
   }
 
   Future<void> _checkNeuronchikGreeting() async {
@@ -139,6 +157,68 @@ class _HomeScreenState extends State<HomeScreen>
             index: _currentIndex,
             children: _tabs,
           ),
+          // Робот-приветствие для всех пользователей (раз в день)
+          if (_showRobotGreeting)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => setState(() => _showRobotGreeting = false),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedOpacity(
+                  opacity: _showRobotGreeting ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 400),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF0ABDB9).withValues(alpha: 0.25),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              _greetings[DateTime.now().day % _greetings.length],
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F1F1E),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Image.asset(
+                            'assets/images/robot.png',
+                            width: 180,
+                            height: 180,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Нажми, чтобы продолжить',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           // Нейрончик в углу (скрыт пока показывается приветствие)
           if (!_showGreeting)
             Positioned(

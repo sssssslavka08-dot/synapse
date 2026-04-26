@@ -94,8 +94,12 @@ class SupabaseService {
   }
 
   // Google Sign-In
+  // Web client ID из google-services.json — нужен для получения idToken
+  static const _webClientId =
+      '644143023283-bd8s43q4jhsmjk4kc3l6ndjuanh693gj.apps.googleusercontent.com';
+
   Future<AuthResponse?> signInWithGoogle() async {
-    final googleSignIn = GoogleSignIn();
+    final googleSignIn = GoogleSignIn(serverClientId: _webClientId);
     final googleUser = await googleSignIn.signIn();
     if (googleUser == null) return null;
 
