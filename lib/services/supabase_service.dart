@@ -219,16 +219,17 @@ class SupabaseService {
       'subscription_type': planType,
     }).eq('id', uid!);
 
-    // Записываем в subscriptions
-    await db.from('subscriptions').insert({
-      'user_id': uid,
-      'plan_type': planType,
-      'started_at': DateTime.now().toIso8601String(),
-      'expires_at': planType == 'free'
-          ? null
-          : DateTime.now().add(const Duration(days: 30)).toIso8601String(),
-      'is_active': true,
-    });
+    try {
+      await db.from('subscriptions').insert({
+        'user_id': uid,
+        'plan_type': planType,
+        'started_at': DateTime.now().toIso8601String(),
+        'expires_at': planType == 'free'
+            ? null
+            : DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+        'is_active': true,
+      });
+    } catch (_) {}
   }
 
   // Выдать бонусы подписки Legenda

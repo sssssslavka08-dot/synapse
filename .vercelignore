@@ -24,3 +24,10 @@ pubspec.lock
 *.gradle.kts
 Podfile
 Podfile.lock
+foto/
+*.md
+admin/
+web/
+DOCUMENTATION.md
+Progress.md
+README.md
