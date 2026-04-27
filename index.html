@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SYNAPSE — Учи языки бесплатно, весело и эффективно!</title>
-  <meta name="description" content="SYNAPSE — платформа для изучения 12 языков. Игры, XP, стрики, AI-алгоритм. Бесплатно.">
+  <title>SYNAPSE — Учи языки быстро и с удовольствием</title>
+  <meta name="description" content="SYNAPSE — AI-платформа для изучения 12 языков. Алгоритм Эббингауза, XP, стрики. Бесплатно.">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,295 +12,392 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --teal:      #1CC8C4;
-      --teal-d:    #189E9A;
-      --teal-dd:   #0E7A77;
-      --teal-l:    #E8FFFE;
-      --teal-ll:   #F4FFFE;
-      --dark:      #1A1A2E;
-      --dark2:     #16213E;
-      --mid:       #4A6274;
-      --muted:     #A0B4BE;
-      --white:     #FFFFFF;
-      --border:    #D4F5F3;
-      --green:     #58CC02;
-      --yellow:    #FFC800;
-      --red:       #FF4B4B;
-      --orange:    #FF9600;
+      --t:    #1CC8C4;
+      --td:   #14A09C;
+      --tdd:  #0C7A77;
+      --tl:   #E6FFFE;
+      --tll:  #F3FFFE;
+      --dark: #111827;
+      --mid:  #4B6A7A;
+      --mute: #8BA5B0;
+      --w:    #FFFFFF;
+      --br:   #C8F0EE;
     }
     html { scroll-behavior: smooth; }
     body { font-family: 'Nunito', sans-serif; background: #fff; color: var(--dark); overflow-x: hidden; }
 
-    /* ── UTIL ── */
-    .pill {
-      display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 100px; font-weight: 800; font-size: 15px; cursor: pointer;
-      text-decoration: none; transition: filter .15s, transform .1s;
-      border: none; gap: 6px;
-    }
-    .pill:active { transform: scale(0.97); }
-    .pill-teal { background: var(--teal); color: #fff; padding: 14px 28px; box-shadow: 0 4px 0 var(--teal-dd); }
-    .pill-teal:hover { filter: brightness(1.06); }
-    .pill-outline { background: #fff; color: var(--teal); padding: 13px 28px; border: 2px solid var(--border); box-shadow: 0 4px 0 var(--border); }
-    .pill-outline:hover { border-color: var(--teal); box-shadow: 0 4px 0 var(--teal-d); }
-    .pill-white { background: #fff; color: var(--teal); padding: 14px 32px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
-    .pill-white:hover { filter: brightness(0.97); }
-    .pill-dark { background: rgba(255,255,255,0.15); color: #fff; padding: 14px 28px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
-    .pill-dark:hover { background: rgba(255,255,255,0.22); }
-    .pill-lg { font-size: 17px; padding: 16px 40px; }
-    .pill-xl { font-size: 18px; padding: 18px 48px; }
-
-    .section-label {
-      font-size: 14px; font-weight: 800; color: var(--teal);
-      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;
-    }
-    .section-h {
-      font-size: 42px; font-weight: 900; line-height: 1.1; letter-spacing: -1.5px;
-      color: var(--teal); margin-bottom: 16px;
-    }
-    .section-p { font-size: 17px; color: var(--mid); line-height: 1.7; font-weight: 600; max-width: 440px; }
-
     /* ── REVEAL ── */
-    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease; }
-    .reveal.up { opacity: 1; transform: none; }
-    .reveal-l { opacity: 0; transform: translateX(-32px); transition: opacity .6s ease, transform .6s ease; }
-    .reveal-l.up { opacity: 1; transform: none; }
-    .reveal-r { opacity: 0; transform: translateX(32px); transition: opacity .6s ease, transform .6s ease; }
-    .reveal-r.up { opacity: 1; transform: none; }
-    .d1 { transition-delay: .1s; } .d2 { transition-delay: .2s; } .d3 { transition-delay: .3s; } .d4 { transition-delay: .4s; }
+    .rv  { opacity:0; transform:translateY(30px);  transition: opacity .65s ease, transform .65s ease; }
+    .rvl { opacity:0; transform:translateX(-40px); transition: opacity .65s ease, transform .65s ease; }
+    .rvr { opacity:0; transform:translateX(40px);  transition: opacity .65s ease, transform .65s ease; }
+    .rv.on,.rvl.on,.rvr.on { opacity:1; transform:none; }
+    .d1{transition-delay:.1s} .d2{transition-delay:.2s} .d3{transition-delay:.3s} .d4{transition-delay:.4s}
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      border-radius: 14px; font-weight: 800; font-size: 15px;
+      text-decoration: none; cursor: pointer; border: none; transition: all .15s;
+      padding: 15px 28px; user-select: none;
+    }
+    .btn:active { transform: scale(0.97) translateY(2px); }
+    .btn-fill  { background: var(--t); color: #fff; box-shadow: 0 4px 0 var(--tdd); }
+    .btn-fill:hover  { background: #1dbfbb; }
+    .btn-ghost { background: #fff; color: var(--t); border: 2px solid var(--br); box-shadow: 0 4px 0 var(--br); }
+    .btn-ghost:hover { border-color: var(--t); box-shadow: 0 4px 0 var(--td); }
+    .btn-dark  { background: rgba(255,255,255,.12); color:#fff; border:2px solid rgba(255,255,255,.25); box-shadow:0 4px 0 rgba(0,0,0,.25); }
+    .btn-dark:hover { background: rgba(255,255,255,.2); }
+    .btn-lg { font-size: 17px; padding: 17px 36px; border-radius: 16px; }
 
     /* ── NAV ── */
     nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(255,255,255,0.97); backdrop-filter: blur(12px);
-      border-bottom: 2px solid var(--border);
-      height: 64px; padding: 0 32px;
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(255,255,255,.96); backdrop-filter: blur(14px);
+      border-bottom: 2px solid var(--br);
+      height: 66px; padding: 0 40px;
       display: flex; align-items: center; justify-content: space-between;
     }
-    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .nav-logo img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
-    .nav-logo-name { font-size: 21px; font-weight: 900; color: var(--dark); letter-spacing: -0.5px; }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .nav-login { font-size: 14px; font-weight: 800; color: var(--teal); text-decoration: none; padding: 9px 16px; border-radius: 100px; border: 2px solid var(--border); transition: all .2s; }
-    .nav-login:hover { border-color: var(--teal); background: var(--teal-ll); }
-    .nav-start { background: var(--teal); color: #fff; border: none; border-radius: 100px; padding: 10px 22px; font-size: 14px; font-weight: 900; cursor: pointer; text-decoration: none; box-shadow: 0 3px 0 var(--teal-dd); transition: filter .15s; letter-spacing: .3px; }
-    .nav-start:hover { filter: brightness(1.07); }
+    .nav-logo { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+    .nav-logo img { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; border: 2px solid var(--br); }
+    .nav-logo span { font-size: 22px; font-weight: 900; color: var(--dark); letter-spacing: -0.5px; }
+    .nav-links { display: flex; align-items: center; gap: 6px; }
+    .nav-link { font-size: 14px; font-weight: 800; color: var(--mid); text-decoration: none; padding: 8px 14px; border-radius: 10px; transition: all .2s; }
+    .nav-link:hover { color: var(--t); background: var(--tl); }
+    .nav-login { font-size: 14px; font-weight: 800; color: var(--t); text-decoration: none; padding: 9px 18px; border-radius: 12px; border: 2px solid var(--br); transition: all .2s; }
+    .nav-login:hover { border-color: var(--t); background: var(--tll); }
+    .nav-cta { background: var(--t); color: #fff; font-size: 14px; font-weight: 900; text-decoration: none; padding: 10px 22px; border-radius: 12px; box-shadow: 0 3px 0 var(--tdd); letter-spacing: .3px; transition: filter .15s; }
+    .nav-cta:hover { filter: brightness(1.07); }
     .burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; }
     .burger span { display: block; width: 24px; height: 2px; background: var(--dark); border-radius: 2px; transition: all .3s; }
     .burger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
     .burger.open span:nth-child(2) { opacity: 0; }
     .burger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
-    .mobile-menu { display: none; position: fixed; top: 64px; left: 0; right: 0; background: #fff; padding: 16px 24px; flex-direction: column; gap: 2px; z-index: 99; border-bottom: 2px solid var(--border); }
-    .mobile-menu.open { display: flex; }
-    .mobile-menu a { text-decoration: none; color: var(--dark); font-size: 16px; font-weight: 700; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-    .mobile-menu a:last-child { border-bottom: none; color: var(--teal); }
+    .mob { display: none; position: fixed; top: 66px; left: 0; right: 0; background: #fff; border-bottom: 2px solid var(--br); padding: 16px 24px; flex-direction: column; gap: 2px; z-index: 199; }
+    .mob.open { display: flex; }
+    .mob a { text-decoration: none; color: var(--dark); font-size: 16px; font-weight: 700; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+    .mob a:last-child { border-bottom: none; color: var(--t); font-weight: 900; }
 
-    /* ── HERO ── */
-    .hero-wrap { background: #fff; padding-bottom: 0; overflow: hidden; }
-    .hero {
-      max-width: 1120px; margin: 0 auto; padding: 48px 32px 0;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: flex-end;
+    /* ══════════════════════════════════════
+       HERO — большой робот + текст слева
+    ══════════════════════════════════════ */
+    .hero-section {
+      background: linear-gradient(135deg, #F0FFFE 0%, #fff 60%);
+      border-bottom: 2px solid var(--br);
+      overflow: hidden;
     }
-    .hero-text { padding-bottom: 48px; }
-    .hero-title { font-size: 52px; font-weight: 900; line-height: 1.08; letter-spacing: -2px; color: var(--dark); margin-bottom: 28px; }
-    .hero-title em { color: var(--teal); font-style: normal; }
-    .hero-btns { display: flex; flex-direction: column; gap: 10px; max-width: 340px; }
-    .hero-btns .pill { width: 100%; }
-    .hero-img { display: flex; align-items: flex-end; justify-content: center; }
-    .hero-img img { width: 440px; max-width: 100%; display: block; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 20px 40px rgba(28,200,196,.2)); }
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+    .hero-wrap {
+      max-width: 1200px; margin: 0 auto;
+      padding: 56px 40px 0;
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 40px;
+      align-items: flex-end;
+      min-height: 560px;
+    }
+    .hero-left { padding-bottom: 60px; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--tl); color: var(--td);
+      font-size: 13px; font-weight: 900; padding: 6px 14px;
+      border-radius: 100px; border: 1.5px solid var(--br);
+      margin-bottom: 22px; letter-spacing: .3px;
+    }
+    .hero-h1 {
+      font-size: 58px; font-weight: 900; line-height: 1.06;
+      letter-spacing: -2.5px; color: var(--dark); margin-bottom: 22px;
+    }
+    .hero-h1 .accent { color: var(--t); }
+    .hero-sub {
+      font-size: 18px; color: var(--mid); line-height: 1.75;
+      font-weight: 600; margin-bottom: 36px; max-width: 440px;
+    }
+    .hero-btns { display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
+    .hero-btns .btn { width: 100%; font-size: 16px; padding: 17px; border-radius: 14px; }
+    .hero-stats { display: flex; gap: 28px; margin-top: 36px; padding-top: 28px; border-top: 2px solid var(--br); flex-wrap: wrap; }
+    .hs-val { font-size: 26px; font-weight: 900; color: var(--dark); }
+    .hs-lab { font-size: 12px; font-weight: 700; color: var(--mute); margin-top: 1px; }
+
+    /* Правая колонка — большой робот */
+    .hero-right {
+      display: flex; align-items: flex-end; justify-content: center;
+      position: relative;
+    }
+    .hero-blob {
+      position: absolute; width: 480px; height: 480px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(28,200,196,.14) 0%, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .hero-robot {
+      width: 100%; max-width: 560px;
+      position: relative; z-index: 2;
+      animation: bob 4.5s ease-in-out infinite;
+      filter: drop-shadow(0 32px 48px rgba(28,200,196,.22));
+    }
+    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+
+    /* Плашки вокруг робота */
+    .chip {
+      position: absolute; z-index: 3;
+      background: #fff; border-radius: 14px; padding: 10px 16px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.11);
+      display: flex; align-items: center; gap: 9px;
+      font-size: 13px; font-weight: 800; color: var(--dark);
+      border: 1.5px solid var(--br); white-space: nowrap;
+      animation: chipFloat 3.5s ease-in-out infinite;
+    }
+    @keyframes chipFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .chip-1 { top: 60px; right: -10px;  animation-delay: 0s; }
+    .chip-2 { top: 45%;  left: -20px;  animation-delay: .8s; }
+    .chip-3 { bottom: 80px; right: 10px; animation-delay: 1.6s; }
+    .chip .chip-icon { font-size: 20px; }
+    .chip .chip-val { font-size: 15px; font-weight: 900; color: var(--t); }
 
     /* ── LANG STRIP ── */
-    .lang-strip { background: var(--teal-l); border-top: 2px solid var(--border); border-bottom: 2px solid var(--border); padding: 0; overflow: hidden; }
-    .lang-strip-inner { display: flex; align-items: stretch; position: relative; }
-    .lang-strip-arrow { width: 48px; display: flex; align-items: center; justify-content: center; background: var(--teal-l); border: none; cursor: pointer; font-size: 20px; color: var(--teal); font-weight: 900; flex-shrink: 0; z-index: 2; }
-    .lang-strip-arrow:hover { background: var(--border); }
-    .lang-strip-scroll { display: flex; gap: 0; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; flex: 1; }
-    .lang-strip-scroll::-webkit-scrollbar { display: none; }
-    .lang-item { display: flex; align-items: center; gap: 8px; padding: 14px 20px; font-size: 14px; font-weight: 800; color: var(--mid); white-space: nowrap; cursor: pointer; border-right: 1px solid var(--border); transition: all .2s; flex-shrink: 0; }
-    .lang-item:hover { background: var(--border); color: var(--teal); }
-    .lang-item .flag { font-size: 22px; }
+    .lang-wrap { background: var(--tl); border-top: 2px solid var(--br); border-bottom: 2px solid var(--br); }
+    .lang-scroll-row { display: flex; align-items: stretch; }
+    .lang-arr { width: 46px; flex-shrink: 0; background: transparent; border: none; cursor: pointer; font-size: 22px; font-weight: 900; color: var(--td); display: flex; align-items: center; justify-content: center; transition: background .2s; }
+    .lang-arr:hover { background: var(--br); }
+    .lang-list { display: flex; overflow-x: auto; scrollbar-width: none; flex: 1; }
+    .lang-list::-webkit-scrollbar { display: none; }
+    .lang-pill { display: flex; align-items: center; gap: 9px; padding: 14px 22px; font-size: 14px; font-weight: 800; color: var(--mid); cursor: pointer; white-space: nowrap; border-right: 1.5px solid var(--br); transition: all .2s; flex-shrink: 0; }
+    .lang-pill:hover { background: var(--br); color: var(--t); }
+    .lang-pill .lf { font-size: 24px; }
 
-    /* ── FEATURE SECTIONS ── */
-    .feat { max-width: 1120px; margin: 0 auto; padding: 80px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-    .feat.rev .feat-img { order: -1; }
+    /* ── WHY SYNAPSE (stats cards) ── */
+    .why-section { padding: 80px 40px; }
+    .why-inner { max-width: 1120px; margin: 0 auto; }
+    .sec-label { font-size: 13px; font-weight: 900; color: var(--t); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+    .sec-h { font-size: 40px; font-weight: 900; letter-spacing: -1.5px; color: var(--dark); line-height: 1.1; margin-bottom: 14px; }
+    .sec-p { font-size: 17px; color: var(--mid); font-weight: 600; line-height: 1.7; max-width: 520px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 52px; }
+    .stat-card {
+      background: var(--tll); border-radius: 22px; padding: 28px 24px;
+      border: 2px solid var(--br); border-bottom: 4px solid var(--br);
+      text-align: center; transition: transform .2s, border-color .2s;
+    }
+    .stat-card:hover { transform: translateY(-4px); border-color: var(--t); border-bottom-color: var(--tdd); }
+    .stat-icon { font-size: 36px; margin-bottom: 12px; }
+    .stat-num { font-size: 40px; font-weight: 900; color: var(--t); letter-spacing: -1.5px; }
+    .stat-desc { font-size: 13px; font-weight: 700; color: var(--mid); margin-top: 4px; }
+
+    /* ── FEATURES (2-col split, alternating) ── */
+    .feat-wrap { border-top: 2px solid var(--br); }
+    .feat-wrap.bg-alt { background: var(--tll); border-bottom: 2px solid var(--br); }
+    .feat {
+      max-width: 1120px; margin: 0 auto; padding: 80px 40px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
+    }
     .feat-img { display: flex; justify-content: center; }
-    .feat-img img { width: 100%; max-width: 420px; filter: drop-shadow(0 12px 32px rgba(28,200,196,.15)); }
-    .feat-text {}
-    .feat-text .section-h { font-size: 38px; }
-    .feat-text .section-p { margin-bottom: 24px; }
-    .feat-sep { border-top: 2px solid var(--border); }
+    .feat-img img { width: 100%; max-width: 420px; filter: drop-shadow(0 16px 40px rgba(28,200,196,.17)); }
+    .feat-text .sec-h { font-size: 36px; }
+    .feat-text .sec-p { margin-bottom: 28px; }
+    .feat-list { list-style: none; margin-bottom: 32px; }
+    .feat-list li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--br); font-size: 15px; font-weight: 700; color: var(--mid); }
+    .feat-list li:last-child { border-bottom: none; }
+    .feat-list .fi { font-size: 20px; flex-shrink: 0; width: 32px; }
 
-    /* ── LEARN EVERYWHERE (light teal bg) ── */
-    .learn-everywhere { background: var(--teal-l); border-top: 2px solid var(--border); border-bottom: 2px solid var(--border); padding: 80px 32px; text-align: center; overflow: hidden; position: relative; }
-    .learn-everywhere .section-h { color: var(--dark); font-size: 44px; margin-bottom: 12px; }
-    .learn-everywhere .section-p { margin: 0 auto 36px; max-width: 480px; }
-    .le-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 56px; }
-    .le-scene { position: relative; display: inline-block; }
-    .le-robot { width: 300px; position: relative; z-index: 2; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 16px 32px rgba(28,200,196,.25)); }
-    .floating-item {
-      position: absolute; font-size: 36px; z-index: 3;
-      animation: floatItem 3s ease-in-out infinite;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,.15));
+    /* ── GAMIFICATION SECTION ── */
+    .game-section {
+      background: var(--dark); padding: 88px 40px; position: relative; overflow: hidden;
     }
-    @keyframes floatItem {
-      0%,100%  { transform: translateY(0) rotate(0deg); }
-      33%      { transform: translateY(-12px) rotate(8deg); }
-      66%      { transform: translateY(6px) rotate(-5deg); }
+    .game-section::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 15% 50%, rgba(28,200,196,.15) 0%, transparent 100%),
+                  radial-gradient(ellipse 50% 50% at 85% 30%, rgba(100,60,220,.1) 0%, transparent 100%);
     }
-    .fi-1  { top: -20px;  left: -60px;  animation-delay: 0s; }
-    .fi-2  { top: 20px;   right: -70px; animation-delay: .4s; }
-    .fi-3  { top: 50%;    left: -80px;  animation-delay: .8s; }
-    .fi-4  { top: 50%;    right: -75px; animation-delay: 1.2s; }
-    .fi-5  { bottom: 20px; left: -50px; animation-delay: 1.6s; }
-    .fi-6  { bottom: 10px; right: -60px; animation-delay: 2s; }
+    .game-inner { max-width: 1120px; margin: 0 auto; position: relative; }
+    .game-header { text-align: center; margin-bottom: 56px; }
+    .game-header .sec-h { color: #fff; }
+    .game-header .sec-p { color: var(--mute); margin: 0 auto; }
+    .game-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 48px; }
+    .gc {
+      background: rgba(255,255,255,.05); border-radius: 24px; padding: 32px 26px;
+      border: 1.5px solid rgba(255,255,255,.1); text-align: center;
+      transition: all .2s;
+    }
+    .gc:hover { background: rgba(28,200,196,.1); border-color: var(--t); transform: translateY(-4px); }
+    .gc-icon { font-size: 50px; margin-bottom: 14px; }
+    .gc-title { font-size: 19px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+    .gc-desc { font-size: 14px; color: var(--mute); line-height: 1.65; font-weight: 600; }
+    .gc-tag { display: inline-block; background: rgba(28,200,196,.2); color: var(--t); font-size: 11px; font-weight: 900; padding: 4px 12px; border-radius: 100px; margin-top: 12px; }
+    /* Прогресс-бар для геймификации */
+    .xp-bar-demo {
+      background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: 22px; padding: 32px 36px;
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 24px;
+    }
+    .xbd { text-align: center; }
+    .xbd-val { font-size: 38px; font-weight: 900; color: var(--t); letter-spacing: -1px; }
+    .xbd-lab { font-size: 13px; font-weight: 700; color: var(--mute); margin-top: 4px; }
+    .xbd-ico { font-size: 22px; margin-bottom: 6px; }
 
-    /* ── PRO DARK ── */
-    .pro-section {
-      background: var(--dark);
-      padding: 88px 32px;
-      position: relative; overflow: hidden;
+    /* ── FLOATING ROBOT SECTION ── */
+    .everywhere {
+      background: var(--tll); border-top: 2px solid var(--br);
+      padding: 80px 40px; text-align: center; overflow: hidden;
     }
+    .everywhere .sec-h { font-size: 42px; margin-bottom: 12px; color: var(--dark); }
+    .everywhere .sec-p { margin: 0 auto 40px; }
+    .ew-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 56px; }
+    .ew-scene { position: relative; display: inline-block; }
+    .ew-robot { width: 340px; animation: bob 4.5s ease-in-out infinite; filter: drop-shadow(0 24px 48px rgba(28,200,196,.28)); }
+    .fi-wrap { position: absolute; }
+    .fi-item { font-size: 40px; animation: floatRnd 3s ease-in-out infinite; position: absolute; display: block; filter: drop-shadow(0 4px 10px rgba(0,0,0,.12)); }
+    @keyframes floatRnd { 0%,100%{transform:translateY(0) rotate(0)} 40%{transform:translateY(-14px) rotate(10deg)} 70%{transform:translateY(6px) rotate(-6deg)} }
+    .fi-a { top: -10px; left: -80px; animation-delay: 0s; }
+    .fi-b { top: 30px;  right: -90px; animation-delay: .5s; }
+    .fi-c { top: 48%;   left: -100px; animation-delay: 1s; }
+    .fi-d { top: 48%;   right: -95px; animation-delay: 1.5s; }
+    .fi-e { bottom: 40px; left: -70px; animation-delay: 2s; }
+    .fi-f { bottom: 30px; right: -80px; animation-delay: 2.5s; }
+
+    /* ── PRO/LEGENDA ── */
+    .pro-section { background: var(--dark); padding: 88px 40px; position: relative; overflow: hidden; }
     .pro-section::before {
       content: ''; position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 30% 50%, rgba(28,200,196,.18) 0%, transparent 55%),
-                  radial-gradient(ellipse at 80% 20%, rgba(100,60,200,.12) 0%, transparent 50%);
+      background: radial-gradient(ellipse 70% 70% at 80% 50%, rgba(28,200,196,.12) 0%, transparent 60%);
     }
     .pro-inner { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; position: relative; }
-    .pro-img img { width: 100%; max-width: 380px; filter: drop-shadow(0 20px 48px rgba(28,200,196,.3)); animation: float 4s ease-in-out infinite; }
-    .pro-badge { display: inline-block; background: linear-gradient(90deg, var(--teal), #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
-    .pro-title { font-size: 42px; font-weight: 900; color: #fff; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px; }
-    .pro-sub { font-size: 17px; color: var(--muted); font-weight: 600; line-height: 1.7; margin-bottom: 32px; max-width: 420px; }
-    .pro-perks { list-style: none; margin-bottom: 36px; }
-    .pro-perks li { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; color: rgba(255,255,255,.85); padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
-    .pro-perks li:last-child { border-bottom: none; }
-    .pro-perks .pi { font-size: 20px; }
+    .pro-img { display: flex; justify-content: center; }
+    .pro-img img { width: 100%; max-width: 360px; animation: bob 4.5s ease-in-out infinite; filter: drop-shadow(0 24px 48px rgba(28,200,196,.3)); }
+    .pro-eyebrow { display: inline-flex; align-items: center; gap: 6px; background: rgba(28,200,196,.18); color: var(--t); font-size: 12px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; border: 1.5px solid rgba(28,200,196,.3); }
+    .pro-h { font-size: 44px; font-weight: 900; color: #fff; letter-spacing: -1.5px; line-height: 1.08; margin-bottom: 16px; }
+    .pro-p { font-size: 17px; color: var(--mute); font-weight: 600; line-height: 1.7; margin-bottom: 32px; }
+    .pro-list { list-style: none; margin-bottom: 36px; }
+    .pro-list li { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; color: rgba(255,255,255,.82); padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .pro-list li:last-child { border-bottom: none; }
+    .pro-list .pi { font-size: 20px; }
+    .pro-btns { display: flex; gap: 12px; flex-wrap: wrap; }
 
     /* ── CERTIFICATE ── */
-    .cert-section { padding: 80px 32px; }
+    .cert-section { padding: 80px 40px; }
     .cert-inner { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-    .cert-img img { width: 100%; max-width: 460px; border-radius: 20px; box-shadow: 0 24px 64px rgba(28,200,196,.2); transform: rotate(-2deg); transition: transform .3s; }
+    .cert-img img { width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 24px 64px rgba(28,200,196,.18); transform: rotate(-1.5deg); transition: transform .4s; }
     .cert-img img:hover { transform: rotate(0deg) scale(1.02); }
 
     /* ── PRICING ── */
-    .pricing-section { background: var(--teal-ll); border-top: 2px solid var(--border); border-bottom: 2px solid var(--border); padding: 80px 32px; }
+    .pricing-section { background: var(--tll); border-top: 2px solid var(--br); border-bottom: 2px solid var(--br); padding: 80px 40px; }
     .pricing-inner { max-width: 1120px; margin: 0 auto; }
-    .pricing-header { text-align: center; margin-bottom: 48px; }
-    .pricing-header .section-h { color: var(--dark); }
-    .pricing-toggle { display: inline-flex; background: #fff; border-radius: 100px; padding: 4px; border: 2px solid var(--border); margin-top: 16px; }
-    .ptbtn { padding: 8px 22px; border-radius: 100px; border: none; cursor: pointer; font-weight: 800; font-size: 14px; background: transparent; color: var(--muted); transition: all .2s; }
-    .ptbtn.active { background: var(--teal); color: #fff; box-shadow: 0 2px 0 var(--teal-dd); }
-    .save-tag { background: #DCFCE7; color: #166534; font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 100px; margin-left: 6px; }
-    .pricing-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .pc {
-      background: #fff; border-radius: 24px; padding: 32px 28px;
-      border: 2px solid var(--border); border-bottom: 5px solid var(--border);
-      position: relative; transition: transform .2s;
-    }
+    .pricing-head { text-align: center; margin-bottom: 52px; }
+    .pricing-toggle { display: inline-flex; background: #fff; border-radius: 100px; padding: 4px; border: 2px solid var(--br); margin-top: 16px; }
+    .ptb { padding: 9px 22px; border-radius: 100px; border: none; cursor: pointer; font-weight: 800; font-size: 14px; background: transparent; color: var(--mute); transition: all .2s; }
+    .ptb.on { background: var(--t); color: #fff; box-shadow: 0 2px 0 var(--tdd); }
+    .save-tag { background: #DCFCE7; color: #166534; font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 100px; margin-left: 4px; }
+    .pc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .pc { background: #fff; border-radius: 24px; padding: 32px 28px; border: 2px solid var(--br); border-bottom: 5px solid var(--br); position: relative; transition: transform .2s; }
     .pc:hover { transform: translateY(-4px); }
-    .pc.hot { border-color: var(--teal); border-bottom-color: var(--teal-dd); box-shadow: 0 16px 48px rgba(28,200,196,.15); }
-    .pc-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #fff; font-size: 11px; font-weight: 900; padding: 4px 16px; border-radius: 100px; box-shadow: 0 2px 0 var(--teal-dd); white-space: nowrap; }
-    .pc-name { font-size: 13px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .pc.hot { border-color: var(--t); border-bottom-color: var(--tdd); box-shadow: 0 16px 48px rgba(28,200,196,.14); }
+    .pc-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--t); color: #fff; font-size: 11px; font-weight: 900; padding: 4px 16px; border-radius: 100px; box-shadow: 0 2px 0 var(--tdd); white-space: nowrap; }
+    .pc-name { font-size: 13px; font-weight: 900; color: var(--mute); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
     .pc-price { font-size: 42px; font-weight: 900; color: var(--dark); letter-spacing: -1.5px; }
-    .pc-price span { font-size: 15px; font-weight: 700; color: var(--muted); }
-    .pc-note { font-size: 12px; color: var(--green); font-weight: 800; min-height: 16px; margin: 4px 0 14px; }
+    .pc-price span { font-size: 15px; font-weight: 700; color: var(--mute); }
+    .pc-note { font-size: 12px; color: #16a34a; font-weight: 800; min-height: 16px; margin: 4px 0 14px; }
     .pc-desc { font-size: 14px; color: var(--mid); margin-bottom: 24px; font-weight: 700; }
-    .pc-list { list-style: none; margin-bottom: 28px; }
-    .pc-list li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--mid); padding: 6px 0; border-bottom: 1px solid var(--border); font-weight: 700; }
-    .pc-list li:last-child { border-bottom: none; }
-    .pc-list li.no { color: #CBD5E1; }
-    .pc-btn { display: block; width: 100%; text-align: center; border-radius: 100px; padding: 14px; font-size: 15px; font-weight: 900; text-decoration: none; border: none; cursor: pointer; }
-    .pc-btn-fill { background: var(--teal); color: #fff; box-shadow: 0 3px 0 var(--teal-dd); transition: filter .15s; }
-    .pc-btn-fill:hover { filter: brightness(1.07); }
-    .pc-btn-out { background: #fff; color: var(--teal); border: 2px solid var(--border); box-shadow: 0 3px 0 var(--border); transition: border-color .2s; }
-    .pc-btn-out:hover { border-color: var(--teal); box-shadow: 0 3px 0 var(--teal-d); }
-
-    /* ── BIG CTA BOTTOM ── */
-    .big-cta {
-      background: #fff; padding: 0 32px 0; text-align: center; overflow: hidden;
-    }
-    .big-cta-inner { max-width: 900px; margin: 0 auto; }
-    .big-cta h2 { font-size: 50px; font-weight: 900; color: var(--dark); letter-spacing: -2px; line-height: 1.1; margin-bottom: 28px; padding-top: 80px; }
-    .big-cta h2 em { color: var(--teal); font-style: normal; }
-    .big-cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
-    .big-cta-scene { position: relative; display: inline-block; }
-    .big-cta-robot { width: 280px; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 24px 48px rgba(28,200,196,.3)); }
-    .bfi { position: absolute; font-size: 42px; animation: floatItem 3s ease-in-out infinite; filter: drop-shadow(0 4px 12px rgba(0,0,0,.15)); }
-    .bfi-1 { top: -10px; left: -70px;  animation-delay: 0s; }
-    .bfi-2 { top: 30px;  right: -80px; animation-delay: .5s; }
-    .bfi-3 { top: 50%;   left: -90px;  animation-delay: 1s; }
-    .bfi-4 { top: 50%;   right: -85px; animation-delay: 1.5s; }
-    .bfi-5 { bottom: 30px; left: -60px; animation-delay: 2s; }
-    .bfi-6 { bottom: 20px; right: -70px; animation-delay: 2.5s; }
-
-    /* Teal hill wave at bottom */
-    .teal-hill {
-      width: 100%; display: block; margin-top: -2px;
-    }
-
-    /* ── FOOTER ── */
-    footer { background: var(--teal); color: rgba(255,255,255,.85); padding: 56px 32px 32px; }
-    .footer-inner { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
-    .footer-brand .fl { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .footer-brand .fl img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
-    .footer-brand .fl span { font-size: 20px; font-weight: 900; color: #fff; }
-    .footer-brand p { font-size: 14px; line-height: 1.7; font-weight: 600; max-width: 220px; color: rgba(255,255,255,.75); }
-    .footer-col h4 { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
-    .footer-col a { display: block; text-decoration: none; color: rgba(255,255,255,.75); font-size: 14px; font-weight: 700; padding: 4px 0; transition: color .2s; }
-    .footer-col a:hover { color: #fff; }
-    .footer-bottom { max-width: 1120px; margin: 0 auto; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; color: rgba(255,255,255,.65); font-weight: 700; }
-    .footer-bottom a { color: rgba(255,255,255,.65); text-decoration: none; }
-    .footer-bottom a:hover { color: #fff; }
+    .pc-feats { list-style: none; margin-bottom: 28px; }
+    .pc-feats li { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--mid); padding: 6px 0; border-bottom: 1px solid var(--br); }
+    .pc-feats li:last-child { border-bottom: none; }
+    .pc-feats li.no { color: #CBD5E1; }
+    .pc-btn { display: block; width: 100%; text-align: center; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 900; text-decoration: none; border: none; cursor: pointer; transition: all .15s; }
+    .pc-btn:active { transform: scale(.97); }
+    .pc-btn-f { background: var(--t); color: #fff; box-shadow: 0 3px 0 var(--tdd); }
+    .pc-btn-f:hover { filter: brightness(1.07); }
+    .pc-btn-o { background: #fff; color: var(--t); border: 2px solid var(--br); box-shadow: 0 3px 0 var(--br); }
+    .pc-btn-o:hover { border-color: var(--t); box-shadow: 0 3px 0 var(--td); }
 
     /* ── FAQ ── */
-    .faq-section { padding: 80px 32px; background: var(--teal-ll); border-top: 2px solid var(--border); }
+    .faq-section { padding: 80px 40px; }
     .faq-inner { max-width: 760px; margin: 0 auto; }
-    .faq-header { text-align: center; margin-bottom: 48px; }
-    .faq-header .section-h { color: var(--dark); }
-    .faq-item { background: #fff; border-radius: 16px; border: 2px solid var(--border); border-bottom: 4px solid var(--border); overflow: hidden; margin-bottom: 12px; }
-    .faq-item.open { border-color: var(--teal); border-bottom-color: var(--teal-d); }
+    .faq-head { text-align: center; margin-bottom: 48px; }
+    .faq-item { background: var(--tll); border-radius: 16px; border: 2px solid var(--br); border-bottom: 4px solid var(--br); overflow: hidden; margin-bottom: 12px; }
+    .faq-item.open { border-color: var(--t); border-bottom-color: var(--tdd); }
     .faq-q { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; font-size: 16px; font-weight: 900; color: var(--dark); user-select: none; }
-    .faq-q:hover { color: var(--teal); }
-    .faq-icon { font-size: 22px; color: var(--teal); transition: transform .3s; flex-shrink: 0; margin-left: 16px; }
-    .faq-item.open .faq-icon { transform: rotate(45deg); }
+    .faq-q:hover { color: var(--t); }
+    .faq-ic { font-size: 22px; color: var(--t); transition: transform .3s; flex-shrink: 0; margin-left: 16px; }
+    .faq-item.open .faq-ic { transform: rotate(45deg); }
     .faq-a { max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .35s ease; font-size: 15px; color: var(--mid); line-height: 1.7; padding: 0 24px; font-weight: 600; }
-    .faq-item.open .faq-a { max-height: 200px; padding: 0 24px 20px; }
+    .faq-item.open .faq-a { max-height: 220px; padding: 0 24px 20px; }
+
+    /* ── BIG CTA + WAVE ── */
+    .cta-section { background: #fff; text-align: center; padding: 80px 40px 0; overflow: hidden; }
+    .cta-h { font-size: 52px; font-weight: 900; letter-spacing: -2px; color: var(--dark); margin-bottom: 28px; line-height: 1.07; }
+    .cta-h em { color: var(--t); font-style: normal; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
+    .cta-robot-wrap { position: relative; display: inline-block; }
+    .cta-robot { width: 300px; animation: bob 4.5s ease-in-out infinite; filter: drop-shadow(0 28px 52px rgba(28,200,196,.28)); }
+    .cta-fi { position: absolute; font-size: 44px; animation: floatRnd 3s ease-in-out infinite; filter: drop-shadow(0 4px 12px rgba(0,0,0,.12)); }
+    .cfa1{top:-5px;left:-75px;animation-delay:0s}
+    .cfa2{top:25px;right:-85px;animation-delay:.5s}
+    .cfa3{top:48%;left:-95px;animation-delay:1s}
+    .cfa4{top:48%;right:-90px;animation-delay:1.5s}
+    .cfa5{bottom:40px;left:-65px;animation-delay:2s}
+    .cfa6{bottom:35px;right:-75px;animation-delay:2.5s}
+    .wave-svg { display: block; width: 100%; margin-top: -2px; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--dark); color: rgba(255,255,255,.7); padding: 60px 40px 32px; }
+    .foot-inner { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+    .foot-brand .fl { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .foot-brand .fl img { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; border: 2px solid rgba(255,255,255,.12); }
+    .foot-brand .fl span { font-size: 20px; font-weight: 900; color: #fff; }
+    .foot-brand p { font-size: 14px; line-height: 1.7; font-weight: 600; max-width: 230px; }
+    .foot-socials { display: flex; gap: 10px; margin-top: 20px; }
+    .foot-soc { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,.07); display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 17px; transition: background .2s; border: 1.5px solid rgba(255,255,255,.1); }
+    .foot-soc:hover { background: var(--t); border-color: var(--t); }
+    .foot-col h4 { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+    .foot-col a { display: block; text-decoration: none; color: rgba(255,255,255,.6); font-size: 14px; font-weight: 700; padding: 5px 0; transition: color .2s; }
+    .foot-col a:hover { color: var(--t); }
+    .foot-bottom { max-width: 1120px; margin: 0 auto; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; font-weight: 700; }
+    .foot-bottom a { color: rgba(255,255,255,.5); text-decoration: none; }
+    .foot-bottom a:hover { color: var(--t); }
 
     /* ── BACK TO TOP ── */
-    .btt { position: fixed; bottom: 24px; right: 24px; z-index: 200; width: 48px; height: 48px; border-radius: 50%; background: var(--teal); color: #fff; border: none; font-size: 20px; cursor: pointer; box-shadow: 0 4px 0 var(--teal-dd); opacity: 0; visibility: hidden; transition: all .3s; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+    .btt { position: fixed; bottom: 24px; right: 24px; z-index: 300; width: 48px; height: 48px; border-radius: 50%; background: var(--t); color: #fff; border: none; font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 0 var(--tdd); opacity: 0; visibility: hidden; transition: all .3s; display: flex; align-items: center; justify-content: center; }
     .btt.show { opacity: 1; visibility: visible; }
     .btt:hover { transform: translateY(-3px); }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 960px) {
-      .hero { grid-template-columns: 1fr; text-align: center; padding-bottom: 48px; gap: 40px; }
-      .hero-img { order: -1; }
-      .hero-img img { width: 280px; }
-      .hero-btns { max-width: 100%; }
-      .feat { grid-template-columns: 1fr; gap: 40px; text-align: center; }
-      .feat.rev .feat-img { order: 0; }
-      .feat-text .section-p { max-width: 100%; }
-      .pro-inner { grid-template-columns: 1fr; text-align: center; gap: 40px; }
-      .pro-img img { width: 220px; }
-      .pro-sub { max-width: 100%; margin: 0 auto 32px; }
-      .cert-inner { grid-template-columns: 1fr; gap: 40px; text-align: center; }
-      .pricing-cards { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; }
-      .footer-inner { grid-template-columns: 1fr 1fr; }
-      .burger { display: flex; }
-      .nav-right .nav-login { display: none; }
-      .big-cta h2 { font-size: 36px; }
-      .section-h { font-size: 32px; }
+    @media(max-width:1024px){
+      .hero-wrap { grid-template-columns:1fr; padding-bottom:0; min-height:auto; text-align:center; }
+      .hero-right { order:-1; padding: 40px 0 0; }
+      .hero-robot { max-width:360px; }
+      .hero-blob { width:360px;height:360px; }
+      .hero-sub,.hero-btns,.hero-stats { margin-left:auto; margin-right:auto; }
+      .hero-stats { justify-content:center; }
+      .chip { display:none; }
+      .feat { grid-template-columns:1fr; gap:40px; text-align:center; }
+      .feat-img { order:-1; }
+      .feat-text .sec-p { max-width:100%; }
+      .feat-list li { text-align:left; }
+      .pro-inner { grid-template-columns:1fr; text-align:center; gap:40px; }
+      .pro-img img { max-width:260px; }
+      .cert-inner { grid-template-columns:1fr; gap:40px; text-align:center; }
+      .cert-img img { transform:none; margin:0 auto; }
+      .pc-grid { grid-template-columns:1fr; max-width:380px; margin:0 auto; }
+      .stats-grid { grid-template-columns:1fr 1fr; }
+      .game-cards { grid-template-columns:1fr 1fr; }
+      .xp-bar-demo { grid-template-columns:1fr 1fr; }
+      .foot-inner { grid-template-columns:1fr 1fr; }
+      .nav-links { display:none; }
+      .nav-login { display:none; }
+      .burger { display:flex; }
+      .hero-left { padding-bottom:40px; }
     }
-    @media (max-width: 600px) {
-      .hero-title { font-size: 38px; letter-spacing: -1.5px; }
-      .section-h { font-size: 28px; }
-      .big-cta h2 { font-size: 30px; }
-      .feat { padding: 56px 20px; }
-      nav { padding: 0 20px; }
-      .footer-inner { grid-template-columns: 1fr; }
-      .lang-strip .lang-item { padding: 12px 14px; }
-      .le-robot { width: 200px; }
-      .big-cta-robot { width: 200px; }
+    @media(max-width:600px){
+      nav { padding:0 20px; }
+      .hero-wrap { padding:36px 20px 0; }
+      .hero-h1 { font-size:40px; letter-spacing:-1.5px; }
+      .hero-robot { max-width:260px; }
+      .why-section,.feat,.cert-section,.faq-section,.cta-section,.pro-section,.everywhere,.pricing-section,.game-section { padding-left:20px; padding-right:20px; }
+      .sec-h,.feat-text .sec-h { font-size:28px; }
+      .cta-h { font-size:34px; }
+      .stats-grid { grid-template-columns:1fr 1fr; gap:12px; }
+      .game-cards { grid-template-columns:1fr; }
+      .xp-bar-demo { grid-template-columns:1fr 1fr; gap:16px; padding:24px; }
+      .foot-inner { grid-template-columns:1fr; }
+      .ew-robot { width:220px; }
+      .cta-robot { width:200px; }
+      .pro-btns { flex-direction:column; }
     }
   </style>
 </head>
@@ -312,139 +409,240 @@
 <nav>
   <a href="/" class="nav-logo">
     <img src="img/logo-robot.png" alt="SYNAPSE">
-    <span class="nav-logo-name">SYNAPSE</span>
+    <span>SYNAPSE</span>
   </a>
-  <div class="nav-right">
+  <div class="nav-links">
+    <a href="#why" class="nav-link">О нас</a>
+    <a href="#features" class="nav-link">Возможности</a>
+    <a href="#pricing" class="nav-link">Тарифы</a>
+    <a href="#faq" class="nav-link">FAQ</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
     <a href="/flutter/" class="nav-login">Войти</a>
-    <a href="/flutter/" class="nav-start">НАЧАТЬ</a>
+    <a href="/flutter/" class="nav-cta">НАЧАТЬ БЕСПЛАТНО</a>
   </div>
   <button class="burger" id="burger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
-<div class="mobile-menu" id="mobileMenu">
-  <a href="#pricing" onclick="closeMenu()">Тарифы</a>
-  <a href="#faq" onclick="closeMenu()">FAQ</a>
-  <a href="/flutter/" onclick="closeMenu()">Войти</a>
-  <a href="/flutter/" onclick="closeMenu()">🚀 Начать бесплатно</a>
+<div class="mob" id="mob">
+  <a href="#why" onclick="closeMob()">О нас</a>
+  <a href="#features" onclick="closeMob()">Возможности</a>
+  <a href="#pricing" onclick="closeMob()">Тарифы</a>
+  <a href="#faq" onclick="closeMob()">FAQ</a>
+  <a href="/flutter/" onclick="closeMob()">Войти</a>
+  <a href="/flutter/" onclick="closeMob()">🚀 Начать бесплатно</a>
 </div>
 
 <!-- ── HERO ── -->
-<section class="hero-wrap">
-  <div class="hero">
-    <div class="hero-text reveal-l">
-      <h1 class="hero-title">Учи языки<br>бесплатно,<br><em>весело</em> и<br>эффективно!</h1>
+<section class="hero-section">
+  <div class="hero-wrap">
+    <!-- Левый блок: текст -->
+    <div class="hero-left rvl">
+      <div class="hero-eyebrow">🤖 AI-алгоритм · 12 языков · Бесплатно</div>
+      <h1 class="hero-h1">
+        Учи языки<br>
+        быстро и<br>
+        <span class="accent">с удовольствием</span>
+      </h1>
+      <p class="hero-sub">SYNAPSE запоминает за тебя, когда именно повторить слово — так ты тратишь минимум времени и получаешь максимум результата.</p>
       <div class="hero-btns">
-        <a href="/flutter/" class="pill pill-teal pill-lg">НАЧАТЬ</a>
-        <a href="/flutter/" class="pill pill-outline pill-lg">У меня уже есть аккаунт</a>
+        <a href="/flutter/" class="btn btn-fill btn-lg">🚀 Начать бесплатно</a>
+        <a href="/flutter/" class="btn btn-ghost btn-lg">У меня уже есть аккаунт</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="hs-val" id="sUsers">0</div><div class="hs-lab">учеников</div></div>
+        <div><div class="hs-val" id="sWords">0</div><div class="hs-lab">слов в базе</div></div>
+        <div><div class="hs-val" id="sLangs">0</div><div class="hs-lab">языков</div></div>
       </div>
     </div>
-    <div class="hero-img reveal-r d2">
-      <img src="img/robot-main.png" alt="SYNAPSE маскот">
+    <!-- Правый блок: большой робот -->
+    <div class="hero-right rvr d2">
+      <div class="hero-blob"></div>
+      <!-- Плашки вокруг -->
+      <div class="chip chip-1">
+        <span class="chip-icon">🔥</span>
+        <span>Стрик <span class="chip-val">21 день</span></span>
+      </div>
+      <div class="chip chip-2">
+        <span class="chip-icon">⚡</span>
+        <span>+<span class="chip-val">25 XP</span></span>
+      </div>
+      <div class="chip chip-3">
+        <span class="chip-icon">🏆</span>
+        <span>Топ <span class="chip-val">10%</span></span>
+      </div>
+      <img src="img/robot-main.png" alt="SYNAPSE маскот" class="hero-robot">
     </div>
   </div>
 </section>
 
 <!-- ── LANG STRIP ── -->
-<div class="lang-strip">
-  <div class="lang-strip-inner">
-    <button class="lang-strip-arrow" onclick="scrollLangs(-200)">‹</button>
-    <div class="lang-strip-scroll" id="langScroll">
-      <div class="lang-item"><span class="flag">🇬🇧</span> Английский</div>
-      <div class="lang-item"><span class="flag">🇰🇿</span> Казахский</div>
-      <div class="lang-item"><span class="flag">🇩🇪</span> Немецкий</div>
-      <div class="lang-item"><span class="flag">🇫🇷</span> Французский</div>
-      <div class="lang-item"><span class="flag">🇪🇸</span> Испанский</div>
-      <div class="lang-item"><span class="flag">🇮🇹</span> Итальянский</div>
-      <div class="lang-item"><span class="flag">🇹🇷</span> Турецкий</div>
-      <div class="lang-item"><span class="flag">🇷🇺</span> Русский</div>
-      <div class="lang-item"><span class="flag">🇨🇳</span> Китайский</div>
-      <div class="lang-item"><span class="flag">🇯🇵</span> Японский</div>
-      <div class="lang-item"><span class="flag">🇰🇷</span> Корейский</div>
-      <div class="lang-item"><span class="flag">🇸🇦</span> Арабский</div>
+<div class="lang-wrap">
+  <div class="lang-scroll-row">
+    <button class="lang-arr" onclick="scrollL(-180)">‹</button>
+    <div class="lang-list" id="langList">
+      <div class="lang-pill"><span class="lf">🇬🇧</span>Английский</div>
+      <div class="lang-pill"><span class="lf">🇰🇿</span>Казахский</div>
+      <div class="lang-pill"><span class="lf">🇩🇪</span>Немецкий</div>
+      <div class="lang-pill"><span class="lf">🇫🇷</span>Французский</div>
+      <div class="lang-pill"><span class="lf">🇪🇸</span>Испанский</div>
+      <div class="lang-pill"><span class="lf">🇮🇹</span>Итальянский</div>
+      <div class="lang-pill"><span class="lf">🇹🇷</span>Турецкий</div>
+      <div class="lang-pill"><span class="lf">🇷🇺</span>Русский</div>
+      <div class="lang-pill"><span class="lf">🇨🇳</span>Китайский</div>
+      <div class="lang-pill"><span class="lf">🇯🇵</span>Японский</div>
+      <div class="lang-pill"><span class="lf">🇰🇷</span>Корейский</div>
+      <div class="lang-pill"><span class="lf">🇸🇦</span>Арабский</div>
     </div>
-    <button class="lang-strip-arrow" onclick="scrollLangs(200)">›</button>
+    <button class="lang-arr" onclick="scrollL(180)">›</button>
   </div>
 </div>
 
-<!-- ── FEAT 1: Бесплатно. Весело. Эффективно. ── -->
-<div class="feat-sep"></div>
-<div class="feat">
-  <div class="feat-text reveal-l">
-    <div class="section-h">Бесплатно.<br>Весело.<br>Эффективно.</div>
-    <p class="section-p">Учись с SYNAPSE — зарабатывай очки за правильные ответы, открывай новые уровни и развивай навыки разговорной речи. Наши уроки действительно работают.</p>
-    <a href="/flutter/" class="pill pill-teal">Начать бесплатно →</a>
-  </div>
-  <div class="feat-img reveal-r d2">
-    <img src="img/robot-main.png" alt="Бесплатно, весело, эффективно">
-  </div>
-</div>
-
-<!-- ── FEAT 2: Научный подход ── -->
-<div class="feat-sep"></div>
-<div class="feat rev">
-  <div class="feat-text reveal-r">
-    <div class="section-h">Научный<br>подход</div>
-    <p class="section-p">Уникальный метод обучения и увлекательные материалы: исследования показывают, что наши курсы эффективно развивают навыки чтения, письма, понимания на слух и устной речи!</p>
-    <a href="#faq" class="pill pill-outline">Узнать больше →</a>
-  </div>
-  <div class="feat-img reveal-l d2">
-    <img src="img/robot-serious.png" alt="Научный подход">
-  </div>
-</div>
-
-<!-- ── FEAT 3: Стимул к учёбе ── -->
-<div class="feat-sep"></div>
-<div class="feat">
-  <div class="feat-text reveal-l">
-    <div class="section-h">Стимул<br>к учёбе</div>
-    <p class="section-p">Игровой подход с забавными заданиями и напоминаниями от нашего маскота помогает быстро превратить ежедневные занятия в привычку. XP, стрики, монеты — всё работает на тебя.</p>
-    <a href="/flutter/" class="pill pill-teal">Попробовать →</a>
-  </div>
-  <div class="feat-img reveal-r d2">
-    <img src="img/robot-happy.png" alt="Стимул к учёбе">
-  </div>
-</div>
-
-<!-- ── LEARN EVERYWHERE ── -->
-<section class="learn-everywhere">
-  <div class="reveal">
-    <div class="section-h">Учись в любое время<br>и в любом месте</div>
-    <p class="section-p">Мобильное приложение и веб-версия — синхронизация прогресса на всех устройствах.</p>
-    <div class="le-btns">
-      <a href="/synapse.apk" class="pill pill-teal pill-lg">📱 Скачать APK</a>
-      <a href="/flutter/" class="pill pill-outline pill-lg">🌐 Открыть в браузере</a>
+<!-- ── STATS / WHY ── -->
+<section class="why-section" id="why">
+  <div class="why-inner">
+    <div class="rv" style="text-align:center;margin-bottom:0">
+      <div class="sec-label">Почему SYNAPSE</div>
+      <div class="sec-h" style="text-align:center">Результат — не случайность</div>
+      <p class="sec-p" style="margin:0 auto;text-align:center">Мы используем научный алгоритм, который определяет, когда именно ты начнёшь забывать слово — и показывает его ровно в нужный момент.</p>
     </div>
-    <div class="le-scene">
-      <span class="floating-item fi-1">🔥</span>
-      <span class="floating-item fi-2">⚡</span>
-      <span class="floating-item fi-3">💎</span>
-      <span class="floating-item fi-4">❤️</span>
-      <span class="floating-item fi-5">👑</span>
-      <span class="floating-item fi-6">🏆</span>
-      <img src="img/robot-thumbsup.png" alt="Учись везде" class="le-robot">
+    <div class="stats-grid">
+      <div class="stat-card rv d1"><div class="stat-icon">🧠</div><div class="stat-num" id="cn1">0</div><div class="stat-desc">учеников учатся</div></div>
+      <div class="stat-card rv d2"><div class="stat-icon">📚</div><div class="stat-num" id="cn2">0</div><div class="stat-desc">слов в базе знаний</div></div>
+      <div class="stat-card rv d3"><div class="stat-icon">🌍</div><div class="stat-num" id="cn3">0</div><div class="stat-desc">языков доступно</div></div>
+      <div class="stat-card rv d4"><div class="stat-icon">🎓</div><div class="stat-num" id="cn4">0</div><div class="stat-desc">глав в курсах</div></div>
     </div>
   </div>
 </section>
 
-<!-- ── PRO / LEGENDA DARK ── -->
+<!-- ── FEATURES ── -->
+<div id="features">
+
+<!-- Feat 1 -->
+<div class="feat-wrap bg-alt">
+  <div class="feat">
+    <div class="feat-text rvl">
+      <div class="sec-label">Умное обучение</div>
+      <div class="sec-h">Алгоритм<br>Эббингауза</div>
+      <p class="sec-p">Мы не показываем всё подряд. Система анализирует твои ошибки и рассчитывает, через сколько дней ты забудешь конкретное слово — и напоминает именно тогда.</p>
+      <ul class="feat-list">
+        <li><span class="fi">🧪</span>Научный метод SM-2</li>
+        <li><span class="fi">📊</span>Персональная кривая повторения</li>
+        <li><span class="fi">⏱</span>Минимум времени — максимум удержания</li>
+      </ul>
+      <a href="/flutter/" class="btn btn-fill">Попробовать →</a>
+    </div>
+    <div class="feat-img rvr d2">
+      <img src="img/robot-serious.png" alt="Алгоритм обучения">
+    </div>
+  </div>
+</div>
+
+<!-- Feat 2 -->
+<div class="feat-wrap">
+  <div class="feat">
+    <div class="feat-img rvl">
+      <img src="img/robot-happy.png" alt="Геймификация">
+    </div>
+    <div class="feat-text rvr d2">
+      <div class="sec-label">Мотивация</div>
+      <div class="sec-h">Каждый урок —<br>маленькая победа</div>
+      <p class="sec-p">XP за правильные ответы, монеты, стрики, рейтинги и 24 уникальных достижения — ты не просто учишься, ты побеждаешь каждый день.</p>
+      <ul class="feat-list">
+        <li><span class="fi">🔥</span>Ежедневный стрик — до 365 дней</li>
+        <li><span class="fi">⚡</span>XP и уровни — 25 уровней прокачки</li>
+        <li><span class="fi">🏅</span>24 уникальных достижения</li>
+      </ul>
+      <a href="/flutter/" class="btn btn-fill">Начать играть →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Feat 3 -->
+<div class="feat-wrap bg-alt">
+  <div class="feat">
+    <div class="feat-text rvl">
+      <div class="sec-label">Полные курсы</div>
+      <div class="sec-h">От A1 до B2<br>за 12 месяцев</div>
+      <p class="sec-p">32 главы на каждый язык: теория, упражнения, экзамены и сертификат. Структурированная программа, которая реально работает.</p>
+      <ul class="feat-list">
+        <li><span class="fi">📖</span>Теория с примерами и аудио</li>
+        <li><span class="fi">✏️</span>Упражнения на каждую тему</li>
+        <li><span class="fi">🏆</span>Экзамен и сертификат по итогу</li>
+      </ul>
+      <a href="/flutter/" class="btn btn-fill">Смотреть курсы →</a>
+    </div>
+    <div class="feat-img rvr d2">
+      <img src="img/robot-thumbsup.png" alt="Курсы">
+    </div>
+  </div>
+</div>
+
+</div><!-- end #features -->
+
+<!-- ── GAMIFICATION DARK ── -->
+<section class="game-section">
+  <div class="game-inner">
+    <div class="game-header rv">
+      <div class="sec-label" style="color:var(--t)">Геймификация</div>
+      <div class="sec-h">Учёба — это игра</div>
+      <p class="sec-p">Соревнуйся с собой и другими. Каждый день — новая цель.</p>
+    </div>
+    <div class="game-cards">
+      <div class="gc rv d1"><div class="gc-icon">🔥</div><div class="gc-title">Стрики</div><div class="gc-desc">Учись каждый день — не ломай цепочку. Рекорд — 365 дней подряд.</div><div class="gc-tag">До 365 дней</div></div>
+      <div class="gc rv d2"><div class="gc-icon">⚡</div><div class="gc-title">XP и уровни</div><div class="gc-desc">Зарабатывай опыт за каждый правильный ответ. 25 уровней прокачки.</div><div class="gc-tag">25 уровней</div></div>
+      <div class="gc rv d3"><div class="gc-icon">🏅</div><div class="gc-title">Достижения</div><div class="gc-desc">24 уникальных ачивки. Первое слово, первый стрик, первый сертификат.</div><div class="gc-tag">24 ачивки</div></div>
+    </div>
+    <div class="xp-bar-demo rv">
+      <div class="xbd"><div class="xbd-ico">👥</div><div class="xbd-val" id="xn1">12 500+</div><div class="xbd-lab">Учеников</div></div>
+      <div class="xbd"><div class="xbd-ico">📝</div><div class="xbd-val">5 000+</div><div class="xbd-lab">Слов в базе</div></div>
+      <div class="xbd"><div class="xbd-ico">🌍</div><div class="xbd-val">12</div><div class="xbd-lab">Языков</div></div>
+      <div class="xbd"><div class="xbd-ico">🎓</div><div class="xbd-val">230+</div><div class="xbd-lab">Глав курсов</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── EVERYWHERE ── -->
+<section class="everywhere">
+  <div class="rv">
+    <div class="sec-label" style="text-align:center">Мультиплатформа</div>
+    <div class="sec-h" style="text-align:center">Учись где угодно</div>
+    <p class="sec-p" style="text-align:center">Телефон, планшет или браузер — прогресс синхронизируется везде.</p>
+    <div class="ew-btns">
+      <a href="/synapse.apk" class="btn btn-fill btn-lg">📱 Скачать APK</a>
+      <a href="/flutter/" class="btn btn-ghost btn-lg">🌐 Открыть в браузере</a>
+    </div>
+    <div class="ew-scene">
+      <span class="fi-item fi-a">🔥</span>
+      <span class="fi-item fi-b">⚡</span>
+      <span class="fi-item fi-c">💎</span>
+      <span class="fi-item fi-d">❤️</span>
+      <span class="fi-item fi-e">👑</span>
+      <span class="fi-item fi-f">🏆</span>
+      <img src="img/robot-thumbsup.png" alt="Учись везде" class="ew-robot">
+    </div>
+  </div>
+</section>
+
+<!-- ── PRO/LEGENDA ── -->
 <section class="pro-section">
   <div class="pro-inner">
-    <div class="pro-img reveal-l">
+    <div class="pro-img rvl">
       <img src="img/robot-serious.png" alt="LEGENDA">
     </div>
-    <div class="pro-text reveal-r d2">
-      <div class="pro-badge">✦ МАКСИМУМ ВОЗМОЖНОСТЕЙ</div>
-      <div class="pro-title">Стань<br>LEGENDA</div>
-      <p class="pro-sub">Получи доступ ко всем языкам, офлайн-режиму, AI-аналитике и эксклюзивным бейджам. Никакой рекламы.</p>
-      <ul class="pro-perks">
-        <li><span class="pi">🌍</span> Все 12 языков разблокированы</li>
-        <li><span class="pi">📴</span> Офлайн-режим — учи без интернета</li>
-        <li><span class="pi">🤖</span> Персональный AI-план обучения</li>
-        <li><span class="pi">🏅</span> Эксклюзивные достижения и бейджи</li>
-        <li><span class="pi">🚀</span> Ранний доступ к новым функциям</li>
+    <div class="pro-text rvr d2">
+      <div class="pro-eyebrow">✦ PREMIUM</div>
+      <div class="pro-h">Максимум<br>возможностей</div>
+      <p class="pro-p">Все языки, офлайн-режим, AI-аналитика, эксклюзивные бейджи — для тех, кто серьёзно подходит к языкам.</p>
+      <ul class="pro-list">
+        <li><span class="pi">🌍</span>Все 12 языков разблокированы</li>
+        <li><span class="pi">📴</span>Офлайн-режим без интернета</li>
+        <li><span class="pi">🤖</span>Персональный AI-план обучения</li>
+        <li><span class="pi">🏅</span>Эксклюзивные бейджи и рамки</li>
+        <li><span class="pi">🚀</span>Ранний доступ к новым функциям</li>
       </ul>
-      <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <a href="/flutter/" class="pill pill-teal pill-lg">Попробовать 7 дней бесплатно</a>
-        <a href="#pricing" class="pill pill-dark">Смотреть тарифы</a>
+      <div class="pro-btns">
+        <a href="/flutter/" class="btn btn-fill btn-lg">Попробовать 7 дней бесплатно</a>
+        <a href="#pricing" class="btn btn-dark">Смотреть тарифы</a>
       </div>
     </div>
   </div>
@@ -453,13 +651,14 @@
 <!-- ── CERTIFICATE ── -->
 <section class="cert-section">
   <div class="cert-inner">
-    <div class="cert-img reveal-l">
+    <div class="cert-img rvl">
       <img src="img/certificate.png" alt="Сертификат SYNAPSE">
     </div>
-    <div class="cert-text reveal-r d2">
-      <div class="section-h">Получи<br>сертификат</div>
-      <p class="section-p" style="margin-bottom:28px">Завершил курс? Получи красивый сертификат об уровне владения языком — от A1 до B2. Показывай работодателям и в резюме.</p>
-      <a href="/flutter/" class="pill pill-teal">Начать курс →</a>
+    <div class="cert-text rvr d2">
+      <div class="sec-label">Сертификаты</div>
+      <div class="sec-h">Докажи свой<br>уровень</div>
+      <p class="sec-p" style="margin-bottom:28px">Завершил курс — получай красивый именной сертификат об уровне владения языком (A1–B2). Отлично смотрится в резюме и LinkedIn.</p>
+      <a href="/flutter/" class="btn btn-fill">Начать курс →</a>
     </div>
   </div>
 </section>
@@ -467,63 +666,50 @@
 <!-- ── PRICING ── -->
 <section class="pricing-section" id="pricing">
   <div class="pricing-inner">
-    <div class="pricing-header reveal">
-      <div class="section-h">Начни бесплатно</div>
-      <p class="section-p" style="margin:0 auto;max-width:480px">Базовые функции — бесплатно навсегда. Разблокируй всё с PRO или LEGENDA.</p>
+    <div class="pricing-head rv">
+      <div class="sec-label">Тарифы</div>
+      <div class="sec-h">Начни бесплатно</div>
+      <p class="sec-p" style="margin:0 auto;text-align:center">Базовые функции — бесплатно навсегда. PRO и LEGENDA открывают всё остальное.</p>
       <div class="pricing-toggle" style="margin-top:20px">
-        <button class="ptbtn active" id="btnM" onclick="setPricing('month')">Месяц</button>
-        <button class="ptbtn" id="btnY" onclick="setPricing('year')">Год <span class="save-tag">−20%</span></button>
+        <button class="ptb on" id="btnM" onclick="setP('m')">Месяц</button>
+        <button class="ptb" id="btnY" onclick="setP('y')">Год <span class="save-tag">−20%</span></button>
       </div>
     </div>
-    <div class="pricing-cards">
-      <div class="pc reveal d1">
+    <div class="pc-grid">
+      <div class="pc rv d1">
         <div class="pc-name">🌱 FREE</div>
-        <div class="pc-price" id="pfree">0 <span>/ всегда</span></div>
-        <div class="pc-note" id="nfree"></div>
-        <div class="pc-desc">Для старта. Навсегда бесплатно.</div>
-        <ul class="pc-list">
-          <li>✅ 20 слов в день</li>
-          <li>✅ 1 язык</li>
-          <li>✅ Базовые карточки</li>
-          <li>✅ Рейтинг</li>
-          <li class="no">❌ Режим выживания</li>
-          <li class="no">❌ AI-аналитика</li>
-          <li class="no">❌ Офлайн-режим</li>
+        <div class="pc-price" id="pf">0 <span>/ всегда</span></div>
+        <div class="pc-note" id="nf"></div>
+        <div class="pc-desc">Для старта — навсегда бесплатно.</div>
+        <ul class="pc-feats">
+          <li>✅ 20 слов в день</li><li>✅ 1 язык</li><li>✅ Карточки</li><li>✅ Рейтинг</li>
+          <li class="no">❌ Все мини-игры</li><li class="no">❌ AI-аналитика</li><li class="no">❌ Офлайн</li>
         </ul>
-        <a href="/flutter/" class="pc-btn pc-btn-out">Скачать бесплатно</a>
+        <a href="/flutter/" class="pc-btn pc-btn-o">Скачать бесплатно</a>
       </div>
-      <div class="pc hot reveal d2">
+      <div class="pc hot rv d2">
         <div class="pc-badge">Популярный</div>
         <div class="pc-name">⚡ PRO</div>
-        <div class="pc-price" id="ppro">2 990 <span>₸ / мес</span></div>
-        <div class="pc-note" id="npro"></div>
-        <div class="pc-desc">Для серьёзного изучения языка.</div>
-        <ul class="pc-list">
-          <li>✅ Безлимит слов</li>
-          <li>✅ Все 8+ языков</li>
-          <li>✅ Все мини-игры</li>
-          <li>✅ Режим выживания</li>
-          <li>✅ AI-аналитика</li>
-          <li>✅ Приоритет в рейтинге</li>
-          <li class="no">❌ Офлайн-режим</li>
+        <div class="pc-price" id="pp">2 990 <span>₸ / мес</span></div>
+        <div class="pc-note" id="np"></div>
+        <div class="pc-desc">Для серьёзного изучения.</div>
+        <ul class="pc-feats">
+          <li>✅ Безлимит слов</li><li>✅ 8+ языков</li><li>✅ Все мини-игры</li><li>✅ Режим выживания</li>
+          <li>✅ AI-аналитика</li><li>✅ Приоритет в рейтинге</li><li class="no">❌ Офлайн</li>
         </ul>
-        <a href="/flutter/" class="pc-btn pc-btn-fill">Начать PRO →</a>
+        <a href="/flutter/" class="pc-btn pc-btn-f">Начать PRO →</a>
       </div>
-      <div class="pc reveal d3">
+      <div class="pc rv d3">
         <div class="pc-name">👑 LEGENDA</div>
-        <div class="pc-price" id="pleg">5 990 <span>₸ / мес</span></div>
-        <div class="pc-note" id="nleg"></div>
+        <div class="pc-price" id="pl">5 990 <span>₸ / мес</span></div>
+        <div class="pc-note" id="nl"></div>
         <div class="pc-desc">Всё включено. Максимальный результат.</div>
-        <ul class="pc-list">
-          <li>✅ Всё из PRO</li>
-          <li>✅ Офлайн-режим</li>
-          <li>✅ Персональный AI-план</li>
-          <li>✅ Эксклюзивные бейджи</li>
-          <li>✅ Разблокированные лиги</li>
-          <li>✅ Ранний доступ к фичам</li>
-          <li>✅ Приоритетная поддержка</li>
+        <ul class="pc-feats">
+          <li>✅ Всё из PRO</li><li>✅ Офлайн-режим</li><li>✅ Персональный AI-план</li>
+          <li>✅ Эксклюзивные бейджи</li><li>✅ Разблокированные лиги</li>
+          <li>✅ Ранний доступ к фичам</li><li>✅ Приоритетная поддержка</li>
         </ul>
-        <a href="/flutter/" class="pc-btn pc-btn-fill">Стать легендой →</a>
+        <a href="/flutter/" class="pc-btn pc-btn-f">Стать легендой →</a>
       </div>
     </div>
   </div>
@@ -532,83 +718,87 @@
 <!-- ── FAQ ── -->
 <section class="faq-section" id="faq">
   <div class="faq-inner">
-    <div class="faq-header reveal">
-      <div class="section-h">Частые вопросы</div>
-      <p class="section-p" style="margin:0 auto;max-width:440px">Отвечаем честно и по делу.</p>
+    <div class="faq-head rv">
+      <div class="sec-label">FAQ</div>
+      <div class="sec-h">Частые вопросы</div>
     </div>
-    <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Это правда бесплатно? <span class="faq-icon">+</span></div><div class="faq-a">Да! Базовый доступ бесплатен навсегда: 20 слов в день, 1 язык, карточки и рейтинг. PRO и LEGENDA открывают больше языков, игр и AI-аналитику.</div></div>
-    <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Сколько времени нужно заниматься? <span class="faq-icon">+</span></div><div class="faq-a">От 10 минут в день. При регулярных занятиях за 3–4 месяца реально освоить базу A1–A2. B2 — это 12–18 месяцев при 20–30 мин/день.</div></div>
-    <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Есть ли казахский язык? <span class="faq-icon">+</span></div><div class="faq-a">Да, казахский включён в бесплатный план. Это одно из немногих приложений с качественным курсом разговорного казахского для начинающих.</div></div>
-    <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Как работает алгоритм повторения? <span class="faq-icon">+</span></div><div class="faq-a">Используем алгоритм SM-2 на основе кривой забывания Эббингауза. После каждого ответа система вычисляет, через сколько дней ты начнёшь забывать слово, и напоминает именно в тот момент.</div></div>
-    <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Работает ли без интернета? <span class="faq-icon">+</span></div><div class="faq-a">В режиме LEGENDA доступен офлайн-режим — скачивай слова заранее и учи в самолёте или метро. Free и Pro требуют подключения к интернету.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Это правда бесплатно?<span class="faq-ic">+</span></div><div class="faq-a">Да! Базовый доступ бесплатен навсегда: 20 слов в день, 1 язык, карточки и рейтинг. PRO и LEGENDA открывают больше языков, игр и AI-аналитику.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Сколько времени нужно заниматься?<span class="faq-ic">+</span></div><div class="faq-a">От 10 минут в день. При регулярных занятиях за 3–4 месяца — A1–A2. B2 — около 12–18 месяцев при 20–30 мин/день.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Есть ли казахский язык?<span class="faq-ic">+</span></div><div class="faq-a">Да, казахский включён в бесплатный план. Одно из немногих приложений с качественным разговорным казахским для начинающих.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Как работает алгоритм повторения?<span class="faq-ic">+</span></div><div class="faq-a">Используем SM-2 на основе кривой забывания Эббингауза. После каждого ответа система рассчитывает, через сколько дней ты начнёшь забывать слово.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Работает ли без интернета?<span class="faq-ic">+</span></div><div class="faq-a">В режиме LEGENDA доступен офлайн-режим. Free и Pro требуют интернет-соединения.</div></div>
   </div>
 </section>
 
-<!-- ── BIG CTA ── -->
-<section class="big-cta">
-  <div class="big-cta-inner">
-    <h2 class="reveal">Учи языки<br>с <em>SYNAPSE</em></h2>
-    <div class="big-cta-btns reveal d1">
-      <a href="/flutter/" class="pill pill-teal pill-xl">НАЧАТЬ</a>
+<!-- ── BIG CTA + WAVE ── -->
+<section class="cta-section">
+  <div class="rv">
+    <h2 class="cta-h">Начни учить<br>языки с <em>SYNAPSE</em></h2>
+    <div class="cta-btns">
+      <a href="/flutter/" class="btn btn-fill btn-lg">🚀 Начать бесплатно</a>
+      <a href="/synapse.apk" class="btn btn-ghost btn-lg">📱 Скачать APK</a>
     </div>
-    <div class="big-cta-scene reveal d2">
-      <span class="bfi bfi-1">🔥</span>
-      <span class="bfi bfi-2">⚡</span>
-      <span class="bfi bfi-3">💎</span>
-      <span class="bfi bfi-4">❤️</span>
-      <span class="bfi bfi-5">👑</span>
-      <span class="bfi bfi-6">🏆</span>
-      <img src="img/robot-happy.png" alt="SYNAPSE" class="big-cta-robot">
+    <div class="cta-robot-wrap">
+      <span class="cta-fi cfa1">🔥</span>
+      <span class="cta-fi cfa2">⚡</span>
+      <span class="cta-fi cfa3">💎</span>
+      <span class="cta-fi cfa4">❤️</span>
+      <span class="cta-fi cfa5">👑</span>
+      <span class="cta-fi cfa6">🏆</span>
+      <img src="img/robot-happy.png" alt="SYNAPSE" class="cta-robot">
     </div>
   </div>
-  <!-- teal hill wave -->
-  <svg class="teal-hill" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,80 C180,140 360,20 540,80 C720,140 900,20 1080,80 C1260,140 1380,60 1440,80 L1440,160 L0,160 Z" fill="#1CC8C4"/>
+  <svg class="wave-svg" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,50 C240,100 480,0 720,50 C960,100 1200,10 1440,50 L1440,100 L0,100 Z" fill="#111827"/>
   </svg>
 </section>
 
 <!-- ── FOOTER ── -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-brand">
+  <div class="foot-inner">
+    <div class="foot-brand">
       <div class="fl">
         <img src="img/logo-robot.png" alt="SYNAPSE">
         <span>SYNAPSE</span>
       </div>
-      <p>Интеллектуальная платформа для изучения 12 языков. Алгоритм SM-2, геймификация и AI-аналитика.</p>
+      <p>AI-платформа для изучения 12 языков. Алгоритм SM-2, геймификация, сертификаты.</p>
+      <div class="foot-socials">
+        <a class="foot-soc" href="#" aria-label="Instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a class="foot-soc" href="#" aria-label="Telegram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.89 8.22l-1.97 9.28c-.15.66-.54.82-1.08.51l-3-2.21-1.45 1.39c-.16.16-.3.3-.6.3l.21-3.05 5.56-5.02c.24-.21-.05-.33-.37-.12L7.19 13.32l-2.96-.92c-.65-.2-.67-.65.14-.97l11.57-4.46c.54-.2 1.02.13.96.25z"/></svg>
+        </a>
+        <a class="foot-soc" href="#" aria-label="TikTok">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 000 12.68 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.74a4.85 4.85 0 01-1.01-.05z"/></svg>
+        </a>
+      </div>
     </div>
-    <div class="footer-col">
-      <h4>О нас</h4>
-      <a href="#">Миссия</a>
-      <a href="#">Методология</a>
-      <a href="#">Эффективность</a>
-      <a href="#">Команда</a>
-    </div>
-    <div class="footer-col">
-      <h4>Продукты</h4>
-      <a href="/flutter/">SYNAPSE Web</a>
-      <a href="/synapse.apk">SYNAPSE Android</a>
-      <a href="#pricing">PRO</a>
-      <a href="#pricing">LEGENDA</a>
-    </div>
-    <div class="footer-col">
-      <h4>Приложение</h4>
+    <div class="foot-col">
+      <h4>Продукт</h4>
+      <a href="#features">Возможности</a>
       <a href="/flutter/">Веб-версия</a>
-      <a href="/synapse.apk">Скачать APK</a>
+      <a href="/synapse.apk">Android APK</a>
       <a href="#pricing">Тарифы</a>
-      <a href="#faq">FAQ</a>
     </div>
-    <div class="footer-col">
-      <h4>Помощь</h4>
+    <div class="foot-col">
+      <h4>Изучай</h4>
+      <a href="/flutter/">Английский</a>
+      <a href="/flutter/">Казахский</a>
+      <a href="/flutter/">Немецкий</a>
+      <a href="/flutter/">Французский</a>
+    </div>
+    <div class="foot-col">
+      <h4>Компания</h4>
       <a href="mailto:hello@synapse.app">Контакты</a>
       <a href="#">Политика</a>
       <a href="#">Условия</a>
-      <a href="#">Конфиденциальность</a>
+      <a href="#faq">FAQ</a>
     </div>
   </div>
-  <div class="footer-bottom">
+  <div class="foot-bottom">
     <span>Сделано в Казахстане 🇰🇿 · © 2025 SYNAPSE. Все права защищены.</span>
-    <span><a href="#">Политика конфиденциальности</a> · <a href="#">Условия использования</a></span>
+    <span><a href="#">Конфиденциальность</a> · <a href="#">Условия</a></span>
   </div>
 </footer>
 
@@ -623,55 +813,80 @@ window.addEventListener('scroll', () => {
   document.getElementById('btt').classList.toggle('show', window.scrollY > 400);
 });
 
+// ── Reveal observer ──────────────────────────────────────────────
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); ro.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.rv,.rvl,.rvr').forEach(el => ro.observe(el));
+
 // ── Burger ───────────────────────────────────────────────────────
 function toggleMenu() {
   document.getElementById('burger').classList.toggle('open');
-  document.getElementById('mobileMenu').classList.toggle('open');
+  document.getElementById('mob').classList.toggle('open');
 }
-function closeMenu() {
+function closeMob() {
   document.getElementById('burger').classList.remove('open');
-  document.getElementById('mobileMenu').classList.remove('open');
+  document.getElementById('mob').classList.remove('open');
 }
 
-// ── Reveal on scroll ─────────────────────────────────────────────
-const ro = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('up'); ro.unobserve(e.target); } });
-}, { threshold: 0.1 });
-document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el => ro.observe(el));
-
-// ── Lang strip scroll ────────────────────────────────────────────
-function scrollLangs(dx) {
-  document.getElementById('langScroll').scrollBy({ left: dx, behavior: 'smooth' });
+// ── Lang strip ───────────────────────────────────────────────────
+function scrollL(dx) {
+  document.getElementById('langList').scrollBy({ left: dx, behavior: 'smooth' });
 }
 
 // ── FAQ ──────────────────────────────────────────────────────────
-function toggleFaq(el) {
+function tfaq(el) {
   const item = el.parentElement;
-  const isOpen = item.classList.contains('open');
+  const was = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-  if (!isOpen) item.classList.add('open');
+  if (!was) item.classList.add('open');
 }
 
 // ── Pricing toggle ───────────────────────────────────────────────
-function setPricing(mode) {
-  document.getElementById('btnM').classList.toggle('active', mode === 'month');
-  document.getElementById('btnY').classList.toggle('active', mode === 'year');
-  if (mode === 'month') {
-    document.getElementById('pfree').innerHTML = '0 <span>/ всегда</span>';
-    document.getElementById('ppro').innerHTML  = '2 990 <span>₸ / мес</span>';
-    document.getElementById('pleg').innerHTML  = '5 990 <span>₸ / мес</span>';
-    ['nfree','npro','nleg'].forEach(id => document.getElementById(id).textContent = '');
+function setP(mode) {
+  document.getElementById('btnM').classList.toggle('on', mode === 'm');
+  document.getElementById('btnY').classList.toggle('on', mode === 'y');
+  if (mode === 'm') {
+    document.getElementById('pf').innerHTML = '0 <span>/ всегда</span>';
+    document.getElementById('pp').innerHTML = '2 990 <span>₸ / мес</span>';
+    document.getElementById('pl').innerHTML = '5 990 <span>₸ / мес</span>';
+    ['nf','np','nl'].forEach(id => document.getElementById(id).textContent = '');
   } else {
-    document.getElementById('pfree').innerHTML = '0 <span>/ всегда</span>';
-    document.getElementById('ppro').innerHTML  = '2 392 <span>₸ / мес</span>';
-    document.getElementById('pleg').innerHTML  = '4 792 <span>₸ / мес</span>';
-    document.getElementById('nfree').textContent = '';
-    document.getElementById('npro').textContent  = '28 704 ₸ / год · экономия 20%';
-    document.getElementById('nleg').textContent  = '57 504 ₸ / год · экономия 20%';
+    document.getElementById('pf').innerHTML = '0 <span>/ всегда</span>';
+    document.getElementById('pp').innerHTML = '2 392 <span>₸ / мес</span>';
+    document.getElementById('pl').innerHTML = '4 792 <span>₸ / мес</span>';
+    document.getElementById('nf').textContent = '';
+    document.getElementById('np').textContent = '28 704 ₸ / год · экономия 20%';
+    document.getElementById('nl').textContent = '57 504 ₸ / год · экономия 20%';
   }
 }
 
-// ── iOS waitlist (leads) ─────────────────────────────────────────
+// ── CountUp ──────────────────────────────────────────────────────
+function countUp(el, target, dur, fmt) {
+  const t0 = performance.now();
+  (function tick(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(Math.round(e * target), p >= 1);
+    if (p < 1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+const counterObs = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) {
+    counterObs.disconnect();
+    countUp(document.getElementById('sUsers'), 12500, 1800, (v,d) => v.toLocaleString('ru') + (d?'+':''));
+    countUp(document.getElementById('sWords'), 5000,  1800, (v,d) => v.toLocaleString('ru') + (d?'+':''));
+    countUp(document.getElementById('sLangs'), 12,    900,  v => String(v));
+    countUp(document.getElementById('cn1'), 12500, 1800, (v,d) => v.toLocaleString('ru') + (d?'+':''));
+    countUp(document.getElementById('cn2'), 5000,  1800, (v,d) => v.toLocaleString('ru') + (d?'+':''));
+    countUp(document.getElementById('cn3'), 12,    900,  v => String(v));
+    countUp(document.getElementById('cn4'), 230,   1200, (v,d) => String(v) + (d?'+':''));
+  }
+}, { threshold: 0.3 });
+const heroEl = document.querySelector('.hero-section');
+if (heroEl) counterObs.observe(heroEl);
+
+// ── Leads (iOS waitlist) ─────────────────────────────────────────
 async function submitLead() {
   const inp = document.getElementById('leadEmail');
   if (!inp) return;
@@ -682,9 +897,9 @@ async function submitLead() {
   if (btn) { btn.textContent = '...'; btn.disabled = true; }
   await db.from('leads').insert({ email, source: 'landing' });
   const form = document.querySelector('.waitlist-form');
-  const success = document.getElementById('leadsSuccess');
+  const ok = document.getElementById('leadsSuccess');
   if (form) form.style.display = 'none';
-  if (success) success.style.display = 'block';
+  if (ok) ok.style.display = 'block';
 }
 </script>
 </body>
