@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SYNAPSE — Учи языки быстро и с удовольствием</title>
   <meta name="description" content="SYNAPSE — AI-платформа для изучения 12 языков. Алгоритм Эббингауза, XP, стрики. Бесплатно.">
+  <script>history.scrollRestoration='manual';if(location.hash)history.replaceState(null,'',location.pathname+location.search);</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -827,7 +828,9 @@
 <script>
 // ── Scroll fix ───────────────────────────────────────────────────
 history.scrollRestoration = 'manual';
+if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search);
 window.scrollTo(0, 0);
+window.addEventListener('load', () => { window.scrollTo(0, 0); });
 
 // ── i18n ─────────────────────────────────────────────────────────
 const T = {
