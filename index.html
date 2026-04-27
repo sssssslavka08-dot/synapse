@@ -356,6 +356,16 @@
     .btt.show { opacity: 1; visibility: visible; }
     .btt:hover { transform: translateY(-3px); }
 
+    /* ── LANG PICKER ── */
+    .lang-picker { position: relative; }
+    .lang-btn { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 12px; border: 2px solid var(--br); background: #fff; cursor: pointer; font-size: 14px; font-weight: 800; color: var(--dark); transition: all .2s; line-height: 1; }
+    .lang-btn:hover { border-color: var(--t); color: var(--t); }
+    .lang-drop { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border-radius: 14px; border: 2px solid var(--br); box-shadow: 0 12px 40px rgba(0,0,0,.13); overflow: hidden; min-width: 145px; display: none; z-index: 500; }
+    .lang-picker.open .lang-drop { display: block; }
+    .lang-opt { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-size: 14px; font-weight: 800; color: var(--dark); cursor: pointer; transition: background .15s; }
+    .lang-opt:hover { background: var(--tl); color: var(--t); }
+    .lang-opt.active { color: var(--t); background: var(--tll); }
+
     /* ── RESPONSIVE ── */
     @media(max-width:1024px){
       .hero-wrap { grid-template-columns:1fr; padding-bottom:0; min-height:auto; text-align:center; }
@@ -412,14 +422,26 @@
     <span>SYNAPSE</span>
   </a>
   <div class="nav-links">
-    <a href="#why" class="nav-link">О нас</a>
-    <a href="#features" class="nav-link">Возможности</a>
-    <a href="#pricing" class="nav-link">Тарифы</a>
-    <a href="#faq" class="nav-link">FAQ</a>
+    <a href="#why" class="nav-link" data-i18n="nav-about">О нас</a>
+    <a href="#features" class="nav-link" data-i18n="nav-features">Возможности</a>
+    <a href="#pricing" class="nav-link" data-i18n="nav-pricing">Тарифы</a>
+    <a href="#faq" class="nav-link" data-i18n="nav-faq">FAQ</a>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <a href="/flutter/" class="nav-login">Войти</a>
-    <a href="/flutter/" class="nav-cta">НАЧАТЬ БЕСПЛАТНО</a>
+    <div class="lang-picker" id="langPicker">
+      <button class="lang-btn" onclick="toggleLang()">
+        <span id="langFlag">🇷🇺</span>
+        <span id="langCode">RU</span>
+        <svg width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="lang-drop">
+        <div class="lang-opt active" data-lang="ru" onclick="setLang('ru')">🇷🇺 Русский</div>
+        <div class="lang-opt" data-lang="kz" onclick="setLang('kz')">🇰🇿 Қазақша</div>
+        <div class="lang-opt" data-lang="en" onclick="setLang('en')">🇬🇧 English</div>
+      </div>
+    </div>
+    <a href="/flutter/" class="nav-login" data-i18n="nav-login">Войти</a>
+    <a href="/flutter/" class="nav-cta" data-i18n="nav-cta">НАЧАТЬ БЕСПЛАТНО</a>
   </div>
   <button class="burger" id="burger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
@@ -437,21 +459,21 @@
   <div class="hero-wrap">
     <!-- Левый блок: текст -->
     <div class="hero-left rvl">
-      <div class="hero-eyebrow">🤖 AI-алгоритм · 12 языков · Бесплатно</div>
-      <h1 class="hero-h1">
+      <div class="hero-eyebrow" data-i18n="hero-eyebrow">🤖 AI-алгоритм · 12 языков · Бесплатно</div>
+      <h1 class="hero-h1" data-i18n="hero-h1">
         Учи языки<br>
         быстро и<br>
         <span class="accent">с удовольствием</span>
       </h1>
-      <p class="hero-sub">SYNAPSE запоминает за тебя, когда именно повторить слово — так ты тратишь минимум времени и получаешь максимум результата.</p>
+      <p class="hero-sub" data-i18n="hero-sub">SYNAPSE запоминает за тебя, когда именно повторить слово — так ты тратишь минимум времени и получаешь максимум результата.</p>
       <div class="hero-btns">
-        <a href="/flutter/" class="btn btn-fill btn-lg">🚀 Начать бесплатно</a>
-        <a href="/flutter/" class="btn btn-ghost btn-lg">У меня уже есть аккаунт</a>
+        <a href="/flutter/" class="btn btn-fill btn-lg" data-i18n="btn-start">🚀 Начать бесплатно</a>
+        <a href="/flutter/" class="btn btn-ghost btn-lg" data-i18n="btn-have-acc">У меня уже есть аккаунт</a>
       </div>
       <div class="hero-stats">
-        <div><div class="hs-val" id="sUsers">0</div><div class="hs-lab">учеников</div></div>
-        <div><div class="hs-val" id="sWords">0</div><div class="hs-lab">слов в базе</div></div>
-        <div><div class="hs-val" id="sLangs">0</div><div class="hs-lab">языков</div></div>
+        <div><div class="hs-val" id="sUsers">0</div><div class="hs-lab" data-i18n="stat-users">учеников</div></div>
+        <div><div class="hs-val" id="sWords">0</div><div class="hs-lab" data-i18n="stat-words">слов в базе</div></div>
+        <div><div class="hs-val" id="sLangs">0</div><div class="hs-lab" data-i18n="stat-langs">языков</div></div>
       </div>
     </div>
     <!-- Правый блок: большой робот -->
@@ -803,6 +825,61 @@
 </footer>
 
 <script>
+// ── Scroll fix ───────────────────────────────────────────────────
+history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+
+// ── i18n ─────────────────────────────────────────────────────────
+const T = {
+  ru: {
+    'nav-about':'О нас','nav-features':'Возможности','nav-pricing':'Тарифы','nav-faq':'FAQ',
+    'nav-login':'Войти','nav-cta':'НАЧАТЬ БЕСПЛАТНО',
+    'hero-eyebrow':'🤖 AI-алгоритм · 12 языков · Бесплатно',
+    'hero-h1':'Учи языки<br>быстро и<br><span class="accent">с удовольствием</span>',
+    'hero-sub':'SYNAPSE запоминает за тебя, когда именно повторить слово — так ты тратишь минимум времени и получаешь максимум результата.',
+    'btn-start':'🚀 Начать бесплатно','btn-have-acc':'У меня уже есть аккаунт',
+    'stat-users':'учеников','stat-words':'слов в базе','stat-langs':'языков',
+  },
+  kz: {
+    'nav-about':'Біз туралы','nav-features':'Мүмкіндіктер','nav-pricing':'Тарифтер','nav-faq':'FAQ',
+    'nav-login':'Кіру','nav-cta':'ТЕГІН БАСТАУ',
+    'hero-eyebrow':'🤖 AI-алгоритм · 12 тіл · Тегін',
+    'hero-h1':'Тілдерді жылдам<br>және<br><span class="accent">ләззатпен үйрен</span>',
+    'hero-sub':'SYNAPSE сіздің орнына сөзді қашан қайталау керектігін есептейді — ең аз уақыт, ең жоғары нәтиже.',
+    'btn-start':'🚀 Тегін бастау','btn-have-acc':'Аккаунтым бар',
+    'stat-users':'оқушы','stat-words':'сөз базада','stat-langs':'тіл',
+  },
+  en: {
+    'nav-about':'About','nav-features':'Features','nav-pricing':'Pricing','nav-faq':'FAQ',
+    'nav-login':'Log in','nav-cta':'START FOR FREE',
+    'hero-eyebrow':'🤖 AI Algorithm · 12 languages · Free',
+    'hero-h1':'Learn languages<br>fast and<br><span class="accent">with joy</span>',
+    'hero-sub':'SYNAPSE remembers for you exactly when to repeat each word — minimum time, maximum results.',
+    'btn-start':'🚀 Start for free','btn-have-acc':'I already have an account',
+    'stat-users':'learners','stat-words':'words in base','stat-langs':'languages',
+  }
+};
+const LANG_FLAGS = { ru:'🇷🇺', kz:'🇰🇿', en:'🇬🇧' };
+const LANG_CODES = { ru:'RU', kz:'KAZ', en:'EN' };
+
+function applyLang(lang) {
+  const t = T[lang]; if (!t) return;
+  localStorage.setItem('syn_lang', lang);
+  document.getElementById('langFlag').textContent = LANG_FLAGS[lang];
+  document.getElementById('langCode').textContent = LANG_CODES[lang];
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.toggle('active', o.dataset.lang === lang));
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = t[el.dataset.i18n]; if (!v) return;
+    if (el.dataset.i18n === 'hero-h1') el.innerHTML = v; else el.textContent = v;
+  });
+}
+function setLang(lang) { applyLang(lang); closeLang(); }
+function toggleLang() { document.getElementById('langPicker').classList.toggle('open'); }
+function closeLang() { document.getElementById('langPicker').classList.remove('open'); }
+document.addEventListener('click', e => { if (!e.target.closest('#langPicker')) closeLang(); });
+const _savedLang = localStorage.getItem('syn_lang') || 'ru';
+if (_savedLang !== 'ru') applyLang(_savedLang);
+
 const SUPABASE_URL = 'https://recotdufzxbuffrlluqu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable__B2IbsUIvFWWXsK0AmIaTA_b50roGB-';
 const { createClient } = window.supabase;
