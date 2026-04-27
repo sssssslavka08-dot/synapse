@@ -25,6 +25,7 @@ pubspec.lock
 Podfile
 Podfile.lock
 foto/
+primer/
 *.md
 admin/
 web/
