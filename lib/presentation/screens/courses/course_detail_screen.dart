@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
+import '../../../../main.dart' show appRouteObserver;
 import 'theory_screen.dart';
 import 'exercise_screen.dart';
 import 'exam_screen.dart';
@@ -20,13 +22,31 @@ class CourseDetailScreen extends StatefulWidget {
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
-class _CourseDetailScreenState extends State<CourseDetailScreen> {
+class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware {
   Map<String, ChapterProgress> _progress = {};
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    _load();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    appRouteObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  /// Called when a route above this one was popped — reload progress
+  @override
+  void didPopNext() {
     _load();
   }
 
@@ -55,7 +75,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     };
 
     return Scaffold(
-      backgroundColor: isKids ? const Color(0xFFFFF9F0) : const Color(0xFFF4FEFE),
+      backgroundColor: isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -64,7 +84,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
             if (_loading)
               const Expanded(child: Center(
-                child: CircularProgressIndicator(color: Color(0xFF0ABDB9))))
+                child: CircularProgressIndicator(color: AppColors.tiffany)))
             else
               Expanded(
                 child: ListView(
@@ -95,8 +115,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE8F8F8))),
+        color: AppColors.darkCard,
+        border: Border(bottom: BorderSide(color: AppColors.darkBorder)),
       ),
       child: Column(
         children: [
@@ -108,9 +128,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF4FEFE),
+                    color: AppColors.darkBg,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFD6F5F4)),
+                    border: Border.all(color: AppColors.darkBorder),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
                       size: 18, color: Color(0xFF4D6766)),
@@ -128,13 +148,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F1F1E),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     Text(
                       '$completed / $total глав • ${course.nativeName}',
                       style: const TextStyle(
-                          fontSize: 12, color: Color(0xFF8EAEAC)),
+                          fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -148,7 +168,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               child: LinearProgressIndicator(
                 value: total > 0 ? completed / total : 0,
                 backgroundColor: const Color(0xFFE0FAFA),
-                valueColor: const AlwaysStoppedAnimation(Color(0xFF0ABDB9)),
+                valueColor: const AlwaysStoppedAnimation(AppColors.tiffany),
                 minHeight: 8,
               ),
             ),
@@ -253,7 +273,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 level.description,
                 style: const TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF8EAEAC),
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -362,8 +382,8 @@ class _ChapterTile extends StatelessWidget {
   Color get _statusColor {
     switch (status) {
       case ChapterStatus.completed: return const Color(0xFF4CAF50);
-      case ChapterStatus.inProgress: return const Color(0xFF0ABDB9);
-      case ChapterStatus.available: return const Color(0xFF0ABDB9);
+      case ChapterStatus.inProgress: return AppColors.tiffany;
+      case ChapterStatus.available: return AppColors.tiffany;
       case ChapterStatus.locked: return const Color(0xFFCBD5E1);
     }
   }
@@ -388,11 +408,11 @@ class _ChapterTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: locked ? const Color(0xFFF8FAFC) : Colors.white,
+          color: locked ? AppColors.darkSurface : AppColors.darkCard,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: locked
-                ? const Color(0xFFE2E8F0)
+                ? AppColors.darkBorder
                 : _statusColor.withValues(alpha: 0.3),
             width: status == ChapterStatus.inProgress ? 2 : 1.5,
           ),
@@ -424,7 +444,7 @@ class _ChapterTile extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: locked
                           ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF0F1F1E),
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -434,7 +454,7 @@ class _ChapterTile extends StatelessWidget {
                       fontSize: 11,
                       color: locked
                           ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF8EAEAC),
+                          : AppColors.textSecondary,
                     ),
                   ),
                   if (!locked) ...[
@@ -473,7 +493,7 @@ class _ChapterTile extends StatelessWidget {
                   Text(
                     '${chapter.coinsReward}🪙',
                     style: const TextStyle(
-                        fontSize: 10, color: Color(0xFF8EAEAC)),
+                        fontSize: 10, color: AppColors.textSecondary),
                   ),
                 ],
               ],

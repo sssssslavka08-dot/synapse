@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/secrets.dart';
+import 'core/theme/app_theme.dart';
 import 'core/theme/theme_notifier.dart';
 import 'services/notification_service.dart';
 import 'presentation/screens/splash_screen.dart';
+
+/// Global route observer — used by CourseDetailScreen to reload progress on pop
+final RouteObserver<ModalRoute<void>> appRouteObserver = RouteObserver<ModalRoute<void>>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,13 +45,8 @@ class SynapseApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('ru'), Locale('en'), Locale('kk')],
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: appTheme.primary,
-            primary: appTheme.primary,
-          ),
-        ),
+        theme: AppTheme.dark,
+        navigatorObservers: [appRouteObserver],
         home: const SplashScreen(),
       ),
     );
