@@ -366,6 +366,9 @@
     .lang-opt { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-size: 14px; font-weight: 800; color: var(--dark); cursor: pointer; transition: background .15s; }
     .lang-opt:hover { background: var(--tl); color: var(--t); }
     .lang-opt.active { color: var(--t); background: var(--tll); }
+    .mob-lang { display: flex; gap: 8px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+    .mob-lang-opt { padding: 8px 14px; border-radius: 10px; border: 2px solid var(--br); font-size: 14px; font-weight: 800; cursor: pointer; transition: all .2s; }
+    .mob-lang-opt.active { background: var(--t); color: #fff; border-color: var(--t); }
 
     /* ── RESPONSIVE ── */
     @media(max-width:1024px){
@@ -391,7 +394,9 @@
       .foot-inner { grid-template-columns:1fr 1fr; }
       .nav-links { display:none; }
       .nav-login { display:none; }
+      .nav-cta { display:none; }
       .burger { display:flex; }
+      .lang-picker { display:none !important; }
       .hero-left { padding-bottom:40px; }
     }
     @media(max-width:600px){
@@ -447,12 +452,17 @@
   <button class="burger" id="burger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
 <div class="mob" id="mob">
-  <a href="#why" onclick="closeMob()">О нас</a>
-  <a href="#features" onclick="closeMob()">Возможности</a>
-  <a href="#pricing" onclick="closeMob()">Тарифы</a>
-  <a href="#faq" onclick="closeMob()">FAQ</a>
-  <a href="/flutter/" onclick="closeMob()">Войти</a>
-  <a href="/flutter/" onclick="closeMob()">🚀 Начать бесплатно</a>
+  <a href="#why" onclick="closeMob()" data-i18n="nav-about">О нас</a>
+  <a href="#features" onclick="closeMob()" data-i18n="nav-features">Возможности</a>
+  <a href="#pricing" onclick="closeMob()" data-i18n="nav-pricing">Тарифы</a>
+  <a href="#faq" onclick="closeMob()" data-i18n="nav-faq">FAQ</a>
+  <div class="mob-lang">
+    <div class="mob-lang-opt active" data-lang="ru" onclick="setLang('ru');closeMob()">🇷🇺 RU</div>
+    <div class="mob-lang-opt" data-lang="kz" onclick="setLang('kz');closeMob()">🇰🇿 KAZ</div>
+    <div class="mob-lang-opt" data-lang="en" onclick="setLang('en');closeMob()">🇬🇧 EN</div>
+  </div>
+  <a href="/flutter/" onclick="closeMob()" data-i18n="nav-login">Войти</a>
+  <a href="/flutter/" onclick="closeMob()" data-i18n="btn-start">🚀 Начать бесплатно</a>
 </div>
 
 <!-- ── HERO ── -->
@@ -483,7 +493,7 @@
       <!-- Плашки вокруг -->
       <div class="chip chip-1">
         <span class="chip-icon">🔥</span>
-        <span>Стрик <span class="chip-val">21 день</span></span>
+        <span data-i18n="chip1">Стрик <span class="chip-val">21 день</span></span>
       </div>
       <div class="chip chip-2">
         <span class="chip-icon">⚡</span>
@@ -491,7 +501,7 @@
       </div>
       <div class="chip chip-3">
         <span class="chip-icon">🏆</span>
-        <span>Топ <span class="chip-val">10%</span></span>
+        <span data-i18n="chip3">Топ <span class="chip-val">10%</span></span>
       </div>
       <img src="img/robot-main.png" alt="SYNAPSE маскот" class="hero-robot">
     </div>
@@ -503,18 +513,18 @@
   <div class="lang-scroll-row">
     <button class="lang-arr" onclick="scrollL(-180)">‹</button>
     <div class="lang-list" id="langList">
-      <div class="lang-pill"><span class="lf">🇬🇧</span>Английский</div>
-      <div class="lang-pill"><span class="lf">🇰🇿</span>Казахский</div>
-      <div class="lang-pill"><span class="lf">🇩🇪</span>Немецкий</div>
-      <div class="lang-pill"><span class="lf">🇫🇷</span>Французский</div>
-      <div class="lang-pill"><span class="lf">🇪🇸</span>Испанский</div>
-      <div class="lang-pill"><span class="lf">🇮🇹</span>Итальянский</div>
-      <div class="lang-pill"><span class="lf">🇹🇷</span>Турецкий</div>
-      <div class="lang-pill"><span class="lf">🇷🇺</span>Русский</div>
-      <div class="lang-pill"><span class="lf">🇨🇳</span>Китайский</div>
-      <div class="lang-pill"><span class="lf">🇯🇵</span>Японский</div>
-      <div class="lang-pill"><span class="lf">🇰🇷</span>Корейский</div>
-      <div class="lang-pill"><span class="lf">🇸🇦</span>Арабский</div>
+      <div class="lang-pill"><span class="lf">🇬🇧</span><span data-i18n="lp-en">Английский</span></div>
+      <div class="lang-pill"><span class="lf">🇰🇿</span><span data-i18n="lp-kz">Казахский</span></div>
+      <div class="lang-pill"><span class="lf">🇩🇪</span><span data-i18n="lp-de">Немецкий</span></div>
+      <div class="lang-pill"><span class="lf">🇫🇷</span><span data-i18n="lp-fr">Французский</span></div>
+      <div class="lang-pill"><span class="lf">🇪🇸</span><span data-i18n="lp-es">Испанский</span></div>
+      <div class="lang-pill"><span class="lf">🇮🇹</span><span data-i18n="lp-it">Итальянский</span></div>
+      <div class="lang-pill"><span class="lf">🇹🇷</span><span data-i18n="lp-tr">Турецкий</span></div>
+      <div class="lang-pill"><span class="lf">🇷🇺</span><span data-i18n="lp-ru">Русский</span></div>
+      <div class="lang-pill"><span class="lf">🇨🇳</span><span data-i18n="lp-zh">Китайский</span></div>
+      <div class="lang-pill"><span class="lf">🇯🇵</span><span data-i18n="lp-ja">Японский</span></div>
+      <div class="lang-pill"><span class="lf">🇰🇷</span><span data-i18n="lp-ko">Корейский</span></div>
+      <div class="lang-pill"><span class="lf">🇸🇦</span><span data-i18n="lp-ar">Арабский</span></div>
     </div>
     <button class="lang-arr" onclick="scrollL(180)">›</button>
   </div>
@@ -524,15 +534,15 @@
 <section class="why-section" id="why">
   <div class="why-inner">
     <div class="rv" style="text-align:center;margin-bottom:0">
-      <div class="sec-label">Почему SYNAPSE</div>
-      <div class="sec-h" style="text-align:center">Результат — не случайность</div>
-      <p class="sec-p" style="margin:0 auto;text-align:center">Мы используем научный алгоритм, который определяет, когда именно ты начнёшь забывать слово — и показывает его ровно в нужный момент.</p>
+      <div class="sec-label" data-i18n="why-label">Почему SYNAPSE</div>
+      <div class="sec-h" style="text-align:center" data-i18n="why-h">Результат — не случайность</div>
+      <p class="sec-p" style="margin:0 auto;text-align:center" data-i18n="why-p">Мы используем научный алгоритм, который определяет, когда именно ты начнёшь забывать слово — и показывает его ровно в нужный момент.</p>
     </div>
     <div class="stats-grid">
-      <div class="stat-card rv d1"><div class="stat-icon">🧠</div><div class="stat-num" id="cn1">0</div><div class="stat-desc">учеников учатся</div></div>
-      <div class="stat-card rv d2"><div class="stat-icon">📚</div><div class="stat-num" id="cn2">0</div><div class="stat-desc">слов в базе знаний</div></div>
-      <div class="stat-card rv d3"><div class="stat-icon">🌍</div><div class="stat-num" id="cn3">0</div><div class="stat-desc">языков доступно</div></div>
-      <div class="stat-card rv d4"><div class="stat-icon">🎓</div><div class="stat-num" id="cn4">0</div><div class="stat-desc">глав в курсах</div></div>
+      <div class="stat-card rv d1"><div class="stat-icon">🧠</div><div class="stat-num" id="cn1">0</div><div class="stat-desc" data-i18n="sc1">учеников учатся</div></div>
+      <div class="stat-card rv d2"><div class="stat-icon">📚</div><div class="stat-num" id="cn2">0</div><div class="stat-desc" data-i18n="sc2">слов в базе знаний</div></div>
+      <div class="stat-card rv d3"><div class="stat-icon">🌍</div><div class="stat-num" id="cn3">0</div><div class="stat-desc" data-i18n="sc3">языков доступно</div></div>
+      <div class="stat-card rv d4"><div class="stat-icon">🎓</div><div class="stat-num" id="cn4">0</div><div class="stat-desc" data-i18n="sc4">глав в курсах</div></div>
     </div>
   </div>
 </section>
@@ -544,15 +554,15 @@
 <div class="feat-wrap bg-alt">
   <div class="feat">
     <div class="feat-text rvl">
-      <div class="sec-label">Умное обучение</div>
-      <div class="sec-h">Алгоритм<br>Эббингауза</div>
-      <p class="sec-p">Мы не показываем всё подряд. Система анализирует твои ошибки и рассчитывает, через сколько дней ты забудешь конкретное слово — и напоминает именно тогда.</p>
+      <div class="sec-label" data-i18n="f1-label">Умное обучение</div>
+      <div class="sec-h" data-i18n="f1-h">Алгоритм<br>Эббингауза</div>
+      <p class="sec-p" data-i18n="f1-p">Мы не показываем всё подряд. Система анализирует твои ошибки и рассчитывает, через сколько дней ты забудешь конкретное слово — и напоминает именно тогда.</p>
       <ul class="feat-list">
-        <li><span class="fi">🧪</span>Научный метод SM-2</li>
-        <li><span class="fi">📊</span>Персональная кривая повторения</li>
-        <li><span class="fi">⏱</span>Минимум времени — максимум удержания</li>
+        <li><span class="fi">🧪</span><span data-i18n="f1-li1">Научный метод SM-2</span></li>
+        <li><span class="fi">📊</span><span data-i18n="f1-li2">Персональная кривая повторения</span></li>
+        <li><span class="fi">⏱</span><span data-i18n="f1-li3">Минимум времени — максимум удержания</span></li>
       </ul>
-      <a href="/flutter/" class="btn btn-fill">Попробовать →</a>
+      <a href="/flutter/" class="btn btn-fill" data-i18n="f1-btn">Попробовать →</a>
     </div>
     <div class="feat-img rvr d2">
       <img src="img/robot-serious.png" alt="Алгоритм обучения">
@@ -567,15 +577,15 @@
       <img src="img/robot-happy.png" alt="Геймификация">
     </div>
     <div class="feat-text rvr d2">
-      <div class="sec-label">Мотивация</div>
-      <div class="sec-h">Каждый урок —<br>маленькая победа</div>
-      <p class="sec-p">XP за правильные ответы, монеты, стрики, рейтинги и 24 уникальных достижения — ты не просто учишься, ты побеждаешь каждый день.</p>
+      <div class="sec-label" data-i18n="f2-label">Мотивация</div>
+      <div class="sec-h" data-i18n="f2-h">Каждый урок —<br>маленькая победа</div>
+      <p class="sec-p" data-i18n="f2-p">XP за правильные ответы, монеты, стрики, рейтинги и 24 уникальных достижения — ты не просто учишься, ты побеждаешь каждый день.</p>
       <ul class="feat-list">
-        <li><span class="fi">🔥</span>Ежедневный стрик — до 365 дней</li>
-        <li><span class="fi">⚡</span>XP и уровни — 25 уровней прокачки</li>
-        <li><span class="fi">🏅</span>24 уникальных достижения</li>
+        <li><span class="fi">🔥</span><span data-i18n="f2-li1">Ежедневный стрик — до 365 дней</span></li>
+        <li><span class="fi">⚡</span><span data-i18n="f2-li2">XP и уровни — 25 уровней прокачки</span></li>
+        <li><span class="fi">🏅</span><span data-i18n="f2-li3">24 уникальных достижения</span></li>
       </ul>
-      <a href="/flutter/" class="btn btn-fill">Начать играть →</a>
+      <a href="/flutter/" class="btn btn-fill" data-i18n="f2-btn">Начать играть →</a>
     </div>
   </div>
 </div>
@@ -584,15 +594,15 @@
 <div class="feat-wrap bg-alt">
   <div class="feat">
     <div class="feat-text rvl">
-      <div class="sec-label">Полные курсы</div>
-      <div class="sec-h">От A1 до B2<br>за 12 месяцев</div>
-      <p class="sec-p">32 главы на каждый язык: теория, упражнения, экзамены и сертификат. Структурированная программа, которая реально работает.</p>
+      <div class="sec-label" data-i18n="f3-label">Полные курсы</div>
+      <div class="sec-h" data-i18n="f3-h">От A1 до B2<br>за 12 месяцев</div>
+      <p class="sec-p" data-i18n="f3-p">32 главы на каждый язык: теория, упражнения, экзамены и сертификат. Структурированная программа, которая реально работает.</p>
       <ul class="feat-list">
-        <li><span class="fi">📖</span>Теория с примерами и аудио</li>
-        <li><span class="fi">✏️</span>Упражнения на каждую тему</li>
-        <li><span class="fi">🏆</span>Экзамен и сертификат по итогу</li>
+        <li><span class="fi">📖</span><span data-i18n="f3-li1">Теория с примерами и аудио</span></li>
+        <li><span class="fi">✏️</span><span data-i18n="f3-li2">Упражнения на каждую тему</span></li>
+        <li><span class="fi">🏆</span><span data-i18n="f3-li3">Экзамен и сертификат по итогу</span></li>
       </ul>
-      <a href="/flutter/" class="btn btn-fill">Смотреть курсы →</a>
+      <a href="/flutter/" class="btn btn-fill" data-i18n="f3-btn">Смотреть курсы →</a>
     </div>
     <div class="feat-img rvr d2">
       <img src="img/robot-thumbsup.png" alt="Курсы">
@@ -606,20 +616,20 @@
 <section class="game-section">
   <div class="game-inner">
     <div class="game-header rv">
-      <div class="sec-label" style="color:var(--t)">Геймификация</div>
-      <div class="sec-h">Учёба — это игра</div>
-      <p class="sec-p">Соревнуйся с собой и другими. Каждый день — новая цель.</p>
+      <div class="sec-label" style="color:var(--t)" data-i18n="gam-label">Геймификация</div>
+      <div class="sec-h" data-i18n="gam-h">Учёба — это игра</div>
+      <p class="sec-p" data-i18n="gam-p">Соревнуйся с собой и другими. Каждый день — новая цель.</p>
     </div>
     <div class="game-cards">
-      <div class="gc rv d1"><div class="gc-icon">🔥</div><div class="gc-title">Стрики</div><div class="gc-desc">Учись каждый день — не ломай цепочку. Рекорд — 365 дней подряд.</div><div class="gc-tag">До 365 дней</div></div>
-      <div class="gc rv d2"><div class="gc-icon">⚡</div><div class="gc-title">XP и уровни</div><div class="gc-desc">Зарабатывай опыт за каждый правильный ответ. 25 уровней прокачки.</div><div class="gc-tag">25 уровней</div></div>
-      <div class="gc rv d3"><div class="gc-icon">🏅</div><div class="gc-title">Достижения</div><div class="gc-desc">24 уникальных ачивки. Первое слово, первый стрик, первый сертификат.</div><div class="gc-tag">24 ачивки</div></div>
+      <div class="gc rv d1"><div class="gc-icon">🔥</div><div class="gc-title" data-i18n="gc1-t">Стрики</div><div class="gc-desc" data-i18n="gc1-d">Учись каждый день — не ломай цепочку. Рекорд — 365 дней подряд.</div><div class="gc-tag" data-i18n="gc1-tag">До 365 дней</div></div>
+      <div class="gc rv d2"><div class="gc-icon">⚡</div><div class="gc-title" data-i18n="gc2-t">XP и уровни</div><div class="gc-desc" data-i18n="gc2-d">Зарабатывай опыт за каждый правильный ответ. 25 уровней прокачки.</div><div class="gc-tag" data-i18n="gc2-tag">25 уровней</div></div>
+      <div class="gc rv d3"><div class="gc-icon">🏅</div><div class="gc-title" data-i18n="gc3-t">Достижения</div><div class="gc-desc" data-i18n="gc3-d">24 уникальных ачивки. Первое слово, первый стрик, первый сертификат.</div><div class="gc-tag" data-i18n="gc3-tag">24 ачивки</div></div>
     </div>
     <div class="xp-bar-demo rv">
-      <div class="xbd"><div class="xbd-ico">👥</div><div class="xbd-val" id="xn1">12 500+</div><div class="xbd-lab">Учеников</div></div>
-      <div class="xbd"><div class="xbd-ico">📝</div><div class="xbd-val">5 000+</div><div class="xbd-lab">Слов в базе</div></div>
-      <div class="xbd"><div class="xbd-ico">🌍</div><div class="xbd-val">12</div><div class="xbd-lab">Языков</div></div>
-      <div class="xbd"><div class="xbd-ico">🎓</div><div class="xbd-val">230+</div><div class="xbd-lab">Глав курсов</div></div>
+      <div class="xbd"><div class="xbd-ico">👥</div><div class="xbd-val" id="xn1">12 500+</div><div class="xbd-lab" data-i18n="xbd1">Учеников</div></div>
+      <div class="xbd"><div class="xbd-ico">📝</div><div class="xbd-val">5 000+</div><div class="xbd-lab" data-i18n="xbd2">Слов в базе</div></div>
+      <div class="xbd"><div class="xbd-ico">🌍</div><div class="xbd-val">12</div><div class="xbd-lab" data-i18n="xbd3">Языков</div></div>
+      <div class="xbd"><div class="xbd-ico">🎓</div><div class="xbd-val">230+</div><div class="xbd-lab" data-i18n="xbd4">Глав курсов</div></div>
     </div>
   </div>
 </section>
@@ -627,12 +637,12 @@
 <!-- ── EVERYWHERE ── -->
 <section class="everywhere">
   <div class="rv">
-    <div class="sec-label" style="text-align:center">Мультиплатформа</div>
-    <div class="sec-h" style="text-align:center">Учись где угодно</div>
-    <p class="sec-p" style="text-align:center">Телефон, планшет или браузер — прогресс синхронизируется везде.</p>
+    <div class="sec-label" style="text-align:center" data-i18n="ew-label">Мультиплатформа</div>
+    <div class="sec-h" style="text-align:center" data-i18n="ew-h">Учись где угодно</div>
+    <p class="sec-p" style="text-align:center" data-i18n="ew-p">Телефон, планшет или браузер — прогресс синхронизируется везде.</p>
     <div class="ew-btns">
-      <a href="/synapse.apk" class="btn btn-fill btn-lg">📱 Скачать APK</a>
-      <a href="/flutter/" class="btn btn-ghost btn-lg">🌐 Открыть в браузере</a>
+      <a href="/synapse.apk" class="btn btn-fill btn-lg" data-i18n="ew-btn1">📱 Скачать APK</a>
+      <a href="/flutter/" class="btn btn-ghost btn-lg" data-i18n="ew-btn2">🌐 Открыть в браузере</a>
     </div>
     <div class="ew-scene">
       <span class="fi-item fi-a">🔥</span>
@@ -653,19 +663,19 @@
       <img src="img/robot-serious.png" alt="LEGENDA">
     </div>
     <div class="pro-text rvr d2">
-      <div class="pro-eyebrow">✦ PREMIUM</div>
-      <div class="pro-h">Максимум<br>возможностей</div>
-      <p class="pro-p">Все языки, офлайн-режим, AI-аналитика, эксклюзивные бейджи — для тех, кто серьёзно подходит к языкам.</p>
+      <div class="pro-eyebrow" data-i18n="pro-eyebrow">✦ PREMIUM</div>
+      <div class="pro-h" data-i18n="pro-h">Максимум<br>возможностей</div>
+      <p class="pro-p" data-i18n="pro-p">Все языки, офлайн-режим, AI-аналитика, эксклюзивные бейджи — для тех, кто серьёзно подходит к языкам.</p>
       <ul class="pro-list">
-        <li><span class="pi">🌍</span>Все 12 языков разблокированы</li>
-        <li><span class="pi">📴</span>Офлайн-режим без интернета</li>
-        <li><span class="pi">🤖</span>Персональный AI-план обучения</li>
-        <li><span class="pi">🏅</span>Эксклюзивные бейджи и рамки</li>
-        <li><span class="pi">🚀</span>Ранний доступ к новым функциям</li>
+        <li><span class="pi">🌍</span><span data-i18n="pro-li1">Все 12 языков разблокированы</span></li>
+        <li><span class="pi">📴</span><span data-i18n="pro-li2">Офлайн-режим без интернета</span></li>
+        <li><span class="pi">🤖</span><span data-i18n="pro-li3">Персональный AI-план обучения</span></li>
+        <li><span class="pi">🏅</span><span data-i18n="pro-li4">Эксклюзивные бейджи и рамки</span></li>
+        <li><span class="pi">🚀</span><span data-i18n="pro-li5">Ранний доступ к новым функциям</span></li>
       </ul>
       <div class="pro-btns">
-        <a href="/flutter/" class="btn btn-fill btn-lg">Попробовать 7 дней бесплатно</a>
-        <a href="#pricing" class="btn btn-dark">Смотреть тарифы</a>
+        <a href="/flutter/" class="btn btn-fill btn-lg" data-i18n="pro-btn1">Попробовать 7 дней бесплатно</a>
+        <a href="#pricing" class="btn btn-dark" data-i18n="pro-btn2">Смотреть тарифы</a>
       </div>
     </div>
   </div>
@@ -678,10 +688,10 @@
       <img src="img/certificate.png" alt="Сертификат SYNAPSE">
     </div>
     <div class="cert-text rvr d2">
-      <div class="sec-label">Сертификаты</div>
-      <div class="sec-h">Докажи свой<br>уровень</div>
-      <p class="sec-p" style="margin-bottom:28px">Завершил курс — получай красивый именной сертификат об уровне владения языком (A1–B2). Отлично смотрится в резюме и LinkedIn.</p>
-      <a href="/flutter/" class="btn btn-fill">Начать курс →</a>
+      <div class="sec-label" data-i18n="cert-label">Сертификаты</div>
+      <div class="sec-h" data-i18n="cert-h">Докажи свой<br>уровень</div>
+      <p class="sec-p" style="margin-bottom:28px" data-i18n="cert-p">Завершил курс — получай красивый именной сертификат об уровне владения языком (A1–B2). Отлично смотрится в резюме и LinkedIn.</p>
+      <a href="/flutter/" class="btn btn-fill" data-i18n="cert-btn">Начать курс →</a>
     </div>
   </div>
 </section>
@@ -690,12 +700,12 @@
 <section class="pricing-section" id="pricing">
   <div class="pricing-inner">
     <div class="pricing-head rv">
-      <div class="sec-label">Тарифы</div>
-      <div class="sec-h">Начни бесплатно</div>
-      <p class="sec-p" style="margin:0 auto;text-align:center">Базовые функции — бесплатно навсегда. PRO и LEGENDA открывают всё остальное.</p>
+      <div class="sec-label" data-i18n="price-label">Тарифы</div>
+      <div class="sec-h" data-i18n="price-h">Начни бесплатно</div>
+      <p class="sec-p" style="margin:0 auto;text-align:center" data-i18n="price-p">Базовые функции — бесплатно навсегда. PRO и LEGENDA открывают всё остальное.</p>
       <div class="pricing-toggle" style="margin-top:20px">
-        <button class="ptb on" id="btnM" onclick="setP('m')">Месяц</button>
-        <button class="ptb" id="btnY" onclick="setP('y')">Год <span class="save-tag">−20%</span></button>
+        <button class="ptb on" id="btnM" onclick="setP('m')" data-i18n="ptb-m">Месяц</button>
+        <button class="ptb" id="btnY" onclick="setP('y')"><span data-i18n="ptb-y">Год</span> <span class="save-tag">−20%</span></button>
       </div>
     </div>
     <div class="pc-grid">
@@ -703,36 +713,36 @@
         <div class="pc-name">🌱 FREE</div>
         <div class="pc-price" id="pf">0 <span>/ всегда</span></div>
         <div class="pc-note" id="nf"></div>
-        <div class="pc-desc">Для старта — навсегда бесплатно.</div>
+        <div class="pc-desc" data-i18n="free-desc">Для старта — навсегда бесплатно.</div>
         <ul class="pc-feats">
-          <li>✅ 20 слов в день</li><li>✅ 1 язык</li><li>✅ Карточки</li><li>✅ Рейтинг</li>
-          <li class="no">❌ Все мини-игры</li><li class="no">❌ AI-аналитика</li><li class="no">❌ Офлайн</li>
+          <li data-i18n="pf1">✅ 20 слов в день</li><li data-i18n="pf2">✅ 1 язык</li><li data-i18n="pf3">✅ Карточки</li><li data-i18n="pf4">✅ Рейтинг</li>
+          <li class="no" data-i18n="pf5">❌ Все мини-игры</li><li class="no" data-i18n="pf6">❌ AI-аналитика</li><li class="no" data-i18n="pf7">❌ Офлайн</li>
         </ul>
-        <a href="/flutter/" class="pc-btn pc-btn-o">Скачать бесплатно</a>
+        <a href="/flutter/" class="pc-btn pc-btn-o" data-i18n="free-btn">Скачать бесплатно</a>
       </div>
       <div class="pc hot rv d2">
-        <div class="pc-badge">Популярный</div>
+        <div class="pc-badge" data-i18n="pro-badge-txt">Популярный</div>
         <div class="pc-name">⚡ PRO</div>
         <div class="pc-price" id="pp">2 990 <span>₸ / мес</span></div>
         <div class="pc-note" id="np"></div>
-        <div class="pc-desc">Для серьёзного изучения.</div>
+        <div class="pc-desc" data-i18n="pro-desc">Для серьёзного изучения.</div>
         <ul class="pc-feats">
-          <li>✅ Безлимит слов</li><li>✅ 8+ языков</li><li>✅ Все мини-игры</li><li>✅ Режим выживания</li>
-          <li>✅ AI-аналитика</li><li>✅ Приоритет в рейтинге</li><li class="no">❌ Офлайн</li>
+          <li data-i18n="pp1">✅ Безлимит слов</li><li data-i18n="pp2">✅ 8+ языков</li><li data-i18n="pp3">✅ Все мини-игры</li><li data-i18n="pp4">✅ Режим выживания</li>
+          <li data-i18n="pp5">✅ AI-аналитика</li><li data-i18n="pp6">✅ Приоритет в рейтинге</li><li class="no" data-i18n="pp7">❌ Офлайн</li>
         </ul>
-        <a href="/flutter/" class="pc-btn pc-btn-f">Начать PRO →</a>
+        <a href="/flutter/" class="pc-btn pc-btn-f" data-i18n="pro-btn-p">Начать PRO →</a>
       </div>
       <div class="pc rv d3">
         <div class="pc-name">👑 LEGENDA</div>
         <div class="pc-price" id="pl">5 990 <span>₸ / мес</span></div>
         <div class="pc-note" id="nl"></div>
-        <div class="pc-desc">Всё включено. Максимальный результат.</div>
+        <div class="pc-desc" data-i18n="leg-desc">Всё включено. Максимальный результат.</div>
         <ul class="pc-feats">
-          <li>✅ Всё из PRO</li><li>✅ Офлайн-режим</li><li>✅ Персональный AI-план</li>
-          <li>✅ Эксклюзивные бейджи</li><li>✅ Разблокированные лиги</li>
-          <li>✅ Ранний доступ к фичам</li><li>✅ Приоритетная поддержка</li>
+          <li data-i18n="pl1">✅ Всё из PRO</li><li data-i18n="pl2">✅ Офлайн-режим</li><li data-i18n="pl3">✅ Персональный AI-план</li>
+          <li data-i18n="pl4">✅ Эксклюзивные бейджи</li><li data-i18n="pl5">✅ Разблокированные лиги</li>
+          <li data-i18n="pl6">✅ Ранний доступ к фичам</li><li data-i18n="pl7">✅ Приоритетная поддержка</li>
         </ul>
-        <a href="/flutter/" class="pc-btn pc-btn-f">Стать легендой →</a>
+        <a href="/flutter/" class="pc-btn pc-btn-f" data-i18n="leg-btn">Стать легендой →</a>
       </div>
     </div>
   </div>
@@ -742,24 +752,24 @@
 <section class="faq-section" id="faq">
   <div class="faq-inner">
     <div class="faq-head rv">
-      <div class="sec-label">FAQ</div>
-      <div class="sec-h">Частые вопросы</div>
+      <div class="sec-label" data-i18n="faq-label">FAQ</div>
+      <div class="sec-h" data-i18n="faq-h">Частые вопросы</div>
     </div>
-    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Это правда бесплатно?<span class="faq-ic">+</span></div><div class="faq-a">Да! Базовый доступ бесплатен навсегда: 20 слов в день, 1 язык, карточки и рейтинг. PRO и LEGENDA открывают больше языков, игр и AI-аналитику.</div></div>
-    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Сколько времени нужно заниматься?<span class="faq-ic">+</span></div><div class="faq-a">От 10 минут в день. При регулярных занятиях за 3–4 месяца — A1–A2. B2 — около 12–18 месяцев при 20–30 мин/день.</div></div>
-    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Есть ли казахский язык?<span class="faq-ic">+</span></div><div class="faq-a">Да, казахский включён в бесплатный план. Одно из немногих приложений с качественным разговорным казахским для начинающих.</div></div>
-    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Как работает алгоритм повторения?<span class="faq-ic">+</span></div><div class="faq-a">Используем SM-2 на основе кривой забывания Эббингауза. После каждого ответа система рассчитывает, через сколько дней ты начнёшь забывать слово.</div></div>
-    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)">Работает ли без интернета?<span class="faq-ic">+</span></div><div class="faq-a">В режиме LEGENDA доступен офлайн-режим. Free и Pro требуют интернет-соединения.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)"><span data-i18n="faq-q1">Это правда бесплатно?</span><span class="faq-ic">+</span></div><div class="faq-a" data-i18n="faq-a1">Да! Базовый доступ бесплатен навсегда: 20 слов в день, 1 язык, карточки и рейтинг. PRO и LEGENDA открывают больше языков, игр и AI-аналитику.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)"><span data-i18n="faq-q2">Сколько времени нужно заниматься?</span><span class="faq-ic">+</span></div><div class="faq-a" data-i18n="faq-a2">От 10 минут в день. При регулярных занятиях за 3–4 месяца — A1–A2. B2 — около 12–18 месяцев при 20–30 мин/день.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)"><span data-i18n="faq-q3">Есть ли казахский язык?</span><span class="faq-ic">+</span></div><div class="faq-a" data-i18n="faq-a3">Да, казахский включён в бесплатный план. Одно из немногих приложений с качественным разговорным казахским для начинающих.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)"><span data-i18n="faq-q4">Как работает алгоритм повторения?</span><span class="faq-ic">+</span></div><div class="faq-a" data-i18n="faq-a4">Используем SM-2 на основе кривой забывания Эббингауза. После каждого ответа система рассчитывает, через сколько дней ты начнёшь забывать слово.</div></div>
+    <div class="faq-item rv"><div class="faq-q" onclick="tfaq(this)"><span data-i18n="faq-q5">Работает ли без интернета?</span><span class="faq-ic">+</span></div><div class="faq-a" data-i18n="faq-a5">В режиме LEGENDA доступен офлайн-режим. Free и Pro требуют интернет-соединения.</div></div>
   </div>
 </section>
 
 <!-- ── BIG CTA + WAVE ── -->
 <section class="cta-section">
   <div class="rv">
-    <h2 class="cta-h">Начни учить<br>языки с <em>SYNAPSE</em></h2>
+    <h2 class="cta-h" data-i18n="cta-h">Начни учить<br>языки с <em>SYNAPSE</em></h2>
     <div class="cta-btns">
-      <a href="/flutter/" class="btn btn-fill btn-lg">🚀 Начать бесплатно</a>
-      <a href="/synapse.apk" class="btn btn-ghost btn-lg">📱 Скачать APK</a>
+      <a href="/flutter/" class="btn btn-fill btn-lg" data-i18n="cta-btn1">🚀 Начать бесплатно</a>
+      <a href="/synapse.apk" class="btn btn-ghost btn-lg" data-i18n="cta-btn2">📱 Скачать APK</a>
     </div>
     <div class="cta-robot-wrap">
       <span class="cta-fi cfa1">🔥</span>
@@ -784,7 +794,7 @@
         <img src="img/logo-robot.png" alt="SYNAPSE">
         <span>SYNAPSE</span>
       </div>
-      <p>AI-платформа для изучения 12 языков. Алгоритм SM-2, геймификация, сертификаты.</p>
+      <p data-i18n="foot-desc">AI-платформа для изучения 12 языков. Алгоритм SM-2, геймификация, сертификаты.</p>
       <div class="foot-socials">
         <a class="foot-soc" href="#" aria-label="Instagram">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -798,30 +808,30 @@
       </div>
     </div>
     <div class="foot-col">
-      <h4>Продукт</h4>
-      <a href="#features">Возможности</a>
-      <a href="/flutter/">Веб-версия</a>
+      <h4 data-i18n="foot-col1-h">Продукт</h4>
+      <a href="#features" data-i18n="ft-features">Возможности</a>
+      <a href="/flutter/" data-i18n="ft-web">Веб-версия</a>
       <a href="/synapse.apk">Android APK</a>
-      <a href="#pricing">Тарифы</a>
+      <a href="#pricing" data-i18n="ft-pricing">Тарифы</a>
     </div>
     <div class="foot-col">
-      <h4>Изучай</h4>
-      <a href="/flutter/">Английский</a>
-      <a href="/flutter/">Казахский</a>
-      <a href="/flutter/">Немецкий</a>
-      <a href="/flutter/">Французский</a>
+      <h4 data-i18n="foot-col2-h">Изучай</h4>
+      <a href="/flutter/" data-i18n="ft-english">Английский</a>
+      <a href="/flutter/" data-i18n="ft-kazakh">Казахский</a>
+      <a href="/flutter/" data-i18n="ft-german">Немецкий</a>
+      <a href="/flutter/" data-i18n="ft-french">Французский</a>
     </div>
     <div class="foot-col">
-      <h4>Компания</h4>
-      <a href="mailto:hello@synapse.app">Контакты</a>
-      <a href="#">Политика</a>
-      <a href="#">Условия</a>
+      <h4 data-i18n="foot-col3-h">Компания</h4>
+      <a href="mailto:hello@synapse.app" data-i18n="ft-contacts">Контакты</a>
+      <a href="#" data-i18n="ft-policy">Политика</a>
+      <a href="#" data-i18n="ft-terms">Условия</a>
       <a href="#faq">FAQ</a>
     </div>
   </div>
   <div class="foot-bottom">
-    <span>Сделано в Казахстане 🇰🇿 · © 2025 SYNAPSE. Все права защищены.</span>
-    <span><a href="#">Конфиденциальность</a> · <a href="#">Условия</a></span>
+    <span data-i18n="foot-copy">Сделано в Казахстане 🇰🇿 · © 2025 SYNAPSE. Все права защищены.</span>
+    <span><a href="#" data-i18n="fb-privacy">Конфиденциальность</a> · <a href="#" data-i18n="fb-terms">Условия</a></span>
   </div>
 </footer>
 
@@ -842,6 +852,63 @@ const T = {
     'hero-sub':'SYNAPSE запоминает за тебя, когда именно повторить слово — так ты тратишь минимум времени и получаешь максимум результата.',
     'btn-start':'🚀 Начать бесплатно','btn-have-acc':'У меня уже есть аккаунт',
     'stat-users':'учеников','stat-words':'слов в базе','stat-langs':'языков',
+    'why-label':'Почему SYNAPSE','why-h':'Результат — не случайность',
+    'why-p':'Мы используем научный алгоритм, который определяет, когда именно ты начнёшь забывать слово — и показывает его ровно в нужный момент.',
+    'sc1':'учеников учатся','sc2':'слов в базе знаний','sc3':'языков доступно','sc4':'глав в курсах',
+    'f1-label':'Умное обучение','f1-h':'Алгоритм<br>Эббингауза',
+    'f1-p':'Мы не показываем всё подряд. Система анализирует твои ошибки и рассчитывает, через сколько дней ты забудешь конкретное слово — и напоминает именно тогда.',
+    'f1-li1':'Научный метод SM-2','f1-li2':'Персональная кривая повторения','f1-li3':'Минимум времени — максимум удержания','f1-btn':'Попробовать →',
+    'f2-label':'Мотивация','f2-h':'Каждый урок —<br>маленькая победа',
+    'f2-p':'XP за правильные ответы, монеты, стрики, рейтинги и 24 уникальных достижения — ты не просто учишься, ты побеждаешь каждый день.',
+    'f2-li1':'Ежедневный стрик — до 365 дней','f2-li2':'XP и уровни — 25 уровней прокачки','f2-li3':'24 уникальных достижения','f2-btn':'Начать играть →',
+    'f3-label':'Полные курсы','f3-h':'От A1 до B2<br>за 12 месяцев',
+    'f3-p':'32 главы на каждый язык: теория, упражнения, экзамены и сертификат. Структурированная программа, которая реально работает.',
+    'f3-li1':'Теория с примерами и аудио','f3-li2':'Упражнения на каждую тему','f3-li3':'Экзамен и сертификат по итогу','f3-btn':'Смотреть курсы →',
+    'gam-label':'Геймификация','gam-h':'Учёба — это игра','gam-p':'Соревнуйся с собой и другими. Каждый день — новая цель.',
+    'gc1-t':'Стрики','gc1-d':'Учись каждый день — не ломай цепочку. Рекорд — 365 дней подряд.','gc1-tag':'До 365 дней',
+    'gc2-t':'XP и уровни','gc2-d':'Зарабатывай опыт за каждый правильный ответ. 25 уровней прокачки.','gc2-tag':'25 уровней',
+    'gc3-t':'Достижения','gc3-d':'24 уникальных ачивки. Первое слово, первый стрик, первый сертификат.','gc3-tag':'24 ачивки',
+    'xbd1':'Учеников','xbd2':'Слов в базе','xbd3':'Языков','xbd4':'Глав курсов',
+    'ew-label':'Мультиплатформа','ew-h':'Учись где угодно','ew-p':'Телефон, планшет или браузер — прогресс синхронизируется везде.',
+    'ew-btn1':'📱 Скачать APK','ew-btn2':'🌐 Открыть в браузере',
+    'pro-eyebrow':'✦ PREMIUM','pro-h':'Максимум<br>возможностей',
+    'pro-p':'Все языки, офлайн-режим, AI-аналитика, эксклюзивные бейджи — для тех, кто серьёзно подходит к языкам.',
+    'pro-li1':'Все 12 языков разблокированы','pro-li2':'Офлайн-режим без интернета','pro-li3':'Персональный AI-план обучения',
+    'pro-li4':'Эксклюзивные бейджи и рамки','pro-li5':'Ранний доступ к новым функциям',
+    'pro-btn1':'Попробовать 7 дней бесплатно','pro-btn2':'Смотреть тарифы',
+    'cert-label':'Сертификаты','cert-h':'Докажи свой<br>уровень',
+    'cert-p':'Завершил курс — получай красивый именной сертификат об уровне владения языком (A1–B2). Отлично смотрится в резюме и LinkedIn.',
+    'cert-btn':'Начать курс →',
+    'price-label':'Тарифы','price-h':'Начни бесплатно','price-p':'Базовые функции — бесплатно навсегда. PRO и LEGENDA открывают всё остальное.',
+    'ptb-m':'Месяц','ptb-y':'Год',
+    'free-desc':'Для старта — навсегда бесплатно.','free-btn':'Скачать бесплатно',
+    'pro-badge-txt':'Популярный','pro-desc':'Для серьёзного изучения.','pro-btn-p':'Начать PRO →',
+    'leg-desc':'Всё включено. Максимальный результат.','leg-btn':'Стать легендой →',
+    'faq-label':'FAQ','faq-h':'Частые вопросы',
+    'faq-q1':'Это правда бесплатно?','faq-a1':'Да! Базовый доступ бесплатен навсегда: 20 слов в день, 1 язык, карточки и рейтинг. PRO и LEGENDA открывают больше языков, игр и AI-аналитику.',
+    'faq-q2':'Сколько времени нужно заниматься?','faq-a2':'От 10 минут в день. При регулярных занятиях за 3–4 месяца — A1–A2. B2 — около 12–18 месяцев при 20–30 мин/день.',
+    'faq-q3':'Есть ли казахский язык?','faq-a3':'Да, казахский включён в бесплатный план. Одно из немногих приложений с качественным разговорным казахским для начинающих.',
+    'faq-q4':'Как работает алгоритм повторения?','faq-a4':'Используем SM-2 на основе кривой забывания Эббингауза. После каждого ответа система рассчитывает, через сколько дней ты начнёшь забывать слово.',
+    'faq-q5':'Работает ли без интернета?','faq-a5':'В режиме LEGENDA доступен офлайн-режим. Free и Pro требуют интернет-соединения.',
+    'cta-h':'Начни учить<br>языки с <em>SYNAPSE</em>','cta-btn1':'🚀 Начать бесплатно','cta-btn2':'📱 Скачать APK',
+    'foot-desc':'AI-платформа для изучения 12 языков. Алгоритм SM-2, геймификация, сертификаты.',
+    'foot-col1-h':'Продукт','foot-col2-h':'Изучай','foot-col3-h':'Компания',
+    'foot-copy':'Сделано в Казахстане 🇰🇿 · © 2025 SYNAPSE. Все права защищены.',
+    'lp-en':'Английский','lp-kz':'Казахский','lp-de':'Немецкий','lp-fr':'Французский',
+    'lp-es':'Испанский','lp-it':'Итальянский','lp-tr':'Турецкий','lp-ru':'Русский',
+    'lp-zh':'Китайский','lp-ja':'Японский','lp-ko':'Корейский','lp-ar':'Арабский',
+    'chip1':'Стрик <span class="chip-val">21 день</span>','chip3':'Топ <span class="chip-val">10%</span>',
+    'pf1':'✅ 20 слов в день','pf2':'✅ 1 язык','pf3':'✅ Карточки','pf4':'✅ Рейтинг',
+    'pf5':'❌ Все мини-игры','pf6':'❌ AI-аналитика','pf7':'❌ Офлайн',
+    'pp1':'✅ Безлимит слов','pp2':'✅ 8+ языков','pp3':'✅ Все мини-игры','pp4':'✅ Режим выживания',
+    'pp5':'✅ AI-аналитика','pp6':'✅ Приоритет в рейтинге','pp7':'❌ Офлайн',
+    'pl1':'✅ Всё из PRO','pl2':'✅ Офлайн-режим','pl3':'✅ Персональный AI-план',
+    'pl4':'✅ Эксклюзивные бейджи','pl5':'✅ Разблокированные лиги',
+    'pl6':'✅ Ранний доступ к фичам','pl7':'✅ Приоритетная поддержка',
+    'ft-features':'Возможности','ft-web':'Веб-версия','ft-pricing':'Тарифы',
+    'ft-english':'Английский','ft-kazakh':'Казахский','ft-german':'Немецкий','ft-french':'Французский',
+    'ft-contacts':'Контакты','ft-policy':'Политика','ft-terms':'Условия',
+    'fb-privacy':'Конфиденциальность','fb-terms':'Условия',
   },
   kz: {
     'nav-about':'Біз туралы','nav-features':'Мүмкіндіктер','nav-pricing':'Тарифтер','nav-faq':'FAQ',
@@ -851,6 +918,63 @@ const T = {
     'hero-sub':'SYNAPSE сіздің орнына сөзді қашан қайталау керектігін есептейді — ең аз уақыт, ең жоғары нәтиже.',
     'btn-start':'🚀 Тегін бастау','btn-have-acc':'Аккаунтым бар',
     'stat-users':'оқушы','stat-words':'сөз базада','stat-langs':'тіл',
+    'why-label':'Неліктен SYNAPSE','why-h':'Нәтиже — кездейсоқ емес',
+    'why-p':'Біз ғылыми алгоритмді қолданамыз — ол сөзді қашан ұмытасыңды анықтайды және дәл сол сәтте еске түсіреді.',
+    'sc1':'оқушы оқиды','sc2':'сөз базада','sc3':'тіл қол жетімді','sc4':'курс тарауы',
+    'f1-label':'Ақылды оқыту','f1-h':'Эббингауз<br>алгоритмі',
+    'f1-p':'Жүйе қателерді талдайды және нақты сөзді неше күннен кейін ұмытатыныңды есептейді — дәл сол уақытта еске салады.',
+    'f1-li1':'Ғылыми SM-2 әдісі','f1-li2':'Жеке қайталау қисығы','f1-li3':'Аз уақыт — максималды нәтиже','f1-btn':'Байқап көру →',
+    'f2-label':'Мотивация','f2-h':'Әр сабақ —<br>кішкентай жеңіс',
+    'f2-p':'XP, монеталар, стриктер, рейтинг және 24 жетістік — сен жай оқымайсың, сен жеңесің.',
+    'f2-li1':'Күнделікті стрик — 365 күнге дейін','f2-li2':'XP және деңгейлер — 25 деңгей','f2-li3':'24 бірегей жетістік','f2-btn':'Ойнай бастау →',
+    'f3-label':'Толық курстар','f3-h':'A1-ден B2-ге<br>12 айда',
+    'f3-p':'Әр тілге 32 тарау: теория, жаттығулар, емтихан және сертификат.',
+    'f3-li1':'Мысалдар мен аудиосы бар теория','f3-li2':'Әр тақырыпқа жаттығулар','f3-li3':'Емтихан және сертификат','f3-btn':'Курстарды қарау →',
+    'gam-label':'Геймификация','gam-h':'Оқу — бұл ойын','gam-p':'Өзіңмен және басқалармен жарысыңыз. Күн сайын жаңа мақсат.',
+    'gc1-t':'Стриктер','gc1-d':'Күн сайын оқы — тізбекті бұзба. Рекорд — 365 күн.','gc1-tag':'365 күнге дейін',
+    'gc2-t':'XP және деңгейлер','gc2-d':'Әр дұрыс жауап үшін тәжірибе жина. 25 деңгей.','gc2-tag':'25 деңгей',
+    'gc3-t':'Жетістіктер','gc3-d':'24 бірегей жетістік. Бірінші сөз, бірінші стрик, бірінші сертификат.','gc3-tag':'24 жетістік',
+    'xbd1':'Оқушы','xbd2':'Сөз базада','xbd3':'Тіл','xbd4':'Курс тарауы',
+    'ew-label':'Кез келген жерде','ew-h':'Қай жерде болсаң да оқы','ew-p':'Телефон, планшет немесе браузер — прогресс барлық жерде синхрондалады.',
+    'ew-btn1':'📱 APK жүктеу','ew-btn2':'🌐 Браузерде ашу',
+    'pro-eyebrow':'✦ PREMIUM','pro-h':'Максималды<br>мүмкіндіктер',
+    'pro-p':'Барлық тілдер, офлайн-режим, AI-аналитика, эксклюзивті белгілер — тілдерді шынайы үйренгісі келгендер үшін.',
+    'pro-li1':'Барлық 12 тіл ашылды','pro-li2':'Интернетсіз офлайн-режим','pro-li3':'Жеке AI-оқу жоспары',
+    'pro-li4':'Эксклюзивті белгілер мен жақтаулар','pro-li5':'Жаңа функцияларға ерте қол жеткізу',
+    'pro-btn1':'7 күн тегін байқап көру','pro-btn2':'Тарифтерді қарау',
+    'cert-label':'Сертификаттар','cert-h':'Деңгейіңді<br>дәлеле',
+    'cert-p':'Курсты аяқтадың — тілді меңгеру деңгейі бойынша жеке сертификат аласың (A1–B2). Түйіндемеге керемет сияды.',
+    'cert-btn':'Курсты бастау →',
+    'price-label':'Тарифтер','price-h':'Тегін бастаңыз','price-p':'Негізгі функциялар — мәңгілік тегін. PRO және LEGENDA барлық қалғанын ашады.',
+    'ptb-m':'Ай','ptb-y':'Жыл',
+    'free-desc':'Бастау үшін — мәңгілік тегін.','free-btn':'Тегін жүктеу',
+    'pro-badge-txt':'Танымал','pro-desc':'Шынайы оқу үшін.','pro-btn-p':'PRO бастау →',
+    'leg-desc':'Бәрі кіреді. Максималды нәтиже.','leg-btn':'Аңыз болу →',
+    'faq-label':'FAQ','faq-h':'Жиі қойылатын сұрақтар',
+    'faq-q1':'Бұл шынымен тегін бе?','faq-a1':'Иә! Негізгі қол жеткізу мәңгілік тегін: күніне 20 сөз, 1 тіл, карточкалар және рейтинг.',
+    'faq-q2':'Қанша уақыт оқу керек?','faq-a2':'Күніне 10 минуттан. Тұрақты сабақпен 3–4 айда A1–A2. B2 — шамамен 12–18 ай.',
+    'faq-q3':'Қазақ тілі бар ма?','faq-a3':'Иә, қазақ тілі тегін жоспарға кіреді. Бастаушылар үшін сапалы қазақ тілін оқытатын аз қолданбалардың бірі.',
+    'faq-q4':'Қайталау алгоритмі қалай жұмыс істейді?','faq-a4':'Эббингауздың ұмыту қисығына негізделген SM-2 қолданамыз.',
+    'faq-q5':'Интернетсіз жұмыс істейді ме?','faq-a5':'LEGENDA режимінде офлайн-режим қол жетімді. Free және Pro интернет байланысын қажет етеді.',
+    'cta-h':'SYNAPSE-пен<br>тіл үйрене бастаңыз','cta-btn1':'🚀 Тегін бастау','cta-btn2':'📱 APK жүктеу',
+    'foot-desc':'12 тілді оқуға арналған AI-платформа. SM-2 алгоритмі, геймификация, сертификаттар.',
+    'foot-col1-h':'Өнім','foot-col2-h':'Үйрен','foot-col3-h':'Компания',
+    'foot-copy':'Қазақстанда жасалды 🇰🇿 · © 2025 SYNAPSE. Барлық құқықтар қорғалған.',
+    'lp-en':'Ағылшын','lp-kz':'Қазақ','lp-de':'Неміс','lp-fr':'Француз',
+    'lp-es':'Испан','lp-it':'Итальян','lp-tr':'Түрік','lp-ru':'Орыс',
+    'lp-zh':'Қытай','lp-ja':'Жапон','lp-ko':'Корей','lp-ar':'Араб',
+    'chip1':'Стрик <span class="chip-val">21 күн</span>','chip3':'Үздік <span class="chip-val">10%</span>',
+    'pf1':'✅ Күніне 20 сөз','pf2':'✅ 1 тіл','pf3':'✅ Карточкалар','pf4':'✅ Рейтинг',
+    'pf5':'❌ Барлық мини-ойындар','pf6':'❌ AI-аналитика','pf7':'❌ Офлайн',
+    'pp1':'✅ Шексіз сөздер','pp2':'✅ 8+ тіл','pp3':'✅ Барлық мини-ойындар','pp4':'✅ Тірі қалу режимі',
+    'pp5':'✅ AI-аналитика','pp6':'✅ Рейтингте басымдық','pp7':'❌ Офлайн',
+    'pl1':'✅ PRO-дағы бәрі','pl2':'✅ Офлайн-режим','pl3':'✅ Жеке AI-жоспар',
+    'pl4':'✅ Эксклюзивті белгілер','pl5':'✅ Ашылған лигалар',
+    'pl6':'✅ Жаңа мүмкіндіктерге ерте қол жеткізу','pl7':'✅ Басым қолдау',
+    'ft-features':'Мүмкіндіктер','ft-web':'Веб-нұсқа','ft-pricing':'Тарифтер',
+    'ft-english':'Ағылшын','ft-kazakh':'Қазақ','ft-german':'Неміс','ft-french':'Француз',
+    'ft-contacts':'Байланыс','ft-policy':'Саясат','ft-terms':'Шарттар',
+    'fb-privacy':'Құпиялылық','fb-terms':'Шарттар',
   },
   en: {
     'nav-about':'About','nav-features':'Features','nav-pricing':'Pricing','nav-faq':'FAQ',
@@ -860,6 +984,63 @@ const T = {
     'hero-sub':'SYNAPSE remembers for you exactly when to repeat each word — minimum time, maximum results.',
     'btn-start':'🚀 Start for free','btn-have-acc':'I already have an account',
     'stat-users':'learners','stat-words':'words in base','stat-langs':'languages',
+    'why-label':'Why SYNAPSE','why-h':'Results are no coincidence',
+    'why-p':'We use a scientific algorithm that determines exactly when you\'ll start forgetting a word — and shows it at just the right moment.',
+    'sc1':'learners active','sc2':'words in database','sc3':'languages available','sc4':'course chapters',
+    'f1-label':'Smart Learning','f1-h':'Ebbinghaus<br>Algorithm',
+    'f1-p':'We don\'t show everything at random. The system analyzes your errors and calculates when you\'ll forget a specific word — and reminds you at exactly that time.',
+    'f1-li1':'Scientific SM-2 method','f1-li2':'Personal repetition curve','f1-li3':'Minimum time — maximum retention','f1-btn':'Try it →',
+    'f2-label':'Motivation','f2-h':'Every lesson —<br>a small victory',
+    'f2-p':'XP for correct answers, coins, streaks, leaderboards and 24 unique achievements — you\'re not just learning, you\'re winning every day.',
+    'f2-li1':'Daily streak — up to 365 days','f2-li2':'XP & levels — 25 levels to unlock','f2-li3':'24 unique achievements','f2-btn':'Start playing →',
+    'f3-label':'Full Courses','f3-h':'From A1 to B2<br>in 12 months',
+    'f3-p':'32 chapters per language: theory, exercises, exams and a certificate. A structured program that actually works.',
+    'f3-li1':'Theory with examples and audio','f3-li2':'Exercises for every topic','f3-li3':'Final exam and certificate','f3-btn':'View courses →',
+    'gam-label':'Gamification','gam-h':'Learning is a game','gam-p':'Compete with yourself and others. Every day — a new goal.',
+    'gc1-t':'Streaks','gc1-d':'Learn every day — don\'t break the chain. Record — 365 days in a row.','gc1-tag':'Up to 365 days',
+    'gc2-t':'XP & Levels','gc2-d':'Earn experience for every correct answer. 25 levels to unlock.','gc2-tag':'25 levels',
+    'gc3-t':'Achievements','gc3-d':'24 unique badges. First word, first streak, first certificate.','gc3-tag':'24 badges',
+    'xbd1':'Learners','xbd2':'Words in base','xbd3':'Languages','xbd4':'Course chapters',
+    'ew-label':'Multiplatform','ew-h':'Learn anywhere','ew-p':'Phone, tablet or browser — your progress syncs everywhere.',
+    'ew-btn1':'📱 Download APK','ew-btn2':'🌐 Open in browser',
+    'pro-eyebrow':'✦ PREMIUM','pro-h':'Maximum<br>capabilities',
+    'pro-p':'All languages, offline mode, AI analytics, exclusive badges — for those serious about language learning.',
+    'pro-li1':'All 12 languages unlocked','pro-li2':'Offline mode without internet','pro-li3':'Personal AI learning plan',
+    'pro-li4':'Exclusive badges and frames','pro-li5':'Early access to new features',
+    'pro-btn1':'Try free for 7 days','pro-btn2':'View pricing',
+    'cert-label':'Certificates','cert-h':'Prove your<br>level',
+    'cert-p':'Complete a course — get a beautiful personalized certificate for your language level (A1–B2). Looks great on a resume and LinkedIn.',
+    'cert-btn':'Start a course →',
+    'price-label':'Pricing','price-h':'Start for free','price-p':'Basic features — free forever. PRO and LEGENDA unlock everything else.',
+    'ptb-m':'Month','ptb-y':'Year',
+    'free-desc':'For getting started — free forever.','free-btn':'Download free',
+    'pro-badge-txt':'Popular','pro-desc':'For serious learners.','pro-btn-p':'Start PRO →',
+    'leg-desc':'Everything included. Maximum results.','leg-btn':'Become a legend →',
+    'faq-label':'FAQ','faq-h':'Frequently asked questions',
+    'faq-q1':'Is it really free?','faq-a1':'Yes! Basic access is free forever: 20 words/day, 1 language, flashcards and leaderboard. PRO and LEGENDA unlock more languages, games and AI analytics.',
+    'faq-q2':'How much time do I need?','faq-a2':'From 10 minutes a day. With regular practice, A1–A2 in 3–4 months. B2 takes about 12–18 months at 20–30 min/day.',
+    'faq-q3':'Is Kazakh language available?','faq-a3':'Yes, Kazakh is included in the free plan. One of the few apps with quality conversational Kazakh for beginners.',
+    'faq-q4':'How does the repetition algorithm work?','faq-a4':'We use SM-2 based on Ebbinghaus\'s forgetting curve. After each answer, the system calculates how many days until you start forgetting the word.',
+    'faq-q5':'Does it work without internet?','faq-a5':'Offline mode is available in the LEGENDA plan. Free and Pro require an internet connection.',
+    'cta-h':'Start learning<br>languages with <em>SYNAPSE</em>','cta-btn1':'🚀 Start for free','cta-btn2':'📱 Download APK',
+    'foot-desc':'AI platform for learning 12 languages. SM-2 algorithm, gamification, certificates.',
+    'foot-col1-h':'Product','foot-col2-h':'Learn','foot-col3-h':'Company',
+    'foot-copy':'Made in Kazakhstan 🇰🇿 · © 2025 SYNAPSE. All rights reserved.',
+    'lp-en':'English','lp-kz':'Kazakh','lp-de':'German','lp-fr':'French',
+    'lp-es':'Spanish','lp-it':'Italian','lp-tr':'Turkish','lp-ru':'Russian',
+    'lp-zh':'Chinese','lp-ja':'Japanese','lp-ko':'Korean','lp-ar':'Arabic',
+    'chip1':'Streak <span class="chip-val">21 days</span>','chip3':'Top <span class="chip-val">10%</span>',
+    'pf1':'✅ 20 words/day','pf2':'✅ 1 language','pf3':'✅ Flashcards','pf4':'✅ Leaderboard',
+    'pf5':'❌ All mini-games','pf6':'❌ AI analytics','pf7':'❌ Offline',
+    'pp1':'✅ Unlimited words','pp2':'✅ 8+ languages','pp3':'✅ All mini-games','pp4':'✅ Survival mode',
+    'pp5':'✅ AI analytics','pp6':'✅ Priority in leaderboard','pp7':'❌ Offline',
+    'pl1':'✅ Everything in PRO','pl2':'✅ Offline mode','pl3':'✅ Personal AI plan',
+    'pl4':'✅ Exclusive badges','pl5':'✅ Unlocked leagues',
+    'pl6':'✅ Early access to features','pl7':'✅ Priority support',
+    'ft-features':'Features','ft-web':'Web version','ft-pricing':'Pricing',
+    'ft-english':'English','ft-kazakh':'Kazakh','ft-german':'German','ft-french':'French',
+    'ft-contacts':'Contact','ft-policy':'Policy','ft-terms':'Terms',
+    'fb-privacy':'Privacy','fb-terms':'Terms',
   }
 };
 const LANG_FLAGS = { ru:'🇷🇺', kz:'🇰🇿', en:'🇬🇧' };
@@ -871,10 +1052,12 @@ function applyLang(lang) {
   document.getElementById('langFlag').textContent = LANG_FLAGS[lang];
   document.getElementById('langCode').textContent = LANG_CODES[lang];
   document.querySelectorAll('.lang-opt').forEach(o => o.classList.toggle('active', o.dataset.lang === lang));
+  document.querySelectorAll('.mob-lang-opt').forEach(o => o.classList.toggle('active', o.dataset.lang === lang));
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const v = t[el.dataset.i18n]; if (!v) return;
-    if (el.dataset.i18n === 'hero-h1') el.innerHTML = v; else el.textContent = v;
+    if (v.includes('<')) el.innerHTML = v; else el.textContent = v;
   });
+  setP(document.getElementById('btnM').classList.contains('on') ? 'm' : 'y');
 }
 function setLang(lang) { applyLang(lang); closeLang(); }
 function toggleLang() { document.getElementById('langPicker').classList.toggle('open'); }
@@ -924,20 +1107,27 @@ function tfaq(el) {
 
 // ── Pricing toggle ───────────────────────────────────────────────
 function setP(mode) {
+  var lang = localStorage.getItem('syn_lang') || 'ru';
+  var L = {
+    ru:{always:'/ всегда',mo:'₸ / мес',yr:'₸ / год',save:'· экономия 20%'},
+    kz:{always:'/ мәңгі',mo:'₸ / ай',yr:'₸ / жыл',save:'· 20% үнемдеу'},
+    en:{always:'/ forever',mo:'₸ / mo',yr:'₸ / year',save:'· save 20%'}
+  };
+  var l = L[lang] || L.ru;
   document.getElementById('btnM').classList.toggle('on', mode === 'm');
   document.getElementById('btnY').classList.toggle('on', mode === 'y');
   if (mode === 'm') {
-    document.getElementById('pf').innerHTML = '0 <span>/ всегда</span>';
-    document.getElementById('pp').innerHTML = '2 990 <span>₸ / мес</span>';
-    document.getElementById('pl').innerHTML = '5 990 <span>₸ / мес</span>';
+    document.getElementById('pf').innerHTML = '0 <span>' + l.always + '</span>';
+    document.getElementById('pp').innerHTML = '2 990 <span>' + l.mo + '</span>';
+    document.getElementById('pl').innerHTML = '5 990 <span>' + l.mo + '</span>';
     ['nf','np','nl'].forEach(id => document.getElementById(id).textContent = '');
   } else {
-    document.getElementById('pf').innerHTML = '0 <span>/ всегда</span>';
-    document.getElementById('pp').innerHTML = '2 392 <span>₸ / мес</span>';
-    document.getElementById('pl').innerHTML = '4 792 <span>₸ / мес</span>';
+    document.getElementById('pf').innerHTML = '0 <span>' + l.always + '</span>';
+    document.getElementById('pp').innerHTML = '2 392 <span>' + l.mo + '</span>';
+    document.getElementById('pl').innerHTML = '4 792 <span>' + l.mo + '</span>';
     document.getElementById('nf').textContent = '';
-    document.getElementById('np').textContent = '28 704 ₸ / год · экономия 20%';
-    document.getElementById('nl').textContent = '57 504 ₸ / год · экономия 20%';
+    document.getElementById('np').textContent = '28 704 ' + l.yr + ' ' + l.save;
+    document.getElementById('nl').textContent = '57 504 ' + l.yr + ' ' + l.save;
   }
 }
 
