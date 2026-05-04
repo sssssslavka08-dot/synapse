@@ -112,6 +112,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware
         .length;
     final total = course.totalChapters;
 
+    // Средний балл по завершённым главам
+    final scores = _progress.values
+        .where((p) => p.status == ChapterStatus.completed && p.score > 0)
+        .map((p) => p.score)
+        .toList();
+    final avgScore = scores.isEmpty
+        ? null
+        : (scores.reduce((a, b) => a + b) / scores.length).round();
+
+    final pct = total > 0 ? (completed / total * 100).round() : 0;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: const BoxDecoration(
@@ -171,6 +182,30 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware
                 valueColor: const AlwaysStoppedAnimation(AppColors.tiffany),
                 minHeight: 8,
               ),
+            ),
+            const SizedBox(height: 10),
+            // Статистика
+            Row(
+              children: [
+                _StatChip(
+                  icon: '📊',
+                  label: '$pct% пройдено',
+                  color: AppColors.tiffany,
+                ),
+                const SizedBox(width: 8),
+                if (avgScore != null)
+                  _StatChip(
+                    icon: '⭐',
+                    label: 'Средний балл: $avgScore%',
+                    color: const Color(0xFFFFD700),
+                  ),
+                const SizedBox(width: 8),
+                _StatChip(
+                  icon: '✅',
+                  label: '$completed глав',
+                  color: const Color(0xFF4CAF50),
+                ),
+              ],
             ),
           ],
         ],
@@ -500,6 +535,37 @@ class _ChapterTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final String icon;
+  final String label;
+  final Color color;
+  const _StatChip({required this.icon, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 11)),
+          const SizedBox(width: 4),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: color)),
+        ],
       ),
     );
   }

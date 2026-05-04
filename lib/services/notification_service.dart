@@ -1,10 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzData;
 
 // ═══════════════════════════════════════════════════════════════
 //  NotificationService — локальные push-уведомления
-//  Ежедневное напоминание в 19:00 + предупреждение о стрике
+//  Ежедневное напоминание + стрик-предупреждение + отслеживание активности
 // ═══════════════════════════════════════════════════════════════
 class NotificationService {
   NotificationService._();
@@ -15,6 +17,7 @@ class NotificationService {
 
   static const _channelId = 'synapse_main';
   static const _channelName = 'SYNAPSE Уведомления';
+  static const _keyLastActivity = 'last_activity_ts';
 
   // ── Инициализация ──────────────────────────────────────────
   Future<void> init() async {
@@ -33,7 +36,6 @@ class NotificationService {
       const InitializationSettings(android: android, iOS: ios),
     );
 
-    // Запрашиваем разрешение на Android 13+
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -58,21 +60,51 @@ class NotificationService {
         ),
       );
 
+  // ── Записать активность пользователя ─────────────────────
+  Future<void> recordActivity() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+          _keyLastActivity, DateTime.now().millisecondsSinceEpoch);
+    } catch (_) {}
+  }
+
+  // ── Проверить стрик и запланировать предупреждение ────────
+  Future<void> checkAndScheduleStreakWarning() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTs = prefs.getInt(_keyLastActivity);
+      if (lastTs == null) return;
+
+      final lastActivity =
+          DateTime.fromMillisecondsSinceEpoch(lastTs);
+      final now = DateTime.now();
+      final hoursSince =
+          now.difference(lastActivity).inHours;
+
+      // Если не заходил 20+ часов — предупреждение через 1 час
+      if (hoursSince >= 20 && hoursSince < 24) {
+        await scheduleStreakWarning();
+      }
+    } catch (_) {}
+  }
+
   // ── Ежедневное напоминание в 19:00 ─────────────────────────
   Future<void> scheduleDailyReminder() async {
     await init();
-    await _plugin.cancelAll();
+
+    final messages = [
+      'Не забудь про урок! Твой стрик ждёт тебя 🔥',
+      'Один урок в день — и ты станешь полиглотом 🧠',
+      'Твои слова скучают. Зайди на 5 минут! ⚡',
+      'Сегодня отличный день учить новое! 📚',
+    ];
+    final msg = messages[DateTime.now().weekday % messages.length];
 
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      19, // 19:00
-      0,
+      tz.local, now.year, now.month, now.day, 19, 0,
     );
-    // Если 19:00 уже прошло — ставим на завтра
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
@@ -80,7 +112,32 @@ class NotificationService {
     await _plugin.zonedSchedule(
       1,
       'SYNAPSE 🧠',
-      'Не забудь про урок! Твой стрик ждёт тебя 🔥',
+      msg,
+      scheduled,
+      _details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  // ── Дополнительное утреннее напоминание в 09:00 ───────────
+  Future<void> scheduleMorningReminder() async {
+    await init();
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(
+      tz.local, now.year, now.month, now.day, 9, 0,
+    );
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+
+    await _plugin.zonedSchedule(
+      3,
+      'Доброе утро! ☀️',
+      'Начни день с урока — 5 минут языка заряжают мозг!',
       scheduled,
       _details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -91,7 +148,6 @@ class NotificationService {
   }
 
   // ── Предупреждение о сгорании стрика ───────────────────────
-  // Вызывать если пользователь не заходил 23 часа
   Future<void> scheduleStreakWarning() async {
     await init();
     final scheduled =
@@ -106,6 +162,30 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  // ── Уведомление о разблокировке новой главы ───────────────
+  Future<void> notifyChapterUnlocked(String chapterTitle) async {
+    if (kIsWeb) return;
+    await init();
+    await _plugin.show(
+      4,
+      '🔓 Новая глава открыта!',
+      'Глава "$chapterTitle" теперь доступна',
+      _details,
+    );
+  }
+
+  // ── Уведомление о завершении курса ────────────────────────
+  Future<void> notifyCourseCompleted(String langName) async {
+    if (kIsWeb) return;
+    await init();
+    await _plugin.show(
+      5,
+      '🏆 Курс завершён!',
+      'Ты прошёл курс $langName! Получи сертификат 🎓',
+      _details,
     );
   }
 

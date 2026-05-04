@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
 import '../../../presentation/widgets/neuronchik.dart';
@@ -67,10 +69,10 @@ class _TheoryScreenState extends State<TheoryScreen> {
   @override
   Widget build(BuildContext context) {
     final isKids = widget.isKidsMode;
-    final accent = isKids ? const Color(0xFFFF6B35) : const Color(0xFF0ABDB9);
+    final accent = isKids ? const Color(0xFFFF6B35) : AppColors.tiffany;
 
     return Scaffold(
-      backgroundColor: isKids ? const Color(0xFFFFF9F0) : const Color(0xFFF4FEFE),
+      backgroundColor: isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -87,13 +89,13 @@ class _TheoryScreenState extends State<TheoryScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.darkCard,
                             borderRadius: BorderRadius.circular(12),
                             border:
-                                Border.all(color: const Color(0xFFD6F5F4)),
+                                Border.all(color: AppColors.darkBorder),
                           ),
                           child: const Icon(Icons.close_rounded,
-                              size: 20, color: Color(0xFF4D6766)),
+                              size: 20, color: AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -106,7 +108,7 @@ class _TheoryScreenState extends State<TheoryScreen> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F1F1E),
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             Text(
@@ -144,8 +146,11 @@ class _TheoryScreenState extends State<TheoryScreen> {
                         setState(() => _currentPage = i),
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: _totalPages,
-                    itemBuilder: (_, i) =>
-                        _TheoryPage(section: _sections[i], isKidsMode: isKids),
+                    itemBuilder: (_, i) => _TheoryPage(
+                      section: _sections[i],
+                      isKidsMode: isKids,
+                      langCode: widget.langCode,
+                    ),
                   ),
                 ),
 
@@ -195,11 +200,63 @@ class _TheoryScreenState extends State<TheoryScreen> {
   }
 }
 
-class _TheoryPage extends StatelessWidget {
+class _TheoryPage extends StatefulWidget {
   final TheorySection section;
   final bool isKidsMode;
+  final String langCode;
 
-  const _TheoryPage({required this.section, required this.isKidsMode});
+  const _TheoryPage({
+    required this.section,
+    required this.isKidsMode,
+    required this.langCode,
+  });
+
+  @override
+  State<_TheoryPage> createState() => _TheoryPageState();
+}
+
+class _TheoryPageState extends State<_TheoryPage> {
+  final FlutterTts _tts = FlutterTts();
+  bool _speaking = false;
+
+  @override
+  void dispose() {
+    _tts.stop();
+    super.dispose();
+  }
+
+  Future<void> _speak() async {
+    if (_speaking) {
+      await _tts.stop();
+      setState(() => _speaking = false);
+      return;
+    }
+    final lang = _ttsLang(widget.langCode);
+    await _tts.setLanguage(lang);
+    await _tts.setSpeechRate(0.4);
+    await _tts.setVolume(1.0);
+    setState(() => _speaking = true);
+    await _tts.speak(widget.section.content);
+    if (mounted) setState(() => _speaking = false);
+  }
+
+  String _ttsLang(String code) {
+    switch (code) {
+      case 'en': return 'en-US';
+      case 'de': return 'de-DE';
+      case 'fr': return 'fr-FR';
+      case 'es': return 'es-ES';
+      case 'it': return 'it-IT';
+      case 'tr': return 'tr-TR';
+      case 'ru': return 'ru-RU';
+      case 'kz': return 'kk-KZ';
+      case 'zh': return 'zh-CN';
+      case 'ja': return 'ja-JP';
+      case 'ko': return 'ko-KR';
+      case 'ar': return 'ar-SA';
+      default: return 'en-US';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,23 +269,61 @@ class _TheoryPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF0ABDB9).withValues(alpha: 0.08),
+              color: AppColors.tiffany.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: const Color(0xFF0ABDB9).withValues(alpha: 0.2)),
+                  color: AppColors.tiffany.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
                 const Icon(Icons.menu_book_rounded,
-                    color: Color(0xFF0ABDB9), size: 22),
+                    color: AppColors.tiffany, size: 22),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    section.title,
+                    widget.section.title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0ABDB9),
+                      color: AppColors.tiffany,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _speak,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _speaking
+                          ? AppColors.tiffany
+                          : AppColors.tiffany.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _speaking
+                              ? Icons.stop_rounded
+                              : Icons.volume_up_rounded,
+                          color: _speaking
+                              ? Colors.white
+                              : AppColors.tiffany,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _speaking ? 'Стоп' : 'Слушать',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _speaking
+                                ? Colors.white
+                                : AppColors.tiffany,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -242,16 +337,16 @@ class _TheoryPage extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE0F0FF)),
+              border: Border.all(color: AppColors.darkBorder),
             ),
             child: Text(
-              section.content,
+              widget.section.content,
               style: TextStyle(
-                fontSize: isKidsMode ? 15 : 14,
+                fontSize: widget.isKidsMode ? 15 : 14,
                 height: 1.7,
-                color: const Color(0xFF0F1F1E),
+                color: AppColors.textPrimary,
                 fontFamily: 'monospace',
               ),
             ),
@@ -259,33 +354,33 @@ class _TheoryPage extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Таблицы
-          if (section.tables != null)
-            ...section.tables!.map((t) => _GrammarTableWidget(table: t)),
+          if (widget.section.tables != null)
+            ...widget.section.tables!.map((t) => _GrammarTableWidget(table: t)),
 
           // Примеры
-          if (section.examples.isNotEmpty) ...[
+          if (widget.section.examples.isNotEmpty) ...[
             const Text(
               '📝 Примеры',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F1F1E),
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            ...section.examples.map((ex) => Container(
+            ...widget.section.examples.map((ex) => Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8FDF9),
+                    color: AppColors.tiffany.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFA8E6E3)),
+                    border: Border.all(color: AppColors.tiffany.withValues(alpha: 0.2)),
                   ),
                   child: Text(
                     ex,
                     style: TextStyle(
-                      fontSize: isKidsMode ? 14 : 13,
-                      color: const Color(0xFF0F3D3B),
+                      fontSize: widget.isKidsMode ? 14 : 13,
+                      color: AppColors.textPrimary,
                       height: 1.5,
                     ),
                   ),
@@ -308,14 +403,14 @@ class _GrammarTableWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFD6F5F4)),
+        border: Border.all(color: AppColors.darkBorder),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: const BoxDecoration(
-              color: Color(0xFF0ABDB9),
+              color: AppColors.tiffany,
               borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
             ),
             child: Row(
@@ -347,7 +442,7 @@ class _GrammarTableWidget extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0ABDB9),
+                              color: AppColors.tiffany,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -370,7 +465,7 @@ class _GrammarTableWidget extends StatelessWidget {
                                 cell,
                                 style: const TextStyle(
                                     fontSize: 12,
-                                    color: Color(0xFF0F1F1E)),
+                                    color: AppColors.textPrimary),
                                 textAlign: TextAlign.center,
                               ),
                             ),

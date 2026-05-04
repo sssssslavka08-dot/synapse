@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:confetti/confetti.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
 import '../../../presentation/widgets/neuronchik.dart';
@@ -30,6 +33,7 @@ class _ExamScreenState extends State<ExamScreen>
   bool _loading = false;
   late AnimationController _resultCtrl;
   late Animation<double> _resultAnim;
+  late ConfettiController _confettiCtrl;
 
   List<ExamQuestion> get _questions => widget.chapter.exam;
 
@@ -43,16 +47,24 @@ class _ExamScreenState extends State<ExamScreen>
     _resultAnim = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _resultCtrl, curve: Curves.elasticOut),
     );
+    _confettiCtrl = ConfettiController(duration: const Duration(seconds: 3));
   }
 
   @override
   void dispose() {
     _resultCtrl.dispose();
+    _confettiCtrl.dispose();
     super.dispose();
   }
 
   void _select(int idx) {
     if (_answers.containsKey(_current)) return;
+    final isCorrect = idx == _questions[_current].correctIndex;
+    if (isCorrect) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
     setState(() => _answers[_current] = idx);
   }
 
@@ -89,6 +101,10 @@ class _ExamScreenState extends State<ExamScreen>
     if (mounted) {
       setState(() => _loading = false);
       _resultCtrl.forward();
+      if (_score >= 60) {
+        _confettiCtrl.play();
+        HapticFeedback.lightImpact();
+      }
     }
   }
 
@@ -101,7 +117,7 @@ class _ExamScreenState extends State<ExamScreen>
     final answered = _answers.containsKey(_current);
 
     return Scaffold(
-      backgroundColor: isKids ? const Color(0xFFFFF9F0) : const Color(0xFFF4FEFE),
+      backgroundColor: isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -110,16 +126,10 @@ class _ExamScreenState extends State<ExamScreen>
                 // Шапка экзамена
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: const Border(
-                        bottom: BorderSide(color: Color(0xFFE8F8F8))),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                      )
-                    ],
+                  decoration: const BoxDecoration(
+                    color: AppColors.darkCard,
+                    border: Border(
+                        bottom: BorderSide(color: AppColors.darkBorder)),
                   ),
                   child: Column(
                     children: [
@@ -131,13 +141,13 @@ class _ExamScreenState extends State<ExamScreen>
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF4FEFE),
+                                color: AppColors.darkBg,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: const Color(0xFFD6F5F4)),
+                                    color: AppColors.darkBorder),
                               ),
                               child: const Icon(Icons.close_rounded,
-                                  size: 20, color: Color(0xFF4D6766)),
+                                  size: 20, color: AppColors.textSecondary),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -174,7 +184,7 @@ class _ExamScreenState extends State<ExamScreen>
                                       style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF0F1F1E),
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ],
@@ -184,7 +194,7 @@ class _ExamScreenState extends State<ExamScreen>
                                   'Вопрос ${_current + 1} из ${_questions.length}',
                                   style: const TextStyle(
                                     fontSize: 12,
-                                    color: Color(0xFF8EAEAC),
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -219,25 +229,17 @@ class _ExamScreenState extends State<ExamScreen>
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.darkCard,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                                color: const Color(0xFFE0F0FF)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black
-                                    .withValues(alpha: 0.04),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              )
-                            ],
+                                color: AppColors.darkBorder),
                           ),
                           child: Text(
                             question.question,
                             style: TextStyle(
                               fontSize: isKids ? 18 : 16,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F1F1E),
+                              color: AppColors.textPrimary,
                               height: 1.4,
                             ),
                           ),
@@ -265,8 +267,8 @@ class _ExamScreenState extends State<ExamScreen>
                             decoration: BoxDecoration(
                               color:
                                   _answers[_current] == question.correctIndex
-                                      ? const Color(0xFFE8FDF5)
-                                      : const Color(0xFFFFF3F3),
+                                      ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
+                                      : const Color(0xFFEF4444).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color:
@@ -279,7 +281,7 @@ class _ExamScreenState extends State<ExamScreen>
                               question.explanation,
                               style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF0F1F1E),
+                                  color: AppColors.textPrimary,
                                   height: 1.4),
                             ),
                           ),
@@ -341,8 +343,24 @@ class _ExamScreenState extends State<ExamScreen>
 
     return Scaffold(
       backgroundColor:
-          isKids ? const Color(0xFFFFF9F0) : const Color(0xFFF4FEFE),
-      body: SafeArea(
+          isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg,
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiCtrl,
+              blastDirectionality: BlastDirectionality.explosive,
+              numberOfParticles: 30,
+              gravity: 0.2,
+              emissionFrequency: 0.05,
+              colors: const [
+                Color(0xFF4ECDC4), Color(0xFFFFD700),
+                Color(0xFF4CAF50), Color(0xFFFF9800), Color(0xFFE91E63),
+              ],
+            ),
+          ),
+          SafeArea(
         child: _loading
             ? const Center(
                 child: Column(
@@ -352,7 +370,7 @@ class _ExamScreenState extends State<ExamScreen>
                     SizedBox(height: 20),
                     Text('Сохраняем результаты...',
                         style: TextStyle(
-                            color: Color(0xFF8EAEAC), fontSize: 14)),
+                            color: AppColors.textSecondary, fontSize: 14)),
                   ],
                 ),
               )
@@ -377,7 +395,7 @@ class _ExamScreenState extends State<ExamScreen>
                         style: TextStyle(
                           fontSize: isKids ? 26 : 24,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F1F1E),
+                          color: AppColors.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -387,7 +405,7 @@ class _ExamScreenState extends State<ExamScreen>
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.darkCard,
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
                             color: passed
@@ -414,7 +432,7 @@ class _ExamScreenState extends State<ExamScreen>
                                   : 'Нужно минимум 60%',
                               style: const TextStyle(
                                   fontSize: 14,
-                                  color: Color(0xFF8EAEAC)),
+                                  color: AppColors.textSecondary),
                             ),
                             const SizedBox(height: 16),
                             Row(
@@ -468,6 +486,8 @@ class _ExamScreenState extends State<ExamScreen>
                   ),
                 ),
               ),
+          ),
+        ],
       ),
     );
   }
@@ -494,12 +514,12 @@ class _ExamOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color bg = Colors.white;
-    Color border = const Color(0xFFE0F0FF);
+    Color bg = AppColors.darkCard;
+    Color border = AppColors.darkBorder;
 
     if (answered) {
-      if (correct) { bg = const Color(0xFFE8FDF5); border = const Color(0xFF4CAF50); }
-      else if (selected) { bg = const Color(0xFFFFF3F3); border = const Color(0xFFEF4444); }
+      if (correct) { bg = const Color(0xFF4CAF50).withValues(alpha: 0.15); border = const Color(0xFF4CAF50); }
+      else if (selected) { bg = const Color(0xFFEF4444).withValues(alpha: 0.15); border = const Color(0xFFEF4444); }
     } else if (selected) {
       border = const Color(0xFFFF9800);
     }
@@ -520,7 +540,7 @@ class _ExamOption extends StatelessWidget {
           style: TextStyle(
             fontSize: isKidsMode ? 15 : 14,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            color: const Color(0xFF0F1F1E),
+            color: AppColors.textPrimary,
           ),
         ),
       ),
@@ -545,13 +565,13 @@ class _ResultBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: active
-            ? const Color(0xFFE8FDF5)
-            : const Color(0xFFF8FAFC),
+            ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
+            : AppColors.darkSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: active
               ? const Color(0xFF4CAF50)
-              : const Color(0xFFE2E8F0),
+              : AppColors.darkBorder,
         ),
       ),
       child: Row(
@@ -566,7 +586,7 @@ class _ResultBadge extends StatelessWidget {
               fontWeight: FontWeight.w800,
               color: active
                   ? const Color(0xFF4CAF50)
-                  : const Color(0xFFCBD5E1),
+                  : AppColors.textMuted,
             ),
           ),
         ],

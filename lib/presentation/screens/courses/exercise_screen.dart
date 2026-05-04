@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
 import '../../../presentation/widgets/neuronchik.dart';
@@ -59,9 +61,11 @@ class _ExerciseScreenState extends State<ExerciseScreen>
         idx == _exercises[_current].correctIndex;
 
     if (isCorrect) {
+      HapticFeedback.lightImpact();
       _correct++;
       setState(() => _mood = NeuronchikMood.excited);
     } else {
+      HapticFeedback.heavyImpact();
       setState(() => _mood = NeuronchikMood.sad);
       _shakeCtrl.forward().then((_) => _shakeCtrl.reset());
     }
@@ -105,11 +109,11 @@ class _ExerciseScreenState extends State<ExerciseScreen>
   @override
   Widget build(BuildContext context) {
     final isKids = widget.isKidsMode;
-    final accent = isKids ? const Color(0xFFFF6B35) : const Color(0xFF0ABDB9);
+    final accent = isKids ? const Color(0xFFFF6B35) : AppColors.tiffany;
     final exercise = _exercises[_current];
 
     return Scaffold(
-      backgroundColor: isKids ? const Color(0xFFFFF9F0) : const Color(0xFFF4FEFE),
+      backgroundColor: isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -126,14 +130,14 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.darkCard,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: const Color(0xFFD6F5F4)),
+                                color: AppColors.darkBorder),
                           ),
                           child: const Icon(Icons.close_rounded,
                               size: 20,
-                              color: Color(0xFF4D6766)),
+                              color: AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -206,26 +210,17 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                             width: double.infinity,
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.darkCard,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color:
-                                      const Color(0xFFE0F0FF)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black
-                                      .withValues(alpha: 0.04),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                )
-                              ],
+                                  color: AppColors.darkBorder),
                             ),
                             child: Text(
                               exercise.question,
                               style: TextStyle(
                                 fontSize: isKids ? 18 : 16,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF0F1F1E),
+                                color: AppColors.textPrimary,
                                 height: 1.4,
                               ),
                             ),
@@ -256,8 +251,8 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                             decoration: BoxDecoration(
                               color: _selected ==
                                       exercise.correctIndex
-                                  ? const Color(0xFFE8FDF5)
-                                  : const Color(0xFFFFF3F3),
+                                  ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
+                                  : const Color(0xFFEF4444).withValues(alpha: 0.15),
                               borderRadius:
                                   BorderRadius.circular(14),
                               border: Border.all(
@@ -285,7 +280,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                                     exercise.explanation,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: Color(0xFF0F1F1E),
+                                      color: AppColors.textPrimary,
                                       height: 1.4,
                                     ),
                                   ),
@@ -381,17 +376,17 @@ class _OptionTile extends StatelessWidget {
   });
 
   Color get _bgColor {
-    if (!answered) return Colors.white;
-    if (correct) return const Color(0xFFE8FDF5);
-    if (selected) return const Color(0xFFFFF3F3);
-    return Colors.white;
+    if (!answered) return AppColors.darkCard;
+    if (correct) return const Color(0xFF4CAF50).withValues(alpha: 0.15);
+    if (selected) return const Color(0xFFEF4444).withValues(alpha: 0.15);
+    return AppColors.darkCard;
   }
 
   Color get _borderColor {
-    if (!answered) return const Color(0xFFE0F0FF);
+    if (!answered) return AppColors.darkBorder;
     if (correct) return const Color(0xFF4CAF50);
     if (selected) return const Color(0xFFEF4444);
-    return const Color(0xFFE0F0FF);
+    return AppColors.darkBorder;
   }
 
   @override
@@ -429,10 +424,10 @@ class _OptionTile extends StatelessWidget {
                         ? const Color(0xFF4CAF50)
                         : selected
                             ? const Color(0xFFEF4444)
-                            : const Color(0xFFE2E8F0))
+                            : AppColors.darkBorder)
                     : (selected
                         ? accent
-                        : const Color(0xFFE2E8F0)),
+                        : AppColors.darkBorder),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -453,7 +448,7 @@ class _OptionTile extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: selected
                               ? Colors.white
-                              : const Color(0xFF64748B),
+                              : AppColors.textSecondary,
                         ),
                       ),
               ),
@@ -466,7 +461,7 @@ class _OptionTile extends StatelessWidget {
                   fontSize: isKidsMode ? 15 : 14,
                   fontWeight:
                       selected ? FontWeight.w600 : FontWeight.w400,
-                  color: const Color(0xFF0F1F1E),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),

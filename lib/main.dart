@@ -24,6 +24,9 @@ void main() async {
     try {
       await NotificationService.instance.init();
       await NotificationService.instance.scheduleDailyReminder();
+      await NotificationService.instance.scheduleMorningReminder();
+      NotificationService.instance.recordActivity();
+      NotificationService.instance.checkAndScheduleStreakWarning();
     } catch (_) {}
   }
   runApp(const SynapseApp());
