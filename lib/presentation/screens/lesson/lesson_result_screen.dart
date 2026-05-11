@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../services/daily_tasks_service.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../services/daily_tasks_service.dart';
 import '../../widgets/task_completed_overlay.dart';
 import '../home/home_screen.dart';
 import 'lesson_screen.dart';
@@ -32,7 +33,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
   List<Map<String, dynamic>> _completedTasks = [];
 
   int get xpEarned => widget.correct * 10;
-  double get accuracy => widget.correct / widget.total;
+  double get accuracy => widget.total == 0 ? 0.0 : widget.correct / widget.total;
   bool get isPerfect => widget.wrong == 0;
 
   String get _emoji {
@@ -80,7 +81,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -95,7 +96,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0xFFD6F5F4)),
+                  border: Border.all(color: AppColors.darkBorder),
                 ),
                 child: Column(
                   children: [
@@ -105,7 +106,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F1F1E),
+                          color: AppColors.textPrimary,
                           letterSpacing: -0.5,
                         )),
                     const SizedBox(height: 24),
@@ -115,7 +116,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                       const SizedBox(width: 12),
                       _StatBox(label: 'Ошибки', value: '${widget.wrong}',   color: const Color(0xFFEF4444)),
                       const SizedBox(width: 12),
-                      _StatBox(label: 'XP',     value: '+$xpEarned',        color: const Color(0xFF0ABDB9)),
+                      _StatBox(label: 'XP',     value: '+$xpEarned',        color: AppColors.tiffany),
                     ]),
                     const SizedBox(height: 24),
 
@@ -125,9 +126,9 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Точность', style: TextStyle(fontSize: 14, color: Color(0xFF8EAEAC))),
+                            const Text('Точность', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
                             Text('${(accuracy * 100).round()}%',
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF0ABDB9))),
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.tiffany)),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -135,8 +136,8 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                           borderRadius: BorderRadius.circular(8),
                           child: LinearProgressIndicator(
                             value: accuracy,
-                            backgroundColor: const Color(0xFFD6F5F4),
-                            valueColor: const AlwaysStoppedAnimation(Color(0xFF0ABDB9)),
+                            backgroundColor: AppColors.darkBorder,
+                            valueColor: const AlwaysStoppedAnimation(AppColors.tiffany),
                             minHeight: 10,
                           ),
                         ),
@@ -191,7 +192,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                     (route) => false,
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0ABDB9),
+                    backgroundColor: AppColors.tiffany,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -214,7 +215,7 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
                     )),
                   ),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFD6F5F4)),
+                    side: const BorderSide(color: AppColors.darkBorder),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: const Text('Повторить урок',
@@ -248,7 +249,7 @@ class _StatBox extends StatelessWidget {
         child: Column(children: [
           Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: color)),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF8EAEAC))),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         ]),
       ),
     );

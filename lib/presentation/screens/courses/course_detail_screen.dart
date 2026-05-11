@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
-import '../../../../main.dart' show appRouteObserver;
+import '../../../main.dart' show appRouteObserver;
 import 'theory_screen.dart';
 import 'exercise_screen.dart';
 import 'exam_screen.dart';
