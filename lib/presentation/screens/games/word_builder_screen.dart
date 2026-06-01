@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
@@ -228,14 +229,14 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                   style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F1F1E))),
+                      color: AppColors.textPrimary)),
               const SizedBox(height: 8),
               Text('Слов собрано: $_score / ${_words.length}',
                   style: const TextStyle(
                       color: Color(0xFF4D6766), fontSize: 15)),
               Text('+$_xp XP ⚡',
                   style: const TextStyle(
-                      color: Color(0xFF0ABDB9),
+                      color: AppColors.tiffany,
                       fontSize: 15,
                       fontWeight: FontWeight.w700)),
               const SizedBox(height: 20),
@@ -247,7 +248,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0ABDB9),
+                    backgroundColor: AppColors.tiffany,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -277,11 +278,11 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: _loading
             ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF0ABDB9)))
+                child: CircularProgressIndicator(color: AppColors.tiffany))
             : _words.isEmpty
                 ? Center(
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -289,12 +290,12 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                         style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 12),
                     const Text('Нет подходящих слов',
-                        style: TextStyle(color: Color(0xFF8EAEAC))),
+                        style: TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0ABDB9),
+                          backgroundColor: AppColors.tiffany,
                           foregroundColor: Colors.white),
                       child: const Text('Назад'),
                     ),
@@ -315,7 +316,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: const Color(0xFFD6F5F4)),
+                                    color: AppColors.darkBorder),
                               ),
                               child: const Icon(Icons.close,
                                   size: 20, color: Color(0xFF4D6766)),
@@ -327,9 +328,9 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                               borderRadius: BorderRadius.circular(8),
                               child: LinearProgressIndicator(
                                 value: (_index + 1) / _words.length,
-                                backgroundColor: const Color(0xFFD6F5F4),
+                                backgroundColor: AppColors.darkBorder,
                                 valueColor: const AlwaysStoppedAnimation(
-                                    Color(0xFF0ABDB9)),
+                                    AppColors.tiffany),
                                 minHeight: 8,
                               ),
                             ),
@@ -337,7 +338,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                           const SizedBox(width: 12),
                           Text('⚡ $_xp',
                               style: const TextStyle(
-                                color: Color(0xFF0ABDB9),
+                                color: AppColors.tiffany,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
                               )),
@@ -356,14 +357,14 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                                color: const Color(0xFFD6F5F4)),
+                                color: AppColors.darkBorder),
                           ),
                           child: Text(
                             _words[_index].translation,
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F1F1E),
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
@@ -372,7 +373,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                         Text(
                           '${_index + 1} / ${_words.length}',
                           style: const TextStyle(
-                              color: Color(0xFF8EAEAC), fontSize: 13),
+                              color: AppColors.textSecondary, fontSize: 13),
                         ),
 
                         const SizedBox(height: 24),
@@ -399,7 +400,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                                     ? const Color(0xFF22C55E)
                                     : _checking && !_correct
                                         ? const Color(0xFFEF4444)
-                                        : const Color(0xFF0ABDB9);
+                                        : AppColors.tiffany;
 
                                 return GestureDetector(
                                   onTap: () => _removeLetter(i),
@@ -412,7 +413,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                                     height: 48,
                                     decoration: BoxDecoration(
                                       color: letter != null
-                                          ? const Color(0xFF0ABDB9)
+                                          ? AppColors.tiffany
                                               .withValues(alpha: 0.1)
                                           : Colors.white,
                                       borderRadius:
@@ -420,7 +421,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                                       border: Border.all(
                                         color: letter != null
                                             ? borderColor
-                                            : const Color(0xFFD6F5F4),
+                                            : AppColors.darkBorder,
                                         width: 2,
                                       ),
                                     ),
@@ -483,14 +484,14 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                                   border: Border.all(
                                     color: tile.used
                                         ? const Color(0xFFE0E0E0)
-                                        : const Color(0xFF0ABDB9),
+                                        : AppColors.tiffany,
                                     width: 1.5,
                                   ),
                                   boxShadow: tile.used
                                       ? null
                                       : [
                                           BoxShadow(
-                                            color: const Color(0xFF0ABDB9)
+                                            color: AppColors.tiffany
                                                 .withValues(alpha: 0.15),
                                             blurRadius: 6,
                                             offset: const Offset(0, 3),
@@ -505,7 +506,7 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                                       fontWeight: FontWeight.w800,
                                       color: tile.used
                                           ? const Color(0xFFCCCCCC)
-                                          : const Color(0xFF0F1F1E),
+                                          : AppColors.textPrimary,
                                     ),
                                   ),
                                 ),
@@ -520,10 +521,10 @@ class _WordBuilderScreenState extends State<WordBuilderScreen>
                         TextButton.icon(
                           onPressed: () => _setupWord(_words[_index]),
                           icon: const Icon(Icons.refresh_rounded,
-                              color: Color(0xFF8EAEAC), size: 18),
+                              color: AppColors.textSecondary, size: 18),
                           label: const Text('Сбросить',
                               style: TextStyle(
-                                  color: Color(0xFF8EAEAC), fontSize: 13)),
+                                  color: AppColors.textSecondary, fontSize: 13)),
                         ),
                       ],
                     ),

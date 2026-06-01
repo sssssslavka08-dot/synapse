@@ -4,6 +4,7 @@ import 'package:confetti/confetti.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
+import '../../../services/daily_tasks_service.dart';
 import '../../../presentation/widgets/neuronchik.dart';
 
 class ExamScreen extends StatefulWidget {
@@ -97,6 +98,18 @@ class _ExamScreenState extends State<ExamScreen>
       xpReward: widget.chapter.xpReward,
       nextChapterId: widget.nextChapterId,
     );
+
+    if (score >= 60) {
+      await DailyTasksService.updateProgress(
+        taskType: 'complete_lesson',
+        count: 1,
+        perfect: score == 100,
+      );
+      await DailyTasksService.updateProgress(
+        taskType: 'correct_answers',
+        count: correct,
+      );
+    }
 
     if (mounted) {
       setState(() => _loading = false);

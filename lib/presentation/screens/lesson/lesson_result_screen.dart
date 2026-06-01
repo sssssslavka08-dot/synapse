@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../services/daily_tasks_service.dart';
+import '../../../services/supabase_service.dart';
 import '../../widgets/task_completed_overlay.dart';
 import '../home/home_screen.dart';
 import 'lesson_screen.dart';
@@ -51,7 +52,16 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
   @override
   void initState() {
     super.initState();
+    _grantRewards();
     _updateTasks();
+  }
+
+  Future<void> _grantRewards() async {
+    final coins = widget.correct * 3;
+    await SupabaseService.instance.addRewards(
+      coins: coins,
+      xp: xpEarned,
+    );
   }
 
   Future<void> _updateTasks() async {

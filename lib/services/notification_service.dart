@@ -198,6 +198,43 @@ class NotificationService {
     await _plugin.show(0, title, body, _details);
   }
 
+  // ── Напоминания если давно не заходил (1 / 2 / 3 дня) ─────
+  Future<void> scheduleReEngagementReminders() async {
+    if (kIsWeb) return;
+    await init();
+
+    final campaigns = [
+      (id: 10, hours: 24, title: 'Скучаем без тебя 🧠', body: 'Один урок — 5 минут. Стрик не сгорит!'),
+      (id: 11, hours: 48, title: 'Твои слова ждут 📚', body: 'Давно не виделись! Загляни в SYNAPSE сегодня.'),
+      (id: 12, hours: 72, title: 'Вернись к учёбе ⚡', body: '3 дня без практики — пора освежить язык!'),
+      (id: 13, hours: 120, title: 'Нейрончик скучает 🤖', body: 'Пройди мини-урок «Слова» — это быстро и полезно.'),
+    ];
+
+    final now = tz.TZDateTime.now(tz.local);
+    for (final c in campaigns) {
+      final when = now.add(Duration(hours: c.hours));
+      await _plugin.zonedSchedule(
+        c.id,
+        c.title,
+        c.body,
+        when,
+        _details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
+  }
+
+  /// При открытии приложения — перепланировать «вернись» уведомления.
+  Future<void> refreshEngagementSchedule() async {
+    if (kIsWeb) return;
+    for (final id in [10, 11, 12, 13]) {
+      await _plugin.cancel(id);
+    }
+    await scheduleReEngagementReminders();
+  }
+
   // ── Отменить все ───────────────────────────────────────────
   Future<void> cancelAll() async {
     await _plugin.cancelAll();

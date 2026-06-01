@@ -2,8 +2,8 @@
 //  SYNAPSE Admin Panel — shared JS
 // ═══════════════════════════════════════════════════════════════
 
-const SUPABASE_URL  = 'https://recotdufzxbuffrlluqu.supabase.co';
-const SUPABASE_KEY  = 'sb_publishable__B2IbsUIvFWWXsK0AmIaTA_b50roGB-';
+const SUPABASE_URL  = 'https://sgtihvgzginbvsdqhqfi.supabase.co';
+const SUPABASE_KEY  = 'REDACTED';
 
 // Init Supabase client (loaded from CDN)
 const { createClient } = window.supabase;

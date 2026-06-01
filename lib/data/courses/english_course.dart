@@ -1373,7 +1373,7 @@ const englishCourse = LanguageCourse(
 
     CourseChapter(
       id: 'en_b2_08', title: 'Подготовка к экзамену', subtitle: 'Exam Preparation — финальный уровень', emoji: '🏆',
-      level: LanguageLevel.b2, order: 29, coinsReward: 150, xpReward: 100,
+      level: LanguageLevel.b2, order: 32, coinsReward: 150, xpReward: 100,
       theory: [
         TheorySection(title: 'Навыки для экзамена B2', content: 'Ключевые области B2 (FCE/IELTS 5.5-6.5):\n\n1. ЧТЕНИЕ: понимание сложных текстов, определение позиции автора, понимание деталей и контекста.\n\n2. ПИСЬМО: эссе с аргументами, официальные письма/email, отчёты и обзоры (180-220 слов).\n\n3. АУДИРОВАНИЕ: понимание интервью, дискуссий, лекций.\n\n4. ГОВОРЕНИЕ: дискуссия, обмен мнениями, переговоры, сравнение.\n\nОсновные грамматические темы B2:\n- All conditionals | Passive in all tenses\n- Modal verbs | Reported speech\n- Inversion | Cleft sentences\n- Wish/If only | Subjunctive', examples: ['I would argue that... — Я бы утверждал, что...', 'The text implies that... — Текст подразумевает, что...']),
         TheorySection(title: 'Стратегии экзамена', content: 'Советы для сдачи B2:\n\nЧтение:\n- Читай вопросы ДО текста\n- Ищи ключевые слова\n- Не паникуй из-за незнакомых слов — угадывай из контекста\n\nПисьмо:\n- Планируй: 5 мин на план\n- Используй разнообразные конструкции\n- Проверь грамматику и орфографию\n- Используй linking words\n\nГоворение:\n- Используй discourse markers: Well, Actually, You know...\n- Развивай идеи: Not only...but also...\n- Исправляй себя вслух: What I mean is...', examples: ['The passage suggests / implies / indicates that... — Отрывок предполагает/указывает, что...', 'To put it another way... — Иными словами...']),
@@ -1392,46 +1392,5 @@ const englishCourse = LanguageCourse(
       ],
     ),
 
-    CourseChapter(
-      id: 'en_b2_09', title: 'Продвинутые фразы и стиль', subtitle: 'Advanced Language — финальная полировка', emoji: '💎',
-      level: LanguageLevel.b2, order: 30, coinsReward: 150, xpReward: 100,
-      theory: [
-        TheorySection(title: 'Сложные грамматические структуры', content: 'Nominalization (субстантивация):\nGlaciers are melting → The melting of glaciers\nPrices have increased → An increase in prices\n\nParticiple clauses:\nHaving finished his work, he went home.\n(Закончив работу, он пошёл домой.)\nBeing tired, she went to bed early.\n\nAbsolute clauses:\nThe weather permitting, we\'ll have a picnic.\n(Если позволит погода, устроим пикник.)\nAll things considered, it was a success.', examples: ['Having studied all night, she passed the exam. — Проучившись всю ночь, она сдала экзамен.', 'The situation having improved, they resumed work. — Ситуация улучшилась, и они возобновили работу.']),
-        TheorySection(title: 'Регистр и стиль', content: 'Неформальный → Формальный:\nget → obtain/receive\nbig → significant/substantial\nbut → however/nevertheless\nso → therefore/consequently\nlots of → a great deal of/numerous\nstart → commence/initiate\nend → conclude/terminate\nbad → adverse/detrimental\nhelp → assist/facilitate\nshow → demonstrate/illustrate\n\nPassive for formality:\nWe will consider your application → Your application will be considered.', examples: ['"We got lots of feedback" → "We received a great deal of feedback"', '"It shows that..." → "It demonstrates that..."']),
-      ],
-      exercises: [
-        CourseExercise(type: ExerciseType.multipleChoice, question: '"Having finished" в причастном обороте означает:', options: ['продолжая', 'закончив', 'не закончив', 'пока заканчиваю'], correctIndex: 1, explanation: '"Having + V3" = завершив действие (причастный оборот)'),
-        CourseExercise(type: ExerciseType.multipleChoice, question: 'Формальная замена "get":',options: ['take', 'obtain', 'grab', 'pick'], correctIndex: 1, explanation: '"obtain" = формальная версия "get"'),
-        CourseExercise(type: ExerciseType.translation, question: 'Преобразуй в формальный стиль: "We showed that..."', options: ['We proved that...', 'We demonstrated that...', 'We found out that...', 'We told that...'], correctIndex: 1, explanation: '"demonstrate" = формальная версия "show"'),
-      ],
-      exam: [
-        ExamQuestion(question: '"Commence" — это формальное слово для:', options: ['закончить', 'начать', 'продолжить', 'остановить'], correctIndex: 1, explanation: 'commence = начать (формально)'),
-        ExamQuestion(question: '"Detrimental" = ?', options: ['полезный', 'нейтральный', 'вредный', 'неважный'], correctIndex: 2, explanation: 'detrimental = вредный (формально вместо "bad")'),
-        ExamQuestion(question: 'Nominalization "prices increased" → ?', options: ['prices rising', 'an increase in prices', 'increased prices', 'price is increasing'], correctIndex: 1, explanation: 'Nominalization: verb → noun: increased → an increase in...'),
-        ExamQuestion(question: '"Facilitate" = ?', options: ['начинать', 'облегчать/содействовать', 'завершать', 'оценивать'], correctIndex: 1, explanation: 'facilitate = облегчать, способствовать (формально вместо "help")'),
-        ExamQuestion(question: '"All things considered" = ?', options: ['если рассмотреть всё', 'принимая всё во внимание', 'несмотря на всё', 'сверх всего'], correctIndex: 1, explanation: '"All things considered" = принимая всё во внимание (absolute clause)'),
-      ],
-    ),
-
-    CourseChapter(
-      id: 'en_b2_10', title: 'Итоговый экзамен', subtitle: 'Final Exam — проверяем всё', emoji: '🎓',
-      level: LanguageLevel.b2, order: 31, coinsReward: 200, xpReward: 150,
-      theory: [
-        TheorySection(title: 'Обзор всего курса', content: 'A1: Приветствия, числа, цвета, еда, тело, время, животные, глаголы to be/have/can\n\nA2: Present Simple/Continuous, семья, транспорт, погода, одежда, хобби, Future will/going to\n\nB1: Present Perfect, Modal Verbs, Passive Voice, Reported Speech, Comparatives, Present Perfect, технологии, медицина\n\nB2: Conditionals (all 4), Inversion, Cleft sentences, Wish/Subjunctive, Business English, Idioms & Phrasal Verbs, Academic Writing, Science vocabulary, Advanced style', examples: ['Всё, что ты изучил — это фундамент для реального общения на уровне B2.', 'Congratulations on completing the course! — Поздравляем с завершением курса!']),
-        TheorySection(title: 'Следующие шаги', content: 'После B2 — путь к C1/C2:\n\nЧитай аутентичные тексты: BBC, The Guardian, научные статьи\nСлушай: подкасты (BBC Radio 4, TED talks)\nГовори: найди языкового партнёра, запишись на разговорный клуб\nПиши: веди дневник на английском, участвуй в форумах\n\nПолезные ресурсы:\n• Cambridge English (exams.cambridgeenglish.org)\n• British Council (britishcouncil.org)\n• Oxford Learner\'s Dictionaries\n\nПомни: язык — это инструмент. Используй его каждый день!', examples: ['Language learning is a journey, not a destination. — Изучение языка — это путешествие, а не конечная точка.']),
-      ],
-      exercises: [
-        CourseExercise(type: ExerciseType.multipleChoice, question: 'Какой уровень следует после B2?', options: ['A1', 'A2', 'B1', 'C1'], correctIndex: 3, explanation: 'CEFR: A1→A2→B1→B2→C1→C2. После B2 следует C1.'),
-        CourseExercise(type: ExerciseType.multipleChoice, question: '"Congratulations on completing the course!" — правильно ли "on completing"?', options: ['Нет, должно быть "to complete"', 'Да, после "on" — герундий (-ing)', 'Нет, нужно "complete"', 'Нет, нужно "completed"'], correctIndex: 1, explanation: '"Congratulations on + -ing" — стандартная конструкция'),
-        CourseExercise(type: ExerciseType.translation, question: 'Переведи финальную фразу: "Language learning is a journey."', options: ['Языки сложны.', 'Учить языки трудно.', 'Изучение языка — это путешествие.', 'Языковое обучение закончено.'], correctIndex: 2, explanation: '"Language learning" = изучение языка, "journey" = путешествие'),
-      ],
-      exam: [
-        ExamQuestion(question: 'B2 = ... по CEFR:', options: ['Elementary', 'Pre-intermediate', 'Intermediate', 'Upper Intermediate'], correctIndex: 3, explanation: 'B2 = Upper Intermediate'),
-        ExamQuestion(question: 'Выбери правильный Third Conditional:', options: ['If I studied, I would pass.', 'If I had studied, I would have passed.', 'If I study, I will pass.', 'If I was studying, I pass.'], correctIndex: 1, explanation: 'Third Conditional: If + Past Perfect, would have + V3'),
-        ExamQuestion(question: 'Passive Past Perfect:', options: ['was written', 'has been written', 'had been written', 'is written'], correctIndex: 2, explanation: 'Past Perfect Passive = had been + V3'),
-        ExamQuestion(question: '"Never ___ I been so happy!" (инверсия)', options: ['have', 'had', 'did', 'was'], correctIndex: 0, explanation: 'Never + have + I + V3 (Present Perfect Inversion)'),
-        ExamQuestion(question: 'Академическое слово для "show":', options: ['prove', 'illustrate/demonstrate', 'say', 'explain'], correctIndex: 1, explanation: 'demonstrate/illustrate = академические синонимы "show"'),
-      ],
-    ),
   ],
 );

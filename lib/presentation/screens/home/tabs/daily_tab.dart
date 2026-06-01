@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/kids_theme.dart';
 import '../../../../services/daily_tasks_service.dart';
+import '../../../../services/user_store.dart';
 
 class DailyTab extends StatefulWidget {
   final String name;
@@ -27,12 +29,19 @@ class _DailyTabState extends State<DailyTab> {
     super.initState();
     _load();
     DailyTasksService.tasksUpdatedNotifier.addListener(_onTasksUpdated);
+    UserStore.instance.addListener(_onWallet);
   }
 
   @override
   void dispose() {
     DailyTasksService.tasksUpdatedNotifier.removeListener(_onTasksUpdated);
+    UserStore.instance.removeListener(_onWallet);
     super.dispose();
+  }
+
+  void _onWallet() {
+    if (!mounted) return;
+    setState(() => _coins = UserStore.instance.coins);
   }
 
   void _onTasksUpdated() {
@@ -53,7 +62,16 @@ class _DailyTabState extends State<DailyTab> {
         coins  = data?['coins']  as int? ?? 0;
       }
 
-      if (mounted) setState(() { _tasks = tasks; _streak = streak; _coins = coins; _loading = false; });
+      if (mounted) {
+        UserStore.instance.coins = coins;
+        UserStore.instance.streak = streak;
+        setState(() {
+          _tasks = tasks;
+          _streak = streak;
+          _coins = coins;
+          _loading = false;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -67,13 +85,13 @@ class _DailyTabState extends State<DailyTab> {
 
   Widget _buildAdult(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _load,
-          color: const Color(0xFF0ABDB9),
+          color: AppColors.tiffany,
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF0ABDB9)))
+              ? const Center(child: CircularProgressIndicator(color: AppColors.tiffany))
               : SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(20),
@@ -85,9 +103,9 @@ class _DailyTabState extends State<DailyTab> {
                         children: [
                           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             const Text('Ежедневные задания',
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF0F1F1E))),
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                             Text('Обновление через ${DailyTasksService.timeUntilReset()}',
-                                style: const TextStyle(color: Color(0xFF8EAEAC), fontSize: 12)),
+                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                           ]),
                           _StatBadge(emoji: '🔥', value: '$_streak', label: 'дней'),
                         ],
@@ -130,21 +148,21 @@ class _DailyTabState extends State<DailyTab> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF8E1),
+                            color: AppColors.darkCard,
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0xFFFFD54F).withValues(alpha: 0.5)),
+                            border: Border.all(color: AppColors.xpGold.withValues(alpha: 0.3)),
                           ),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             const Text('🪙', style: TextStyle(fontSize: 28)),
                             const SizedBox(height: 4),
-                            Text('$_coins', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFFF59E0B))),
-                            const Text('монет', style: TextStyle(fontSize: 10, color: Color(0xFF8EAEAC))),
+                            Text('$_coins', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.xpGold)),
+                            const Text('монет', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
                           ]),
                         ),
                       ]),
                       const SizedBox(height: 24),
                       const Text('Задания на сегодня',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF0F1F1E))),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                       const SizedBox(height: 12),
                       if (_tasks.isEmpty)
                         _EmptyState(onRetry: _load)
@@ -155,16 +173,16 @@ class _DailyTabState extends State<DailyTab> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.darkCard,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE0F3F2)),
+                          border: Border.all(color: AppColors.darkBorder),
                         ),
                         child: Row(children: [
                           const Text('🧊', style: TextStyle(fontSize: 28)),
                           const SizedBox(width: 14),
                           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Заморозить streak', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F1F1E))),
-                            Text('Пропусти день без потери прогресса', style: TextStyle(fontSize: 12, color: Color(0xFF8EAEAC))),
+                            Text('Заморозить streak', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                            Text('Пропусти день без потери прогресса', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                           ])),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -271,8 +289,8 @@ class _DailyTabState extends State<DailyTab> {
                               const Text('🧊', style: TextStyle(fontSize: 32)),
                               const SizedBox(width: 14),
                               const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text('Заморозка!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F1F1E))),
-                                Text('Пропусти день без потери стрика', style: TextStyle(fontSize: 12, color: Color(0xFF8EAEAC))),
+                                Text('Заморозка!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                                Text('Пропусти день без потери стрика', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                               ])),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -309,17 +327,17 @@ class _TaskCard extends StatelessWidget {
     final target = task['target_count'] as int? ?? 1;
     final progress = (current / target).clamp(0.0, 1.0);
 
-    final accent = isKids ? KidsColors.primary : const Color(0xFF0ABDB9);
+    final accent = isKids ? KidsColors.primary : AppColors.tiffany;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: EdgeInsets.all(isKids ? 18 : 16),
         decoration: BoxDecoration(
-          color: done ? accent.withValues(alpha: 0.07) : Colors.white,
+          color: done ? accent.withValues(alpha: 0.07) : AppColors.darkCard,
           borderRadius: BorderRadius.circular(isKids ? 20 : 16),
           border: Border.all(
-            color: done ? accent.withValues(alpha: 0.3) : const Color(0xFFE0F3F2),
+            color: done ? accent.withValues(alpha: 0.3) : AppColors.darkBorder,
             width: isKids ? 2 : 1,
           ),
         ),
@@ -333,7 +351,7 @@ class _TaskCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isKids ? 16 : 14,
                   fontWeight: FontWeight.w600,
-                  color: done ? const Color(0xFF8EAEAC) : const Color(0xFF0F1F1E),
+                  color: done ? AppColors.textSecondary : AppColors.textPrimary,
                   decoration: done ? TextDecoration.lineThrough : null,
                 ),
               ),
@@ -388,7 +406,7 @@ class _StatBadge extends StatelessWidget {
       const SizedBox(width: 6),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Color(0xFFFF6B35))),
-        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF8EAEAC))),
+        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
       ]),
     ]),
   );
@@ -407,7 +425,7 @@ class _EmptyState extends StatelessWidget {
         const SizedBox(height: 12),
         const Text('Задания загружаются...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF4D6766))),
         const SizedBox(height: 8),
-        const Text('Убедись что SQL таблица создана в Supabase', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: Color(0xFF8EAEAC))),
+        const Text('Убедись что SQL таблица создана в Supabase', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 16),
         TextButton(onPressed: onRetry, child: const Text('Попробовать снова')),
       ]),

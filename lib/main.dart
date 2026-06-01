@@ -6,6 +6,7 @@ import 'config/secrets.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_notifier.dart';
 import 'services/notification_service.dart';
+import 'core/auth/oauth_recovery.dart';
 import 'presentation/screens/splash_screen.dart';
 
 /// Global route observer — used by CourseDetailScreen to reload progress on pop
@@ -18,13 +19,19 @@ void main() async {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.pkce,
+        detectSessionInUri: true,
+      ),
     ).timeout(const Duration(seconds: 10));
+    await OAuthRecovery.tryRecoverFromUri();
   } catch (_) {}
   if (!kIsWeb) {
     try {
       await NotificationService.instance.init();
       await NotificationService.instance.scheduleDailyReminder();
       await NotificationService.instance.scheduleMorningReminder();
+      await NotificationService.instance.scheduleReEngagementReminders();
       NotificationService.instance.recordActivity();
       NotificationService.instance.checkAndScheduleStreakWarning();
     } catch (_) {}

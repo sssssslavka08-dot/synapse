@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../services/supabase_service.dart';
 import 'level_test_screen.dart';
 
@@ -205,7 +206,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen>
     final isStep1 = _step == 1;
     final currentSelected = isStep1 ? _nativeLang : _selected;
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -307,11 +308,11 @@ class _Header extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8FAFA),
+                    color: AppColors.darkCard,
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Color(0xFF0ABDB9), size: 16),
+                      color: AppColors.tiffany, size: 16),
                 ),
               ),
               const SizedBox(width: 10),
@@ -320,7 +321,7 @@ class _Header extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF0ABDB9),
+                color: AppColors.tiffany,
                 borderRadius: BorderRadius.circular(11),
               ),
               child: Image.asset('assets/images/logo.png', width: 24, height: 24),
@@ -333,7 +334,7 @@ class _Header extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF0ABDB9).withValues(alpha: 0.1),
+                color: AppColors.tiffany.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -341,7 +342,7 @@ class _Header extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF0ABDB9),
+                  color: AppColors.tiffany,
                 ),
               ),
             ),
@@ -354,7 +355,7 @@ class _Header extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F1F1E),
+                color: AppColors.textPrimary,
                 letterSpacing: -0.5,
                 height: 1.2,
               ),
@@ -363,7 +364,7 @@ class _Header extends StatelessWidget {
                       TextSpan(text: 'Привет, $name!\n'),
                       const TextSpan(
                         text: 'Родной язык? ',
-                        style: TextStyle(color: Color(0xFF0ABDB9)),
+                        style: TextStyle(color: AppColors.tiffany),
                       ),
                       const TextSpan(text: '🌍'),
                     ]
@@ -371,7 +372,7 @@ class _Header extends StatelessWidget {
                       const TextSpan(text: 'Отлично!\n'),
                       const TextSpan(
                         text: 'Что учим? ',
-                        style: TextStyle(color: Color(0xFF0ABDB9)),
+                        style: TextStyle(color: AppColors.tiffany),
                       ),
                       const TextSpan(text: '👇'),
                     ],
@@ -409,10 +410,10 @@ class _LangCard extends StatelessWidget {
           curve: Curves.easeOut,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? lang.bg : Colors.white,
+            color: isSelected ? lang.bg : AppColors.darkCard,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isSelected ? lang.color : const Color(0xFFD6F5F4),
+              color: isSelected ? lang.color : AppColors.darkBorder,
               width: isSelected ? 2 : 1.5,
             ),
             boxShadow: isSelected
@@ -455,7 +456,7 @@ class _LangCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: isSelected ? lang.color : const Color(0xFF0F1F1E),
+                        color: isSelected ? lang.color : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -465,16 +466,18 @@ class _LangCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: isSelected
-                            ? lang.color.withValues(alpha: 0.65)
-                            : const Color(0xFF8EAEAC),
+                            ? lang.color.withValues(alpha: 0.75)
+                            : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       lang.method,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF8EAEAC),
+                        color: isSelected
+                            ? lang.color.withValues(alpha: 0.55)
+                            : AppColors.textHint,
                       ),
                     ),
                   ],
@@ -533,9 +536,10 @@ class _BottomButton extends StatelessWidget {
           child: ElevatedButton(
             onPressed: enabled ? onTap : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0ABDB9),
+              backgroundColor: AppColors.tiffany,
               foregroundColor: Colors.white,
-              disabledBackgroundColor: const Color(0xFFD6F5F4),
+              disabledBackgroundColor: AppColors.darkBorder,
+              disabledForegroundColor: AppColors.textSecondary,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

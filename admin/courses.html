@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Курсы — SYNAPSE Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .editor-grid { display:grid; grid-template-columns: 280px 1fr; gap:20px; }
+    @media (max-width: 900px) { .editor-grid { grid-template-columns: 1fr; } }
+    textarea.code { width:100%; min-height:420px; font-family: ui-monospace, monospace; font-size:12px;
+      padding:14px; border-radius:12px; border:1px solid var(--border); background:#0f1f1e; color:#e8fafa; }
+    .chapter-list { max-height:520px; overflow:auto; }
+    .chapter-item { padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:6px;
+      border:1px solid var(--border); }
+    .chapter-item.active { background: rgba(10,189,185,.12); border-color:#0abdb9; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-text">SYNAPSE</div><div class="logo-sub">Admin Panel</div></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Обзор</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+      <div class="nav-section">Управление</div>
+      <a href="users.html" class="nav-item"><span class="icon">👥</span> Пользователи</a>
+      <a href="words.html" class="nav-item"><span class="icon">📚</span> База слов</a>
+      <a href="courses.html" class="nav-item active"><span class="icon">🎓</span> Курсы</a>
+      <a href="subscriptions.html" class="nav-item"><span class="icon">👑</span> Подписки</a>
+      <div class="nav-section">Аналитика</div>
+      <a href="analytics.html" class="nav-item"><span class="icon">📈</span> Аналитика</a>
+      <a href="leaderboard.html" class="nav-item"><span class="icon">🏆</span> Рейтинг</a>
+    </nav>
+    <div class="sidebar-footer">SYNAPSE v1.0</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="menuBtn" class="btn btn-ghost btn-sm">☰</button>
+        <span class="topbar-title">Редактор курсов</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="card" style="margin-bottom:16px">
+        <p style="margin:0;color:var(--muted);font-size:14px">
+          Редактирование без кода: выбери язык и главу, измени JSON, нажми «Сохранить».
+          Данные хранятся в <code>localStorage</code> браузера. Экспорт — для переноса в Dart-файлы вручную.
+        </p>
+      </div>
+
+      <div class="editor-grid">
+        <div class="card">
+          <label class="label">Язык</label>
+          <select id="langSelect" class="input" style="width:100%;margin-bottom:12px"></select>
+          <div class="chapter-list" id="chapterList"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%" id="btnAddChapter">+ Новая глава</button>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <button class="btn btn-primary btn-sm" id="btnSave">💾 Сохранить</button>
+            <button class="btn btn-ghost btn-sm" id="btnExport">⬇️ Скачать JSON</button>
+            <button class="btn btn-ghost btn-sm" id="btnImport">⬆️ Импорт JSON</button>
+            <input type="file" id="fileImport" accept="application/json" hidden>
+          </div>
+          <textarea id="chapterEditor" class="code" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="admin.js"></script>
+<script src="courses.js"></script>
+</body>
+</html>

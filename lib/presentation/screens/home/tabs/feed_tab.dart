@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/level_system.dart';
 import '../../../../services/supabase_service.dart';
 import '../../friends/friends_screen.dart';
@@ -83,7 +84,7 @@ class _FeedTabState extends State<FeedTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -99,23 +100,23 @@ class _FeedTabState extends State<FeedTab> {
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F1F1E),
+                            color: AppColors.textPrimary,
                           )),
                       Text('Друзья и новости',
                           style: TextStyle(
-                              color: Color(0xFF8EAEAC), fontSize: 13)),
+                              color: AppColors.textSecondary, fontSize: 13)),
                     ],
                   ),
                   Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.darkCard,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE0F3F2)),
+                      border: Border.all(color: AppColors.darkBorder),
                     ),
                     child: const Icon(Icons.notifications_outlined,
-                        color: Color(0xFF8EAEAC), size: 20),
+                        color: AppColors.textHint, size: 20),
                   ),
                 ],
               ),
@@ -193,9 +194,9 @@ class _FeedCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE0F3F2)),
+        border: Border.all(color: AppColors.darkBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +209,7 @@ class _FeedCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F1F1E),
+                    color: AppColors.textPrimary,
                   )),
             ),
             Container(
@@ -229,12 +230,12 @@ class _FeedCard extends StatelessWidget {
           Text(post['content'],
               style: const TextStyle(
                 fontSize: 14,
-                color: Color(0xFF4D6766),
+                color: AppColors.textSecondary,
                 height: 1.5,
               )),
           const SizedBox(height: 8),
           Text(post['time'],
-              style: const TextStyle(fontSize: 11, color: Color(0xFF8EAEAC))),
+              style: const TextStyle(fontSize: 11, color: AppColors.textHint)),
         ],
       ),
     );
@@ -261,9 +262,9 @@ class _QuizCardState extends State<_QuizCard> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE0F3F2)),
+        border: Border.all(color: AppColors.darkBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +277,7 @@ class _QuizCardState extends State<_QuizCard> {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F1F1E),
+                    color: AppColors.textPrimary,
                   )),
             ),
             Container(
@@ -298,14 +299,14 @@ class _QuizCardState extends State<_QuizCard> {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF0F1F1E),
+                color: AppColors.textPrimary,
               )),
           const SizedBox(height: 12),
           ...options.asMap().entries.map((e) {
             final isSelected = _selected == e.key;
             final isCorrect = e.key == correct;
-            Color bg = Colors.white;
-            Color border = const Color(0xFFE0F3F2);
+            Color bg = AppColors.darkSurface;
+            Color border = AppColors.darkBorder;
             if (_selected != null) {
               if (isCorrect) {
                 bg = const Color(0xFF22C55E).withValues(alpha: 0.1);
@@ -315,8 +316,8 @@ class _QuizCardState extends State<_QuizCard> {
                 border = const Color(0xFFEF4444);
               }
             } else if (isSelected) {
-              bg = const Color(0xFF0ABDB9).withValues(alpha: 0.1);
-              border = const Color(0xFF0ABDB9);
+              bg = AppColors.tiffany.withValues(alpha: 0.1);
+              border = AppColors.tiffany;
             }
             return GestureDetector(
               onTap: () {
@@ -361,13 +362,13 @@ class _FriendsActivityRow extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F1F1E))),
+                    color: AppColors.textPrimary)),
             GestureDetector(
               onTap: onSeeAll,
               child: const Text('Все друзья',
                   style: TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF0ABDB9),
+                      color: AppColors.tiffany,
                       fontWeight: FontWeight.w600)),
             ),
           ],
@@ -392,10 +393,10 @@ class _FriendsActivityRow extends StatelessWidget {
                     right: i < friends.length - 1 ? 10 : 0),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.darkCard,
                   borderRadius: BorderRadius.circular(16),
                   border:
-                      Border.all(color: const Color(0xFFE0F3F2)),
+                      Border.all(color: AppColors.darkBorder),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -411,9 +412,9 @@ class _FriendsActivityRow extends StatelessWidget {
                             value: progress,
                             strokeWidth: 3,
                             backgroundColor:
-                                const Color(0xFFD6F5F4),
+                                AppColors.darkBorder,
                             valueColor: const AlwaysStoppedAnimation(
-                                Color(0xFF0ABDB9)),
+                                AppColors.tiffany),
                           ),
                         ),
                         Text(emoji,
@@ -427,11 +428,11 @@ class _FriendsActivityRow extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0F1F1E))),
+                            color: AppColors.textPrimary)),
                     Text('Эт. $level',
                         style: const TextStyle(
                             fontSize: 9,
-                            color: Color(0xFF0ABDB9),
+                            color: AppColors.tiffany,
                             fontWeight: FontWeight.w600)),
                   ],
                 ),
@@ -457,7 +458,7 @@ class _FriendsActivitySkeleton extends StatelessWidget {
           width: 76,
           margin: EdgeInsets.only(right: i < 3 ? 10 : 0),
           decoration: BoxDecoration(
-            color: const Color(0xFFE8FAFA),
+            color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(16),
           ),
         )),

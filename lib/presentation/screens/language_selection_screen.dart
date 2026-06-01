@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../services/auth_service.dart';
 import 'home/home_screen.dart';
 
@@ -94,7 +95,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -110,7 +111,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0ABDB9),
+                        color: AppColors.tiffany,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Image.asset('assets/images/logo.png', width: 26, height: 26),
@@ -126,7 +127,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F1F1E),
+                      color: AppColors.textPrimary,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -163,10 +164,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? color.withValues(alpha: 0.06)
-                              : Colors.white,
+                              : AppColors.darkCard,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: isSelected ? color : const Color(0xFFD6F5F4),
+                            color: isSelected ? color : AppColors.darkBorder,
                             width: isSelected ? 2 : 1.5,
                           ),
                         ),
@@ -199,7 +200,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                       fontWeight: FontWeight.w700,
                                       color: isSelected
                                           ? color
-                                          : const Color(0xFF0F1F1E),
+                                          : AppColors.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -209,7 +210,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                       fontSize: 12,
                                       color: isSelected
                                           ? color.withValues(alpha: 0.7)
-                                          : const Color(0xFF8EAEAC),
+                                          : AppColors.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -226,7 +227,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                 border: Border.all(
                                   color: isSelected
                                       ? color
-                                      : const Color(0xFFD6F5F4),
+                                      : AppColors.darkBorder,
                                   width: 2,
                                 ),
                               ),
@@ -255,9 +256,9 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       ? _confirm
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0ABDB9),
+                    backgroundColor: AppColors.tiffany,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFD6F5F4),
+                    disabledBackgroundColor: AppColors.darkBorder,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),

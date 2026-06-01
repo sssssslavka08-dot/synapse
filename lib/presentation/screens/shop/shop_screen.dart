@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../services/shop_service.dart';
-import '../../../services/supabase_service.dart';
+import '../../../services/user_store.dart';
 
 class ShopScreen extends StatefulWidget {
   final bool isKidsMode;
@@ -30,25 +31,42 @@ class _ShopScreenState extends State<ShopScreen>
     super.initState();
     _tabCtrl = TabController(length: _categories.length, vsync: this);
     _loadData();
+    UserStore.instance.addListener(_onWallet);
+  }
+
+  void _onWallet() {
+    if (!mounted) return;
+    setState(() => _coins = UserStore.instance.coins);
+  }
+
+  @override
+  void dispose() {
+    UserStore.instance.removeListener(_onWallet);
+    _tabCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
+
+    if (!UserStore.instance.loaded) {
+      await UserStore.instance.refresh();
+    }
+    if (mounted) setState(() => _coins = UserStore.instance.coins);
+
+    // Загружаем инвентарь (может не существовать таблица)
     try {
-      final profile = await SupabaseService.instance.getProfile();
       final owned = await ShopService.instance.getInventoryIds();
       final equipped = await ShopService.instance.getEquipped();
       if (mounted) {
         setState(() {
-          _coins = (profile?['coins'] ?? 0) as int;
           _ownedIds = owned;
           _equipped = equipped;
-          _loading = false;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
-    }
+    } catch (_) {}
+
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _buy(ShopItem item) async {
@@ -69,6 +87,9 @@ class _ShopScreenState extends State<ShopScreen>
       case ShopPurchaseResult.alreadyOwned:
         msg = 'ℹ️ У тебя уже есть этот предмет';
         break;
+      case ShopPurchaseResult.notLoggedIn:
+        msg = '🔐 Войди в аккаунт, чтобы покупать предметы';
+        break;
       default:
         msg = '⚠️ Ошибка покупки';
     }
@@ -77,7 +98,7 @@ class _ShopScreenState extends State<ShopScreen>
       SnackBar(
         content: Text(msg),
         backgroundColor:
-            success ? const Color(0xFF0ABDB9) : const Color(0xFF64748B),
+            success ? AppColors.tiffany : const Color(0xFF64748B),
         behavior: SnackBarBehavior.floating,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -94,7 +115,7 @@ class _ShopScreenState extends State<ShopScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('💎 "${item.name}" экипировано!'),
-          backgroundColor: const Color(0xFF0ABDB9),
+          backgroundColor: AppColors.tiffany,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -106,16 +127,10 @@ class _ShopScreenState extends State<ShopScreen>
   }
 
   @override
-  void dispose() {
-    _tabCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isKids = widget.isKidsMode;
     final bgColor =
-        isKids ? const Color(0xFFFFF9F0) : const Color(0xFFF4FEFE);
+        isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -129,9 +144,9 @@ class _ShopScreenState extends State<ShopScreen>
             Container(
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE0F0FF)),
+                border: Border.all(color: AppColors.darkBorder),
               ),
               child: TabBar(
                 controller: _tabCtrl,
@@ -140,12 +155,12 @@ class _ShopScreenState extends State<ShopScreen>
                 indicator: BoxDecoration(
                   color: isKids
                       ? const Color(0xFFFF6B35)
-                      : const Color(0xFF0ABDB9),
+                      : AppColors.tiffany,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: Colors.white,
-                unselectedLabelColor: const Color(0xFF8EAEAC),
+                unselectedLabelColor: AppColors.textSecondary,
                 labelStyle: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -162,7 +177,7 @@ class _ShopScreenState extends State<ShopScreen>
               child: _loading
                   ? const Center(
                       child: CircularProgressIndicator(
-                          color: Color(0xFF0ABDB9)))
+                          color: AppColors.tiffany))
                   : TabBarView(
                       controller: _tabCtrl,
                       children: _categories
@@ -189,21 +204,23 @@ class _ShopScreenState extends State<ShopScreen>
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD6F5F4)),
+          if (Navigator.of(context).canPop()) ...[
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.darkCard,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.darkBorder),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 18, color: AppColors.textSecondary),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                  size: 18, color: Color(0xFF4D6766)),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
+          ],
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -212,12 +229,12 @@ class _ShopScreenState extends State<ShopScreen>
                 style: TextStyle(
                   fontSize: isKids ? 22 : 20,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F1F1E),
+                  color: AppColors.textPrimary,
                 ),
               ),
               const Text(
                 'Трать монеты на крутые штуки!',
-                style: TextStyle(fontSize: 12, color: Color(0xFF8EAEAC)),
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -337,7 +354,7 @@ class _ShopCard extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isEquipped
@@ -422,7 +439,7 @@ class _ShopCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F1F1E),
+                      color: AppColors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -431,7 +448,7 @@ class _ShopCard extends StatelessWidget {
                   Text(
                     item.description,
                     style: const TextStyle(
-                        fontSize: 10, color: Color(0xFF8EAEAC)),
+                        fontSize: 10, color: AppColors.textSecondary),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -497,7 +514,7 @@ class _ShopCard extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF0ABDB9).withValues(alpha: 0.15),
+            color: AppColors.tiffany.withValues(alpha: 0.15),
             border: Border.all(
               color: borderColor,
               width: (item.meta['border_width'] ?? 3.0) as double,
@@ -554,9 +571,9 @@ class _ShopCard extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: canAfford
               ? _rarityColor
-              : const Color(0xFFE2E8F0),
+              : AppColors.darkBorder,
           foregroundColor:
-              canAfford ? Colors.white : const Color(0xFF94A3B8),
+              canAfford ? Colors.white : AppColors.textMuted,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 8),
           shape: RoundedRectangleBorder(

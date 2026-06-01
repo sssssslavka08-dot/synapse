@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/level_system.dart';
+import '../../../../core/utils/user_prefs.dart';
 import '../../../../core/theme/theme_notifier.dart';
 import '../../../../core/achievements/achievement_checker.dart';
+import '../../../../services/shop_service.dart';
+import '../../../../services/user_store.dart';
 import '../../auth/login_screen.dart';
 import '../../subscription/subscription_screen.dart';
 import '../../language_select_screen.dart';
 import '../../friends/friends_screen.dart';
 import '../../shop/shop_screen.dart';
+import '../../profile/customization_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   final String name;
@@ -25,6 +30,8 @@ class _ProfileTabState extends State<ProfileTab> {
   int _totalDays = 0;
   bool _loadingStats = true;
   List<Achievement> _achievements = [];
+  String _avatarEmoji = '😀';
+  Map<String, String> _equipped = {};
 
   static const _langNames = {
     'en': '🇬🇧 Английский',
@@ -45,6 +52,24 @@ class _ProfileTabState extends State<ProfileTab> {
   void initState() {
     super.initState();
     _loadStats();
+    UserStore.instance.addListener(_onWallet);
+  }
+
+  void _onWallet() {
+    if (!mounted || _userData == null) return;
+    setState(() {
+      _userData = {
+        ..._userData!,
+        'coins': UserStore.instance.coins,
+        'xp': UserStore.instance.xp,
+      };
+    });
+  }
+
+  @override
+  void dispose() {
+    UserStore.instance.removeListener(_onWallet);
+    super.dispose();
   }
 
   Future<void> _loadStats() async {
@@ -53,6 +78,13 @@ class _ProfileTabState extends State<ProfileTab> {
       setState(() => _loadingStats = false);
       return;
     }
+
+    // Загружаем аватар и экипировку локально
+    try {
+      final avatar = await UserPrefs.getAvatarEmoji();
+      final eq = await ShopService.instance.getEquipped();
+      if (mounted) setState(() { _avatarEmoji = avatar; _equipped = eq; });
+    } catch (_) {}
 
     // Загружаем профиль отдельно — он критичен, всегда должен обновиться
     Map<String, dynamic>? user;
@@ -66,6 +98,10 @@ class _ProfileTabState extends State<ProfileTab> {
 
     // Сразу применяем данные профиля, чтобы подписка показалась немедленно
     if (user != null) {
+      UserStore.instance.coins = (user['coins'] as int?) ?? 0;
+      UserStore.instance.xp = (user['xp'] as int?) ?? 0;
+      UserStore.instance.streak = (user['streak'] as int?) ?? 0;
+      UserStore.instance.loaded = true;
       setState(() => _userData = user);
     }
 
@@ -131,6 +167,86 @@ class _ProfileTabState extends State<ProfileTab> {
         totalLessons: progress.length,
       );
     });
+  }
+
+  Widget _buildAvatarWithFrame() {
+    final equippedFrameId = _equipped['avatarFrame'];
+    ShopItem? frameItem;
+    if (equippedFrameId != null) {
+      try {
+        frameItem = ShopCatalog.all.firstWhere((i) => i.id == equippedFrameId);
+      } catch (_) {}
+    }
+
+    final borderColor = frameItem != null
+        ? Color(frameItem.meta['border_color'] as int? ?? 0xFF0ABDB9)
+        : const Color(0xFF3FCFCC);
+    final borderWidth = (frameItem?.meta['border_width'] as num?)?.toDouble() ?? 3.0;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => CustomizationScreen(name: widget.name)),
+      ).then((_) => _loadStats()),
+      child: Container(
+        width: 88, height: 88,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: borderColor, width: borderWidth),
+          boxShadow: frameItem?.meta['glow'] != null
+              ? [BoxShadow(
+                  color: Color(frameItem!.meta['glow'] as int).withValues(alpha: 0.4),
+                  blurRadius: 20,
+                )]
+              : null,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            color: const Color(0xFF0ABDB9),
+            child: Center(
+              child: Text(_avatarEmoji, style: const TextStyle(fontSize: 40)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildPrefixedName(String name) {
+    final equippedPrefixId = _equipped['nickPrefix'];
+    ShopItem? prefixItem;
+    if (equippedPrefixId != null) {
+      try {
+        prefixItem = ShopCatalog.all.firstWhere((i) => i.id == equippedPrefixId);
+      } catch (_) {}
+    }
+
+    final prefixText = prefixItem?.meta['prefix_text'] as String?;
+    final prefixColor = prefixItem != null
+        ? Color(prefixItem.meta['color'] as int? ?? 0xFFFFFFFF)
+        : null;
+
+    return [
+      if (prefixText != null) ...[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: (prefixColor ?? AppColors.tiffany).withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(prefixText, style: TextStyle(
+            fontSize: 11, fontWeight: FontWeight.w800,
+            color: prefixColor ?? AppColors.tiffany,
+          )),
+        ),
+        const SizedBox(width: 8),
+      ],
+      Text(name, style: TextStyle(
+        fontSize: 22, fontWeight: FontWeight.w800,
+        color: prefixColor ?? Colors.white,
+      )),
+    ];
   }
 
   void _showThemePicker(BuildContext ctx) {
@@ -218,9 +334,9 @@ class _ProfileTabState extends State<ProfileTab> {
                 decoration: InputDecoration(
                   labelText: 'Имя',
                   prefixIcon: const Icon(Icons.person_outline),
-                  filled: true, fillColor: Colors.white,
+                  filled: true, fillColor: AppColors.darkCard,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFD6F5F4))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.darkBorder)),
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: appTheme.primary, width: 2)),
                 ),
               ),
@@ -231,9 +347,9 @@ class _ProfileTabState extends State<ProfileTab> {
                 decoration: InputDecoration(
                   labelText: 'Возраст',
                   prefixIcon: const Icon(Icons.cake_outlined),
-                  filled: true, fillColor: Colors.white,
+                  filled: true, fillColor: AppColors.darkCard,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFD6F5F4))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.darkBorder)),
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: appTheme.primary, width: 2)),
                 ),
               ),
@@ -287,11 +403,11 @@ class _ProfileTabState extends State<ProfileTab> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadStats,
-          color: const Color(0xFF0ABDB9),
+          color: AppColors.tiffany,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -302,41 +418,17 @@ class _ProfileTabState extends State<ProfileTab> {
                   padding: const EdgeInsets.all(24),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF0F1F1E), Color(0xFF1E3332)],
+                      colors: [AppColors.darkNav, AppColors.darkSurface],
                     ),
                   ),
                   child: Column(
                     children: [
-                      Container(
-                        width: 88,
-                        height: 88,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0ABDB9),
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(
-                              color: const Color(0xFF3FCFCC), width: 3),
-                        ),
-                        child: Center(
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : '?',
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildAvatarWithFrame(),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(name,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              )),
+                          ..._buildPrefixedName(name),
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () => _showEditProfile(context),
@@ -473,10 +565,10 @@ class _ProfileTabState extends State<ProfileTab> {
                             .map((s) => Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: AppColors.darkCard,
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                        color: const Color(0xFFE0F3F2)),
+                                        color: AppColors.darkBorder),
                                   ),
                                   child: Row(children: [
                                     Text(s['icon']!,
@@ -493,12 +585,12 @@ class _ProfileTabState extends State<ProfileTab> {
                                             style: const TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.w800,
-                                              color: Color(0xFF0ABDB9),
+                                              color: AppColors.tiffany,
                                             )),
                                         Text(s['label']!,
                                             style: const TextStyle(
                                               fontSize: 11,
-                                              color: Color(0xFF8EAEAC),
+                                              color: AppColors.textSecondary,
                                             )),
                                       ],
                                     ),
@@ -514,16 +606,16 @@ class _ProfileTabState extends State<ProfileTab> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0F1F1E),
+                            color: AppColors.textPrimary,
                           )),
                       const SizedBox(height: 14),
 
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.darkCard,
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFE0F3F2)),
+                          border: Border.all(color: AppColors.darkBorder),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,7 +625,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF0F1F1E),
+                                  color: AppColors.textPrimary,
                                 )),
                             const SizedBox(height: 14),
                             _loadingStats
@@ -543,13 +635,13 @@ class _ProfileTabState extends State<ProfileTab> {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: Color(0xFF0ABDB9)),
+                                          color: AppColors.tiffany),
                                     ),
                                   )
                                 : _WeekChart(activity: _weekActivity),
 
                             const SizedBox(height: 18),
-                            const Divider(color: Color(0xFFE0F3F2)),
+                            const Divider(color: AppColors.darkBorder),
                             const SizedBox(height: 14),
 
                             // Инсайты
@@ -586,14 +678,14 @@ class _ProfileTabState extends State<ProfileTab> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F1F1E),
+                                color: AppColors.textPrimary,
                               )),
                           if (_achievements.isNotEmpty)
                             Text(
                               '${_achievements.where((a) => a.earned).length}/${_achievements.length}',
                               style: const TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF0ABDB9),
+                                color: AppColors.tiffany,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -626,13 +718,13 @@ class _ProfileTabState extends State<ProfileTab> {
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         color: a.earned
-                                            ? const Color(0xFFE8FDF9)
-                                            : Colors.white,
+                                            ? AppColors.tiffany.withValues(alpha: 0.08)
+                                            : AppColors.darkCard,
                                         borderRadius: BorderRadius.circular(14),
                                         border: Border.all(
                                           color: a.earned
-                                              ? const Color(0xFFA8E6E3)
-                                              : const Color(0xFFE0F3F2),
+                                              ? AppColors.tiffany.withValues(alpha: 0.4)
+                                              : AppColors.darkBorder,
                                           width: a.earned ? 1.5 : 1,
                                         ),
                                       ),
@@ -654,8 +746,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                                     ? FontWeight.w600
                                                     : FontWeight.w400,
                                                 color: a.earned
-                                                    ? const Color(0xFF0F3D3B)
-                                                    : const Color(0xFF8EAEAC),
+                                                    ? AppColors.textPrimary
+                                                    : AppColors.textHint,
                                               )),
                                         ],
                                       ),
@@ -671,10 +763,19 @@ class _ProfileTabState extends State<ProfileTab> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0F1F1E),
+                            color: AppColors.textPrimary,
                           )),
                       const SizedBox(height: 12),
 
+                      _SettingItem(
+                        icon: Icons.auto_awesome_rounded,
+                        title: 'Кастомизация',
+                        value: 'Аватар, рамки, префиксы',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => CustomizationScreen(name: widget.name)),
+                        ).then((_) => _loadStats()),
+                      ),
                       _SettingItem(
                         icon: Icons.language_rounded,
                         title: 'Язык обучения',
@@ -833,8 +934,8 @@ class _WeekChart extends StatelessWidget {
                 height: 52 * ratio + 4,
                 decoration: BoxDecoration(
                   color: active
-                      ? const Color(0xFF0ABDB9)
-                      : const Color(0xFFE0F3F2),
+                      ? AppColors.tiffany
+                      : AppColors.darkBorder,
                   borderRadius: BorderRadius.circular(6),
                 ),
               ),
@@ -843,8 +944,8 @@ class _WeekChart extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     color: active
-                        ? const Color(0xFF0ABDB9)
-                        : const Color(0xFF8EAEAC),
+                        ? AppColors.tiffany
+                        : AppColors.textHint,
                     fontWeight: active
                         ? FontWeight.w700
                         : FontWeight.w400,
@@ -870,7 +971,7 @@ class _InsightRow extends StatelessWidget {
           child: Text(text,
               style: const TextStyle(
                 fontSize: 13,
-                color: Color(0xFF4D6766),
+                color: AppColors.textSecondary,
               )),
         ),
       ]);
@@ -897,19 +998,19 @@ class _SettingItem extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.darkCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE0F3F2)),
+          border: Border.all(color: AppColors.darkBorder),
         ),
         child: Row(children: [
           Container(
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFF0ABDB9).withValues(alpha: 0.1),
+              color: AppColors.tiffany.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: const Color(0xFF0ABDB9), size: 18),
+            child: Icon(icon, color: AppColors.tiffany, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -917,15 +1018,15 @@ class _SettingItem extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF0F1F1E),
+                  color: AppColors.textPrimary,
                 )),
           ),
           Text(value,
               style: const TextStyle(
-                  fontSize: 13, color: Color(0xFF8EAEAC))),
+                  fontSize: 13, color: AppColors.textSecondary)),
           const SizedBox(width: 8),
           const Icon(Icons.chevron_right_rounded,
-              color: Color(0xFF8EAEAC), size: 18),
+              color: AppColors.textHint, size: 18),
         ]),
       ),
     );

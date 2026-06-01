@@ -29,7 +29,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware
   @override
   void initState() {
     super.initState();
-    _load();
+    CourseService.instance.invalidateProgress(widget.course.langCode);
+    _load(force: true);
   }
 
   @override
@@ -50,15 +51,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool force = false}) async {
     setState(() => _loading = true);
-    final p = await CourseService.instance
-        .getCourseProgress(widget.course.langCode);
+    final p = await CourseService.instance.getCourseProgress(
+      widget.course.langCode,
+      force: force,
+    );
     if (mounted) setState(() { _progress = p; _loading = false; });
   }
 
   ChapterStatus _getStatus(CourseChapter ch) {
-    return _progress[ch.id]?.status ?? ChapterStatus.locked;
+    return CourseService.instance.resolveChapterStatus(
+      widget.course,
+      ch,
+      _progress,
+    );
   }
 
   @override
@@ -365,7 +372,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware
           isKidsMode: widget.isKidsMode,
         ),
       ),
-    ).then((_) => _load());
+    ).then((_) => _load(force: true));
   }
 
   void _goToExercises(CourseChapter chapter) {
@@ -378,14 +385,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware
           isKidsMode: widget.isKidsMode,
         ),
       ),
-    ).then((_) => _load());
+    ).then((_) => _load(force: true));
   }
 
   void _goToExam(CourseChapter chapter) {
-    final chapters = widget.course.chapters;
-    final idx = chapters.indexWhere((c) => c.id == chapter.id);
-    final nextChapterId =
-        (idx >= 0 && idx + 1 < chapters.length) ? chapters[idx + 1].id : null;
+    final nextChapterId = CourseService.instance.getNextChapterId(
+      widget.course.langCode,
+      chapter.id,
+    );
 
     Navigator.push(
       context,
@@ -397,7 +404,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with RouteAware
           isKidsMode: widget.isKidsMode,
         ),
       ),
-    ).then((_) => _load());
+    ).then((_) => _load(force: true));
   }
 }
 

@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'shop_service.dart';
+import 'user_store.dart';
 
 // Глобальный клиент — используй везде в приложении
 final db = Supabase.instance.client;
@@ -96,7 +98,7 @@ class SupabaseService {
   // Google Sign-In
   // Web client ID из google-services.json — нужен для получения idToken
   static const _webClientId =
-      '644143023283-bd8s43q4jhsmjk4kc3l6ndjuanh693gj.apps.googleusercontent.com';
+      'REDACTED';
 
   Future<AuthResponse?> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn(serverClientId: _webClientId);
@@ -156,6 +158,13 @@ class SupabaseService {
     String selectedLanguage = 'ru',
   }) async {
     final ageGroup = age > 0 && age <= 12 ? 'kids' : 'adult';
+    final existing = await db
+        .from('users')
+        .select('id, coins, xp, streak')
+        .eq('id', uid)
+        .maybeSingle();
+    final isNew = existing == null;
+
     await db.from('users').upsert({
       'id': uid,
       'name': name,
@@ -163,12 +172,12 @@ class SupabaseService {
       if (email != null) 'email': email,
       if (phone != null) 'phone': phone,
       'selected_language': selectedLanguage,
-      'streak': 0,
-      'xp': 0,
-      'coins': 0,
+      'streak': isNew ? 1 : (existing!['streak'] as int? ?? 0),
+      'xp': isNew ? 0 : (existing!['xp'] as int? ?? 0),
+      'coins': isNew ? 500 : (existing!['coins'] as int? ?? 0),
       'words_learned': 0,
       'subscription_type': 'free',
-      'created_at': DateTime.now().toIso8601String(),
+      if (isNew) 'created_at': DateTime.now().toIso8601String(),
       'last_active_at': DateTime.now().toIso8601String(),
     });
 
@@ -182,6 +191,18 @@ class SupabaseService {
     return await db.from('users').select().eq('id', uid!).maybeSingle();
   }
 
+  /// Для демо: если монет 0 — выдать стартовый бонус (не перезаписывает баланс).
+  Future<void> ensureWelcomeCoins() async {
+    if (uid == null) return;
+    try {
+      final profile = await getProfile();
+      final coins = profile?['coins'] as int? ?? 0;
+      if (coins <= 0) {
+        await db.from('users').update({'coins': 500}).eq('id', uid!);
+      }
+    } catch (_) {}
+  }
+
   // Получить профиль по uid
   Future<Map<String, dynamic>?> getProfileById(String userId) async {
     return await db.from('users').select().eq('id', userId).maybeSingle();
@@ -192,6 +213,7 @@ class SupabaseService {
     if (uid == null) return;
     await db.from('users').update({
       'selected_language': langCode,
+      'first_login': true,
       'last_active_at': DateTime.now().toIso8601String(),
     }).eq('id', uid!);
   }
@@ -239,21 +261,27 @@ class SupabaseService {
   // Выдать бонусы подписки Legenda
   Future<void> grantLegendaRewards() async {
     if (uid == null) return;
+    const legendaItems = ['frame_neon_purple', 'prefix_legenda'];
+    await ShopService.instance.grantItemsLocally(legendaItems);
+    await ShopService.instance.equipById('frame_neon_purple');
+    await ShopService.instance.equipById('prefix_legenda');
+
     try {
       await db.from('users').update({
-        'nick_prefix': 'LEGENDA',
-        'nick_prefix_color': 'purple_neon',
-        'equipped_frame': 'neon_purple',
+        'equipped_frame': 'frame_neon_purple',
+        'equipped_prefix': 'prefix_legenda',
+        'nick_prefix_color': '0xFFE040FB',
       }).eq('id', uid!);
 
-      // Добавляем в инвентарь
-      await db.from('user_inventory').upsert({
-        'user_id': uid,
-        'item_id': 'frame_neon_purple',
-        'item_type': 'frame',
-        'purchased_at': DateTime.now().toIso8601String(),
-        'is_equipped': true,
-      });
+      for (final itemId in legendaItems) {
+        db.from('user_inventory').insert({
+          'user_id': uid,
+          'item_id': itemId,
+          'item_type': itemId.startsWith('frame') ? 'avatarFrame' : 'nickPrefix',
+          'purchased_at': DateTime.now().toIso8601String(),
+          'is_equipped': true,
+        }).then((_) {}, onError: (_) {});
+      }
     } catch (_) {}
   }
 
@@ -497,14 +525,23 @@ class SupabaseService {
   //  ПРИВАТНЫЕ ХЕЛПЕРЫ
   // ═══════════════════════════════════════════════════════════
 
+  /// Начислить монеты и XP (урок, упражнения, задания).
+  Future<void> addRewards({required int coins, required int xp}) async {
+    if (uid == null || (coins == 0 && xp == 0)) return;
+    try {
+      final p = await getProfile();
+      if (p == null) return;
+      await db.from('users').update({
+        'coins': (p['coins'] as int? ?? 0) + coins,
+        'xp': (p['xp'] as int? ?? 0) + xp,
+      }).eq('id', uid!);
+      if (xp > 0) await addWeeklyXp(xp);
+      UserStore.instance.applyDelta(coinsDelta: coins, xpDelta: xp);
+    } catch (_) {}
+  }
+
   Future<void> _addXp(int amount) async {
-    if (uid == null) return;
-    final p = await getProfile();
-    final current = (p?['xp'] ?? 0) as int;
-    await db
-        .from('users')
-        .update({'xp': current + amount}).eq('id', uid!);
-    await addWeeklyXp(amount);
+    await addRewards(coins: 0, xp: amount);
   }
 
   Future<void> _incrementWordsLearned() async {

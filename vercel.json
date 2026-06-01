@@ -1,9 +1,12 @@
 {
+  "redirects": [
+    { "source": "/flutter", "destination": "/flutter/", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/app", "destination": "/app/index.html" },
     { "source": "/app/dashboard", "destination": "/app/dashboard.html" },
     { "source": "/flutter/:path*", "destination": "/flutter/:path*" },
-    { "source": "/flutter", "destination": "/flutter/index.html" },
+    { "source": "/flutter/", "destination": "/flutter/index.html" },
     { "source": "/((?!app/|flutter/).*)", "destination": "/index.html" }
   ]
 }

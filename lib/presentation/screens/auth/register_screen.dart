@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/theme/picker_theme.dart';
 import '../../../services/auth_service.dart';
 import '../language_select_screen.dart';
 import '../home/home_screen.dart';
@@ -44,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Color get _profileColor =>
-      _age < 13 ? const Color(0xFFFF6B35) : const Color(0xFF0ABDB9);
+      _age < 13 ? const Color(0xFFFF6B35) : AppColors.tiffany;
 
   Future<void> _pickBirthDate() async {
     final now = DateTime.now();
@@ -55,19 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       firstDate: DateTime(now.year - 100),
       lastDate: DateTime(now.year - 3),
       locale: const Locale('ru'),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF0ABDB9),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Color(0xFF0F1F1E),
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: synapsePickerTheme,
     );
     if (picked != null) setState(() => _birthDate = picked);
   }
@@ -97,21 +88,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, color: const Color(0xFF8EAEAC)),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary),
       filled: true,
-      fillColor: Colors.white,
-      labelStyle: const TextStyle(color: Color(0xFF8EAEAC)),
+      fillColor: AppColors.darkCard,
+      labelStyle: const TextStyle(color: AppColors.textSecondary),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFD6F5F4)),
+        borderSide: const BorderSide(color: AppColors.darkBorder),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFD6F5F4)),
+        borderSide: const BorderSide(color: AppColors.darkBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF0ABDB9), width: 2),
+        borderSide: const BorderSide(color: AppColors.tiffany, width: 2),
       ),
     );
   }
@@ -185,6 +176,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
     try {
       final result = await _authService.signInWithGoogle();
+      if (result == null && kIsWeb) return;
       if (result != null && mounted) {
         if (result.isNewUser) {
           Navigator.pushReplacement(
@@ -216,7 +208,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           e.toString().contains('sign_in_canceled') ||
                   e.toString().contains('canceled')
               ? 'Вход через Google отменён'
-              : 'Ошибка Google входа. Проверь интернет.';
+              : AuthService.googleSignInErrorMessage(e);
       _showError(msg);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -254,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -268,7 +260,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0ABDB9),
+                    color: AppColors.tiffany,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Image.asset('assets/images/logo.png', width: 26, height: 26),
@@ -285,7 +277,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
-                    color: Color(0xFF0F1F1E),
+                    color: AppColors.textPrimary,
                   )),
               const SizedBox(height: 8),
               const Text('AI настроит приложение под тебя',
@@ -296,7 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8FAFA),
+                  color: AppColors.darkCard,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(children: [
@@ -352,8 +344,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: _birthDate != null
-                          ? const Color(0xFF0ABDB9)
-                          : const Color(0xFFD6F5F4),
+                          ? AppColors.tiffany
+                          : AppColors.darkBorder,
                       width: _birthDate != null ? 2 : 1,
                     ),
                   ),
@@ -361,8 +353,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       Icon(Icons.cake_outlined,
                           color: _birthDate != null
-                              ? const Color(0xFF0ABDB9)
-                              : const Color(0xFF8EAEAC),
+                              ? AppColors.tiffany
+                              : AppColors.textSecondary,
                           size: 20),
                       const SizedBox(width: 12),
                       Expanded(
@@ -373,8 +365,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             color: _birthDate != null
-                                ? const Color(0xFF0F1F1E)
-                                : const Color(0xFF8EAEAC),
+                                ? AppColors.dark
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -397,7 +389,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         )
                       else
                         const Icon(Icons.calendar_today_outlined,
-                            color: Color(0xFF8EAEAC), size: 18),
+                            color: AppColors.textSecondary, size: 18),
                     ],
                   ),
                 ),
@@ -414,7 +406,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       _obscurePass
                           ? Icons.visibility_off
                           : Icons.visibility,
-                      color: const Color(0xFF8EAEAC),
+                      color: AppColors.textSecondary,
                     ),
                     onPressed: () =>
                         setState(() => _obscurePass = !_obscurePass),
@@ -451,7 +443,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0ABDB9),
+                    backgroundColor: AppColors.tiffany,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -468,14 +460,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 20),
 
               const Row(children: [
-                Expanded(child: Divider(color: Color(0xFFD6F5F4))),
+                Expanded(child: Divider(color: AppColors.darkBorder)),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   child: Text('или войти через',
                       style: TextStyle(
-                          color: Color(0xFF8EAEAC), fontSize: 13)),
+                          color: AppColors.textSecondary, fontSize: 13)),
                 ),
-                Expanded(child: Divider(color: Color(0xFFD6F5F4))),
+                Expanded(child: Divider(color: AppColors.darkBorder)),
               ]),
               const SizedBox(height: 20),
 
@@ -490,10 +482,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF0F1F1E),
+                        color: AppColors.textPrimary,
                       )),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFD6F5F4)),
+                    side: const BorderSide(color: AppColors.darkBorder),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -505,14 +497,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Text('Уже есть аккаунт? ',
                     style: TextStyle(
-                        color: Color(0xFF8EAEAC), fontSize: 14)),
+                        color: AppColors.textSecondary, fontSize: 14)),
                 GestureDetector(
                   onTap: () => Navigator.push(context,
                       MaterialPageRoute(
                           builder: (_) => const LoginScreen())),
                   child: const Text('Войти',
                       style: TextStyle(
-                        color: Color(0xFF0ABDB9),
+                        color: AppColors.tiffany,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       )),
@@ -561,8 +553,8 @@ class _MethodTab extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: selected
-                    ? const Color(0xFF0ABDB9)
-                    : const Color(0xFF8EAEAC),
+                    ? AppColors.tiffany
+                    : AppColors.textSecondary,
               )),
         ),
       ),

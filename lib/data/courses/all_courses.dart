@@ -6,7 +6,11 @@ import 'spanish_course.dart';
 import 'italian_course.dart';
 import 'turkish_course.dart';
 import 'russian_course.dart';
-import 'other_courses.dart';
+import 'kazakh_course.dart';
+import 'chinese_course.dart';
+import 'japanese_course.dart';
+import 'korean_course.dart';
+import 'arabic_course.dart';
 
 // Все доступные курсы
 const List<LanguageCourse> allCourses = [

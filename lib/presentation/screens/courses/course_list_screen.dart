@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/all_courses.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
@@ -38,10 +39,13 @@ class _CourseListScreenState extends State<CourseListScreen> {
     final proRaw = profile?['pro_languages'] as String? ?? '';
     _proLangs = proRaw.isEmpty ? [] : proRaw.split(',').where((s) => s.isNotEmpty).toList();
 
-    for (final course in allCourses) {
-      final p = await CourseService.instance.getCourseProgress(course.langCode);
-      _allProgress[course.langCode] = p;
-    }
+    final unlocked = _unlockedCodes;
+    await Future.wait(
+      unlocked.map((code) async {
+        final p = await CourseService.instance.getCourseProgress(code);
+        _allProgress[code] = p;
+      }),
+    );
     if (mounted) setState(() => _loading = false);
   }
 
@@ -114,7 +118,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
               _subscription == 'free'
                   ? 'С бесплатным планом доступен только 1 язык.\nОбновись до PRO — выбери 3 языка, до LEGENDA — все 12!'
                   : 'Ты уже выбрал 3 языка для PRO.\nОбновись до LEGENDA — открой все 12 языков!',
-              style: const TextStyle(fontSize: 14, color: Color(0xFF4D6766)),
+              style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -122,11 +126,11 @@ class _CourseListScreenState extends State<CourseListScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Позже',
-                style: TextStyle(color: Color(0xFF8EAEAC))),
+                style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0ABDB9),
+              backgroundColor: AppColors.tiffany,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -156,7 +160,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
 
     return Scaffold(
       backgroundColor:
-          isKids ? const Color(0xFFFFF9F0) : const Color(0xFFF4FEFE),
+          isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -171,12 +175,19 @@ class _CourseListScreenState extends State<CourseListScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isKids ? Colors.white : AppColors.darkCard,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFD6F5F4)),
+                        border: Border.all(
+                          color: isKids
+                              ? const Color(0xFFE8E0D8)
+                              : AppColors.darkBorder,
+                        ),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 18, color: Color(0xFF4D6766)),
+                      child: Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 18,
+                          color: isKids
+                              ? AppColors.onLightSecondary
+                              : AppColors.textSecondary),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -189,7 +200,9 @@ class _CourseListScreenState extends State<CourseListScreen> {
                           style: TextStyle(
                             fontSize: isKids ? 22 : 20,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F1F1E),
+                            color: isKids
+                                ? AppColors.onLight
+                                : AppColors.textPrimary,
                           ),
                         ),
                         Text(
@@ -198,7 +211,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
                             fontSize: 12,
                             color: isKids
                                 ? const Color(0xFFFF6B35)
-                                : const Color(0xFF8EAEAC),
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -215,7 +228,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
               child: _loading
                   ? const Center(
                       child: CircularProgressIndicator(
-                          color: Color(0xFF0ABDB9)))
+                          color: AppColors.tiffany))
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       itemCount: allCourses.length,
@@ -270,7 +283,7 @@ class _SubBadge extends StatelessWidget {
         gradient: LinearGradient(
           colors: isLegenda
               ? [const Color(0xFF9B59B6), const Color(0xFF6C3483)]
-              : [const Color(0xFF0ABDB9), const Color(0xFF0891B2)],
+              : [AppColors.tiffany, const Color(0xFF0891B2)],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -316,7 +329,7 @@ class _ProLanguagePickerSheetState extends State<_ProLanguagePickerSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.darkSurface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -327,7 +340,7 @@ class _ProLanguagePickerSheetState extends State<_ProLanguagePickerSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFD6F5F4),
+              color: AppColors.darkBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -337,13 +350,13 @@ class _ProLanguagePickerSheetState extends State<_ProLanguagePickerSheet> {
             style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F1F1E)),
+                color: AppColors.textPrimary),
           ),
           const SizedBox(height: 4),
           const Text(
             'Эти языки будут доступны тебе в рамках PRO подписки',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFF8EAEAC)),
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           ConstrainedBox(
@@ -363,7 +376,7 @@ class _ProLanguagePickerSheetState extends State<_ProLanguagePickerSheet> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0ABDB9).withValues(alpha: 0.1),
+                      color: AppColors.tiffany.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
@@ -376,7 +389,7 @@ class _ProLanguagePickerSheetState extends State<_ProLanguagePickerSheet> {
                       style: const TextStyle(fontSize: 12)),
                   trailing: Checkbox(
                     value: isOn,
-                    activeColor: const Color(0xFF0ABDB9),
+                    activeColor: AppColors.tiffany,
                     onChanged: (canAdd || isOn)
                         ? (v) {
                             setState(() {
@@ -399,7 +412,7 @@ class _ProLanguagePickerSheetState extends State<_ProLanguagePickerSheet> {
             height: 50,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0ABDB9),
+                backgroundColor: AppColors.tiffany,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -454,7 +467,7 @@ class _CourseCard extends StatelessWidget {
     final started = completed > 0;
     final accent = isKidsMode
         ? const Color(0xFFFF6B35)
-        : const Color(0xFF0ABDB9);
+        : AppColors.tiffany;
 
     return GestureDetector(
       onTap: onTap,
@@ -464,23 +477,16 @@ class _CourseCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isLocked
-                  ? const Color(0xFFCBD5E1)
+                  ? AppColors.darkBorder
                   : started
                       ? accent.withValues(alpha: 0.4)
-                      : const Color(0xFFE0F0FF),
+                      : AppColors.darkBorder,
               width: started && !isLocked ? 1.5 : 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              )
-            ],
           ),
           child: Row(
             children: [
@@ -490,7 +496,7 @@ class _CourseCard extends StatelessWidget {
                 height: 56,
                 decoration: BoxDecoration(
                   color: isLocked
-                      ? const Color(0xFFF1F5F9)
+                      ? AppColors.darkSurface
                       : accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -516,8 +522,8 @@ class _CourseCard extends StatelessWidget {
                             fontSize: isKidsMode ? 16 : 15,
                             fontWeight: FontWeight.w700,
                             color: isLocked
-                                ? const Color(0xFF8EAEAC)
-                                : const Color(0xFF0F1F1E),
+                                ? AppColors.textSecondary
+                                : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -525,7 +531,7 @@ class _CourseCard extends StatelessWidget {
                           course.nativeName,
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF8EAEAC),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -534,12 +540,12 @@ class _CourseCard extends StatelessWidget {
                     if (isLocked)
                       Row(children: [
                         const Icon(Icons.lock_rounded,
-                            size: 12, color: Color(0xFF8EAEAC)),
+                            size: 12, color: AppColors.textSecondary),
                         const SizedBox(width: 4),
                         const Text(
                           'Нужна подписка',
                           style: TextStyle(
-                              fontSize: 12, color: Color(0xFF8EAEAC)),
+                              fontSize: 12, color: AppColors.textSecondary),
                         ),
                       ])
                     else
@@ -549,7 +555,7 @@ class _CourseCard extends StatelessWidget {
                             : '$total глав · A1 → B2',
                         style: TextStyle(
                           fontSize: 12,
-                          color: started ? accent : const Color(0xFF8EAEAC),
+                          color: started ? accent : AppColors.textSecondary,
                           fontWeight: started
                               ? FontWeight.w600
                               : FontWeight.w400,
@@ -580,10 +586,10 @@ class _CourseCard extends StatelessWidget {
                         ? Icons.emoji_events_rounded
                         : Icons.chevron_right_rounded),
                 color: isLocked
-                    ? const Color(0xFFCBD5E1)
+                    ? AppColors.darkBorder
                     : (completed == total && total > 0
                         ? const Color(0xFFFFD700)
-                        : const Color(0xFF8EAEAC)),
+                        : AppColors.textSecondary),
                 size: 24,
               ),
             ],

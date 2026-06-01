@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
@@ -249,7 +250,7 @@ class _SurvivalScreenState extends State<SurvivalScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1F1E),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: _loading
             ? const Center(

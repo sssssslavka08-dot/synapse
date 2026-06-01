@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/level_system.dart';
-import '../../widgets/neuronchik.dart';
+import '../../../services/supabase_service.dart';
+import '../../../services/user_store.dart';
+import '../../../services/words_service.dart';
+import '../../../services/notification_service.dart';
 import 'tabs/daily_tab.dart';
 import 'tabs/leaderboard_tab.dart';
 import 'tabs/path_tab.dart';
-import 'tabs/feed_tab.dart';
+import '../shop/shop_screen.dart';
 import 'tabs/profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,16 +24,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with TickerProviderStateMixin {
-  int _currentIndex = 2;
-  int _pendingTasks = 3;
+  int _currentIndex = 0;
   bool _showLevelUp = false;
   int _newLevel = 1;
-
-  // Neuronchik greeting (kids only)
-  bool _showGreeting = false;
-  bool _greetingToCorner = false;
-
-  // Robot greeting (all users, once per day)
   bool _showRobotGreeting = false;
 
   late AnimationController _levelUpCtrl;
@@ -45,14 +42,22 @@ class _HomeScreenState extends State<HomeScreen>
     'Привет-привет! Погнали учить! 🧠',
   ];
 
+  static const _navItems = <_NavData>[
+    _NavData(Icons.auto_stories_rounded, 'Обучение'),
+    _NavData(Icons.emoji_events_rounded, 'Рейтинг'),
+    _NavData(Icons.task_alt_rounded, 'Задания'),
+    _NavData(Icons.storefront_rounded, 'Магазин'),
+    _NavData(Icons.person_rounded, 'Профиль'),
+  ];
+
   @override
   void initState() {
     super.initState();
     _tabs = [
-      DailyTab(name: widget.name, isKids: widget.age <= 12),
-      LeaderboardTab(name: widget.name),
       PathTab(name: widget.name, isKids: widget.age <= 12, age: widget.age),
-      FeedTab(),
+      LeaderboardTab(name: widget.name),
+      DailyTab(name: widget.name, isKids: widget.age <= 12),
+      const ShopScreen(),
       ProfileTab(name: widget.name, age: widget.age),
     ];
 
@@ -64,8 +69,28 @@ class _HomeScreenState extends State<HomeScreen>
         CurvedAnimation(parent: _levelUpCtrl, curve: Curves.easeIn));
 
     _checkLevelUp();
-    if (widget.age <= 12) _checkNeuronchikGreeting();
     _checkRobotGreeting();
+    SupabaseService.instance.ensureWelcomeCoins();
+    UserStore.instance.refresh();
+    _warmWordsAndNotifications();
+  }
+
+  Future<void> _warmWordsAndNotifications() async {
+    NotificationService.instance.recordActivity();
+    await NotificationService.instance.refreshEngagementSchedule();
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+      final row = await Supabase.instance.client
+          .from('users')
+          .select('selected_language')
+          .eq('id', uid)
+          .maybeSingle();
+      final lang = row?['selected_language'] as String? ?? 'en';
+      if (lang.isNotEmpty) {
+        await WordsService.instance.warmCacheForLanguage(lang);
+      }
+    } catch (_) {}
   }
 
   Future<void> _checkRobotGreeting() async {
@@ -80,33 +105,6 @@ class _HomeScreenState extends State<HomeScreen>
         if (mounted) setState(() => _showRobotGreeting = false);
       });
     }
-  }
-
-  Future<void> _checkNeuronchikGreeting() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().split('T').first;
-    final last = prefs.getString('neuronchik_greeting_date') ?? '';
-    if (last != today) {
-      await prefs.setString('neuronchik_greeting_date', today);
-      if (!mounted) return;
-      setState(() => _showGreeting = true);
-      // через 2.5с начинаем двигать в угол
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        if (mounted) setState(() => _greetingToCorner = true);
-      });
-      // через 3.8с убираем оверлей — обычный угловой Нейрончик берёт управление
-      Future.delayed(const Duration(milliseconds: 3800), () {
-        if (mounted) setState(() => _showGreeting = false);
-      });
-    }
-  }
-
-  void _dismissGreeting() {
-    if (!_showGreeting) return;
-    setState(() => _greetingToCorner = true);
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) setState(() => _showGreeting = false);
-    });
   }
 
   @override
@@ -147,172 +145,90 @@ class _HomeScreenState extends State<HomeScreen>
     } catch (_) {}
   }
 
+  void _onNav(int i) {
+    setState(() => _currentIndex = i);
+    UserStore.instance.refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final isWide = w >= 768;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: Stack(
         children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: _tabs,
-          ),
-          // Робот-приветствие для всех пользователей (раз в день)
+          // ── Layout: sidebar (web) vs bottom-nav (mobile) ──
+          if (isWide)
+            Row(
+              children: [
+                _Sidebar(
+                  currentIndex: _currentIndex,
+                  items: _navItems,
+                  onTap: _onNav,
+                ),
+                Expanded(
+                  child: IndexedStack(index: _currentIndex, children: _tabs),
+                ),
+              ],
+            )
+          else
+            IndexedStack(index: _currentIndex, children: _tabs),
+
+          // ── Robot greeting overlay ──
           if (_showRobotGreeting)
             Positioned.fill(
               child: GestureDetector(
                 onTap: () => setState(() => _showRobotGreeting = false),
                 behavior: HitTestBehavior.opaque,
-                child: AnimatedOpacity(
-                  opacity: _showRobotGreeting ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 400),
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.55),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF0ABDB9).withValues(alpha: 0.25),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              _greetings[DateTime.now().day % _greetings.length],
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F1F1E),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.darkCard,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.tiffany.withValues(alpha: 0.3)),
                           ),
-                          Image.asset(
-                            'assets/images/robot.png',
-                            width: 180,
-                            height: 180,
-                            fit: BoxFit.contain,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Нажми, чтобы продолжить',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                          child: Text(
+                            _greetings[DateTime.now().day % _greetings.length],
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
                             ),
+                            textAlign: TextAlign.center,
                           ),
-                        ],
-                      ),
+                        ),
+                        Image.asset(
+                          'assets/images/robot.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Нажми, чтобы продолжить',
+                          style: TextStyle(
+                            color: AppColors.textSecondary.withValues(alpha: 0.7),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
 
-          // Нейрончик в углу (скрыт пока показывается приветствие)
-          if (!_showGreeting)
-            Positioned(
-              bottom: 90,
-              right: 16,
-              child: NeuronchikWidget(
-                mood: _currentIndex == 0
-                    ? NeuronchikMood.cheering
-                    : NeuronchikMood.happy,
-              ),
-            ),
-
-          // Greeting анимация (только для детей, раз в день)
-          if (_showGreeting)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: _dismissGreeting,
-                behavior: HitTestBehavior.translucent,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 600),
-                  color: _greetingToCorner
-                      ? Colors.transparent
-                      : Colors.black.withValues(alpha: 0.45),
-                  child: Stack(
-                    children: [
-                      // Greeting bubble (исчезает при движении в угол)
-                      if (!_greetingToCorner)
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  _greetings[DateTime.now().day % _greetings.length],
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F1F1E),
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              NeuronchikWidget(
-                                mood: NeuronchikMood.excited,
-                                size: 180,
-                                isKidsMode: true,
-                              ),
-                              const SizedBox(height: 12),
-                              const Text(
-                                'Нажми, чтобы продолжить',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      // Нейрончик движется в угол
-                      AnimatedPositioned(
-                        duration: const Duration(milliseconds: 1200),
-                        curve: Curves.easeInOut,
-                        bottom: _greetingToCorner ? 90 : null,
-                        right: _greetingToCorner ? 16 : null,
-                        top: _greetingToCorner ? null : 0,
-                        left: _greetingToCorner ? null : 0,
-                        child: _greetingToCorner
-                            ? NeuronchikWidget(
-                                mood: NeuronchikMood.happy,
-                                size: 64,
-                                isKidsMode: true,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          // ── Level up overlay ──
           if (_showLevelUp)
             Positioned.fill(
               child: GestureDetector(
@@ -322,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen>
                   });
                 },
                 child: Container(
-                  color: Colors.black.withValues(alpha: 0.6),
+                  color: Colors.black.withValues(alpha: 0.7),
                   child: Center(
                     child: FadeTransition(
                       opacity: _levelUpFade,
@@ -337,15 +253,194 @@ class _HomeScreenState extends State<HomeScreen>
             ),
         ],
       ),
-      bottomNavigationBar: _BottomNav(
-        currentIndex: _currentIndex,
-        pendingTasks: _pendingTasks,
-        onTap: (i) {
-          setState(() {
-            _currentIndex = i;
-            if (i == 0) _pendingTasks = 0;
-          });
-        },
+      bottomNavigationBar: isWide
+          ? null
+          : _MobileBottomNav(
+              currentIndex: _currentIndex,
+              items: _navItems,
+              onTap: _onNav,
+            ),
+    );
+  }
+}
+
+// ─── Nav data ─────────────────────────────────────────────────────
+class _NavData {
+  final IconData icon;
+  final String label;
+  const _NavData(this.icon, this.label);
+}
+
+// ─── SIDEBAR (web / wide) ─────────────────────────────────────────
+class _Sidebar extends StatelessWidget {
+  final int currentIndex;
+  final List<_NavData> items;
+  final ValueChanged<int> onTap;
+  const _Sidebar({required this.currentIndex, required this.items, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 220,
+      decoration: const BoxDecoration(
+        color: AppColors.darkNav,
+        border: Border(right: BorderSide(color: AppColors.darkBorder, width: 1)),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // ── Logo ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'SYNAPSE',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // ── Nav items ──
+            ...List.generate(items.length, (i) {
+              final item = items[i];
+              final active = i == currentIndex;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => onTap(i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: active
+                            ? AppColors.tiffany.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(14),
+                        border: active
+                            ? Border.all(color: AppColors.tiffany.withValues(alpha: 0.25))
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            item.icon,
+                            size: 22,
+                            color: active ? AppColors.tiffany : AppColors.textHint,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                              color: active ? AppColors.textPrimary : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+            const Spacer(),
+            // ── Bottom logo ──
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                'v1.0',
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── MOBILE BOTTOM NAV ───────────────────────────────────────────
+class _MobileBottomNav extends StatelessWidget {
+  final int currentIndex;
+  final List<_NavData> items;
+  final ValueChanged<int> onTap;
+  const _MobileBottomNav({required this.currentIndex, required this.items, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.darkNav,
+        border: Border(top: BorderSide(color: AppColors.darkBorder, width: 1)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (i) {
+              final item = items[i];
+              final active = i == currentIndex;
+              return GestureDetector(
+                onTap: () => onTap(i),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: active
+                        ? AppColors.tiffany.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        item.icon,
+                        size: 24,
+                        color: active ? AppColors.tiffany : AppColors.textHint,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                          color: active ? AppColors.tiffany : AppColors.textHint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
@@ -364,13 +459,13 @@ class _LevelUpCard extends StatelessWidget {
       width: 280,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1F1E),
+        color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-            color: const Color(0xFF0ABDB9).withValues(alpha: 0.6), width: 2),
+            color: AppColors.tiffany.withValues(alpha: 0.5), width: 2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0ABDB9).withValues(alpha: 0.3),
+            color: AppColors.tiffany.withValues(alpha: 0.25),
             blurRadius: 40,
             spreadRadius: 4,
           ),
@@ -383,20 +478,20 @@ class _LevelUpCard extends StatelessWidget {
           const SizedBox(height: 12),
           const Text('НОВЫЙ ЭТАЖ!',
               style: TextStyle(
-                  color: Color(0xFF0ABDB9),
+                  color: AppColors.tiffany,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 2)),
           const SizedBox(height: 8),
           Text('Этаж $level',
               style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   fontSize: 32,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1)),
           Text(title,
               style: const TextStyle(
-                  color: Color(0xFF8EAEAC),
+                  color: AppColors.textSecondary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 20),
@@ -404,7 +499,7 @@ class _LevelUpCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF0ABDB9),
+              color: AppColors.tiffany,
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Text('🎉 Продолжай учиться!',
@@ -412,216 +507,6 @@ class _LevelUpCard extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 13)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  final int currentIndex;
-  final int pendingTasks;
-  final ValueChanged<int> onTap;
-  const _BottomNav({
-    required this.currentIndex,
-    required this.pendingTasks,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE8F7F7), width: 1)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 20,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                index: 0,
-                current: currentIndex,
-                icon: Icons.task_alt_rounded,
-                label: 'Задания',
-                badge: pendingTasks,
-                onTap: onTap,
-              ),
-              _NavItem(
-                index: 1,
-                current: currentIndex,
-                icon: Icons.emoji_events_rounded,
-                label: 'Рейтинг',
-                onTap: onTap,
-              ),
-              // Центральная кнопка — большая
-              _CenterNavItem(
-                isActive: currentIndex == 2,
-                onTap: () => onTap(2),
-              ),
-              _NavItem(
-                index: 3,
-                current: currentIndex,
-                icon: Icons.feed_rounded,
-                label: 'Лента',
-                onTap: onTap,
-              ),
-              _NavItem(
-                index: 4,
-                current: currentIndex,
-                icon: Icons.person_rounded,
-                label: 'Профиль',
-                onTap: onTap,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final int index, current;
-  final IconData icon;
-  final String label;
-  final int badge;
-  final ValueChanged<int> onTap;
-
-  const _NavItem({
-    required this.index,
-    required this.current,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.badge = 0,
-  });
-
-  bool get isActive => index == current;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? const Color(0xFF0ABDB9).withValues(alpha: 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  icon,
-                  size: 24,
-                  color: isActive
-                      ? const Color(0xFF0ABDB9)
-                      : const Color(0xFF8EAEAC),
-                ),
-                if (badge > 0)
-                  Positioned(
-                    top: -4,
-                    right: -6,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          badge > 9 ? '9+' : '$badge',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive
-                    ? const Color(0xFF0ABDB9)
-                    : const Color(0xFF8EAEAC),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CenterNavItem extends StatelessWidget {
-  final bool isActive;
-  final VoidCallback onTap;
-  const _CenterNavItem({required this.isActive, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color:
-                  isActive ? const Color(0xFF078987) : const Color(0xFF0ABDB9),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0ABDB9).withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.auto_stories_rounded,
-              color: Colors.white,
-              size: 26,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Путь',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color:
-                  isActive ? const Color(0xFF0ABDB9) : const Color(0xFF8EAEAC),
-            ),
           ),
         ],
       ),

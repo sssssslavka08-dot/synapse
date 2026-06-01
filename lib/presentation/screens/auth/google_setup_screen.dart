@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/auth/session_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../services/auth_service.dart';
 import '../language_select_screen.dart';
@@ -61,6 +63,13 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
     if (!widget.isNewUser) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _goHome());
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureValidSession());
+  }
+
+  Future<void> _ensureValidSession() async {
+    if (await SessionGuard.validateSession()) return;
+    if (!mounted) return;
+    await SessionGuard.forceReauth(context);
   }
 
   @override
@@ -73,6 +82,17 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
   }
 
   Future<void> _goHome() async {
+    if (!await SessionGuard.validateSession()) {
+      if (!mounted) return;
+      await SessionGuard.forceReauth(context);
+      return;
+    }
+    await _authService.saveGoogleProfile(
+      name: widget.googleName,
+      email: widget.googleEmail,
+      age: _age > 0 ? _age : 13,
+      photoUrl: widget.googlePhotoUrl,
+    );
     final data = await _authService.getUserData();
     if (!mounted) return;
     Navigator.pushReplacement(
@@ -102,18 +122,32 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
 
     setState(() => _isLoading = true);
     try {
-      // Устанавливаем пароль для аккаунта (привязываем email/password)
-      await Supabase.instance.client.auth.updateUser(
-        UserAttributes(password: _passCtrl.text),
-      );
+      if (!await SessionGuard.validateSession()) {
+        if (!mounted) return;
+        await SessionGuard.forceReauth(context);
+        return;
+      }
 
-      // Сохраняем профиль с данными из Google + возрастом
+      // Сначала профиль — пароль опционален для Google
       await _authService.saveGoogleProfile(
         name: widget.googleName,
         email: widget.googleEmail,
         age: _age,
         photoUrl: widget.googlePhotoUrl,
       );
+
+      // Привязываем email/password (может быть недоступно на части провайдеров)
+      try {
+        await Supabase.instance.client.auth.updateUser(
+          UserAttributes(password: _passCtrl.text),
+        );
+      } on AuthException catch (e) {
+        if (!SessionGuard.isStaleSessionError(e)) {
+          // Продолжаем без пароля — вход через Google остаётся
+        } else {
+          rethrow;
+        }
+      }
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -129,7 +163,11 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
         ),
       );
     } catch (e) {
-      _showError('Ошибка: ${e.toString().replaceAll('Exception: ', '')}');
+      if (SessionGuard.isStaleSessionError(e)) {
+        if (mounted) await SessionGuard.forceReauth(context);
+      } else {
+        _showError('Ошибка: ${e.toString().replaceAll('Exception: ', '')}');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -150,21 +188,21 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, color: const Color(0xFF8EAEAC)),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary),
       filled: true,
-      fillColor: Colors.white,
-      labelStyle: const TextStyle(color: Color(0xFF8EAEAC)),
+      fillColor: AppColors.darkCard,
+      labelStyle: const TextStyle(color: AppColors.textSecondary),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFD6F5F4)),
+        borderSide: const BorderSide(color: AppColors.darkBorder),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFD6F5F4)),
+        borderSide: const BorderSide(color: AppColors.darkBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF0ABDB9), width: 2),
+        borderSide: const BorderSide(color: AppColors.tiffany, width: 2),
       ),
     );
   }
@@ -172,7 +210,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnim,
@@ -191,7 +229,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0ABDB9),
+                        color: AppColors.tiffany,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Image.asset('assets/images/logo.png', width: 26, height: 26),
@@ -209,7 +247,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
-                        color: Color(0xFF0F1F1E),
+                        color: AppColors.textPrimary,
                       )),
                   const SizedBox(height: 8),
                   const Text('Мы получили твои данные из Google',
@@ -221,16 +259,9 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.darkCard,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFD6F5F4)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF0ABDB9).withValues(alpha: 0.07),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      border: Border.all(color: AppColors.darkBorder),
                     ),
                     child: Row(
                       children: [
@@ -246,13 +277,13 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                             children: [
                               Row(children: [
                                 const Icon(Icons.verified,
-                                    color: Color(0xFF0ABDB9), size: 16),
+                                    color: AppColors.tiffany, size: 16),
                                 const SizedBox(width: 5),
                                 const Text('Google аккаунт',
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF0ABDB9),
+                                      color: AppColors.tiffany,
                                     )),
                               ]),
                               const SizedBox(height: 5),
@@ -261,7 +292,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F1F1E),
+                                  color: AppColors.textPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -270,7 +301,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                                 widget.googleEmail,
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF8EAEAC),
+                                  color: AppColors.textSecondary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -284,14 +315,14 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
 
                   // ── Разделитель ───────────────────────────────
                   const Row(children: [
-                    Expanded(child: Divider(color: Color(0xFFD6F5F4))),
+                    Expanded(child: Divider(color: AppColors.darkBorder)),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Text('Укажи дополнительные данные',
                           style: TextStyle(
-                              color: Color(0xFF8EAEAC), fontSize: 12)),
+                              color: AppColors.textSecondary, fontSize: 12)),
                     ),
-                    Expanded(child: Divider(color: Color(0xFFD6F5F4))),
+                    Expanded(child: Divider(color: AppColors.darkBorder)),
                   ]),
                   const SizedBox(height: 24),
 
@@ -317,15 +348,15 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
                         color: (_age <= 12
-                                ? const Color(0xFF0ABDB9)
-                                : const Color(0xFF1E3332))
-                            .withValues(alpha: 0.08),
+                                ? AppColors.tiffany
+                                : AppColors.textSecondary)
+                            .withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: (_age <= 12
-                                  ? const Color(0xFF0ABDB9)
-                                  : const Color(0xFF1E3332))
-                              .withValues(alpha: 0.25),
+                                  ? AppColors.tiffany
+                                  : AppColors.darkBorder)
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                       child: Text(
@@ -336,8 +367,8 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: _age <= 12
-                              ? const Color(0xFF0ABDB9)
-                              : const Color(0xFF1E3332),
+                              ? AppColors.tiffany
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -356,7 +387,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                           _obscurePass
                               ? Icons.visibility_off
                               : Icons.visibility,
-                          color: const Color(0xFF8EAEAC),
+                          color: AppColors.textSecondary,
                         ),
                         onPressed: () =>
                             setState(() => _obscurePass = !_obscurePass),
@@ -377,7 +408,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                           _obscureConfirm
                               ? Icons.visibility_off
                               : Icons.visibility,
-                          color: const Color(0xFF8EAEAC),
+                          color: AppColors.textSecondary,
                         ),
                         onPressed: () => setState(
                             () => _obscureConfirm = !_obscureConfirm),
@@ -422,14 +453,14 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8FAFA),
+                      color: AppColors.darkCard,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Icon(Icons.info_outline_rounded,
-                            color: Color(0xFF0ABDB9), size: 18),
+                            color: AppColors.tiffany, size: 18),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -453,7 +484,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _submit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0ABDB9),
+                        backgroundColor: AppColors.tiffany,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -478,7 +509,7 @@ class _GoogleSetupScreenState extends State<GoogleSetupScreen>
                       child: const Text(
                         'Пропустить — войду только через Google',
                         style: TextStyle(
-                          color: Color(0xFF8EAEAC),
+                          color: AppColors.textSecondary,
                           fontSize: 13,
                         ),
                       ),
@@ -525,7 +556,7 @@ class _GoogleAvatar extends StatelessWidget {
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: const Color(0xFF0ABDB9),
+        color: AppColors.tiffany,
         borderRadius: BorderRadius.circular(28),
       ),
       child: Center(

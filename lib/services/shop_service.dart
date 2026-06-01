@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'user_store.dart';
 
 final _db = Supabase.instance.client;
 
@@ -119,6 +122,16 @@ class ShopCatalog {
       price: 100,
       rarity: Rarity.legendary,
       meta: {'color': 0xFFE040FB, 'glow': 0xFFE040FB},
+    ),
+
+    ShopItem(
+      id: 'prefix_legenda',
+      category: ShopCategory.nickPrefix,
+      name: 'LEGENDA',
+      description: 'Легендарный золотой префикс — для настоящих легенд',
+      price: 500,
+      rarity: Rarity.legendary,
+      meta: {'color': 0xFFFFD700, 'glow': 0xFFFFD700, 'prefix_text': 'LEGENDA'},
     ),
 
     // ─── РАМКИ ДЛЯ АВАТАРКИ ──────────────────────────────────────
@@ -244,102 +257,225 @@ class ShopService {
 
   String? get _uid => _db.auth.currentUser?.id;
 
-  // Купить товар
+  static const _legacyInventoryKey = 'shop_inventory';
+  static const _legacyEquippedKey = 'shop_equipped';
+
+  String get _inventoryKey => 'shop_inventory_${_uid ?? 'anon'}';
+  String get _equippedKey => 'shop_equipped_${_uid ?? 'anon'}';
+
+  Future<void> _migrateLegacyPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final invKey = _inventoryKey;
+      final eqKey = _equippedKey;
+      if (prefs.getString(invKey) == null) {
+        final legacy = prefs.getString(_legacyInventoryKey);
+        if (legacy != null) {
+          await prefs.setString(invKey, legacy);
+          await prefs.remove(_legacyInventoryKey);
+        }
+      }
+      if (prefs.getString(eqKey) == null) {
+        final legacy = prefs.getString(_legacyEquippedKey);
+        if (legacy != null) {
+          await prefs.setString(eqKey, legacy);
+          await prefs.remove(_legacyEquippedKey);
+        }
+      }
+    } catch (_) {}
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  ПОКУПКА
+  // ═══════════════════════════════════════════════════════════════
+
   Future<ShopPurchaseResult> purchase(ShopItem item) async {
     if (_uid == null) return ShopPurchaseResult.notLoggedIn;
 
-    final profile = await _db
-        .from('users')
-        .select('coins, subscription_type')
-        .eq('id', _uid!)
-        .maybeSingle();
+    await _migrateLegacyPrefs();
 
-    if (profile == null) return ShopPurchaseResult.error;
+    // Получаем текущие монеты
+    int coins = 0;
+    try {
+      if (_uid != null) {
+        final profile = await _db
+            .from('users')
+            .select('coins')
+            .eq('id', _uid!)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 4));
+        coins = (profile?['coins'] ?? 0) as int;
+      }
+    } catch (_) {
+      return ShopPurchaseResult.error;
+    }
 
-    final coins = (profile['coins'] ?? 0) as int;
     if (coins < item.price) return ShopPurchaseResult.notEnoughCoins;
 
-    // Проверяем не куплено ли уже
-    final existing = await _db
-        .from('user_inventory')
-        .select('id')
-        .eq('user_id', _uid!)
-        .eq('item_id', item.id)
-        .maybeSingle();
+    // Проверяем не куплено ли уже (локально)
+    final owned = await getInventoryIds();
+    if (owned.contains(item.id)) return ShopPurchaseResult.alreadyOwned;
 
-    if (existing != null) return ShopPurchaseResult.alreadyOwned;
+    // Списываем монеты в Supabase
+    try {
+      if (_uid != null) {
+        await _db.from('users').update({
+          'coins': coins - item.price,
+        }).eq('id', _uid!).timeout(const Duration(seconds: 4));
+        UserStore.instance.applyDelta(coinsDelta: -item.price);
+      }
+    } catch (_) {
+      return ShopPurchaseResult.error;
+    }
 
-    // Списываем монеты
-    await _db.from('users').update({
-      'coins': coins - item.price,
-    }).eq('id', _uid!);
+    // Сохраняем в локальный инвентарь
+    await _addToLocalInventory(item.id);
 
-    // Добавляем в инвентарь
-    await _db.from('user_inventory').insert({
-      'user_id': _uid,
-      'item_id': item.id,
-      'item_type': item.category.name,
-      'purchased_at': DateTime.now().toIso8601String(),
-      'is_equipped': false,
-    });
+    // Пытаемся синхронизировать с Supabase (fire-and-forget)
+    _syncInventoryToRemote(item);
 
     return ShopPurchaseResult.success;
   }
 
-  // Экипировать предмет
+  // ═══════════════════════════════════════════════════════════════
+  //  ЭКИПИРОВКА
+  // ═══════════════════════════════════════════════════════════════
+
+  /// Выдать предметы без списания монет (подписка Legenda, промо).
+  Future<void> grantItemsLocally(List<String> itemIds) async {
+    await _migrateLegacyPrefs();
+    for (final id in itemIds) {
+      await _addToLocalInventory(id);
+    }
+  }
+
+  Future<void> equipById(String itemId) async {
+    try {
+      final item = ShopCatalog.all.firstWhere((i) => i.id == itemId);
+      await equip(item);
+    } catch (_) {}
+  }
+
   Future<void> equip(ShopItem item) async {
-    if (_uid == null) return;
+    // Сохраняем локально
+    await _setEquippedLocal(item.category.name, item.id);
 
-    // Снять предыдущее в этой категории
-    await _db
-        .from('user_inventory')
-        .update({'is_equipped': false})
-        .eq('user_id', _uid!)
-        .eq('item_type', item.category.name);
-
-    // Надеть новое
-    await _db
-        .from('user_inventory')
-        .update({'is_equipped': true})
-        .eq('user_id', _uid!)
-        .eq('item_id', item.id);
-
-    // Обновить профиль
-    if (item.category == ShopCategory.avatarFrame) {
-      await _db.from('users').update({
-        'equipped_frame': item.id,
-      }).eq('id', _uid!);
-    } else if (item.category == ShopCategory.nickPrefix) {
-      await _db.from('users').update({
-        'equipped_prefix': item.id,
-        'nick_prefix_color': item.meta['color']?.toString(),
-      }).eq('id', _uid!);
-    }
+    // Обновляем профиль в Supabase (fire-and-forget)
+    try {
+      if (_uid != null) {
+        if (item.category == ShopCategory.avatarFrame) {
+          _db.from('users').update({
+            'equipped_frame': item.id,
+          }).eq('id', _uid!).then((_) {}, onError: (_) {});
+        } else if (item.category == ShopCategory.nickPrefix) {
+          _db.from('users').update({
+            'equipped_prefix': item.id,
+            'nick_prefix_color': item.meta['color']?.toString(),
+          }).eq('id', _uid!).then((_) {}, onError: (_) {});
+        }
+      }
+    } catch (_) {}
   }
 
-  // Получить инвентарь пользователя
+  // Снять предмет
+  Future<void> unequip(ShopCategory category) async {
+    await _setEquippedLocal(category.name, null);
+
+    try {
+      if (_uid != null) {
+        if (category == ShopCategory.avatarFrame) {
+          _db.from('users').update({
+            'equipped_frame': null,
+          }).eq('id', _uid!).then((_) {}, onError: (_) {});
+        } else if (category == ShopCategory.nickPrefix) {
+          _db.from('users').update({
+            'equipped_prefix': null,
+            'nick_prefix_color': null,
+          }).eq('id', _uid!).then((_) {}, onError: (_) {});
+        }
+      }
+    } catch (_) {}
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  ПОЛУЧЕНИЕ ДАННЫХ
+  // ═══════════════════════════════════════════════════════════════
+
   Future<List<String>> getInventoryIds() async {
-    if (_uid == null) return [];
-    final rows = await _db
-        .from('user_inventory')
-        .select('item_id')
-        .eq('user_id', _uid!);
-    return (rows as List).map((r) => r['item_id'] as String).toList();
+    await _migrateLegacyPrefs();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_inventoryKey);
+      if (raw == null) return [];
+      final list = jsonDecode(raw);
+      if (list is List) return list.cast<String>();
+      return [];
+    } catch (_) {
+      return [];
+    }
   }
 
-  // Получить экипированные предметы
   Future<Map<String, String>> getEquipped() async {
-    if (_uid == null) return {};
-    final rows = await _db
-        .from('user_inventory')
-        .select('item_id, item_type')
-        .eq('user_id', _uid!)
-        .eq('is_equipped', true);
-    final Map<String, String> result = {};
-    for (final r in rows as List) {
-      result[r['item_type'] as String] = r['item_id'] as String;
+    await _migrateLegacyPrefs();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_equippedKey);
+      if (raw == null) return {};
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return Map<String, String>.from(decoded);
+      }
+      return {};
+    } catch (_) {
+      return {};
     }
-    return result;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  ЛОКАЛЬНОЕ ХРАНЕНИЕ
+  // ═══════════════════════════════════════════════════════════════
+
+  Future<void> _addToLocalInventory(String itemId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_inventoryKey);
+      final List<String> list = raw != null
+          ? List<String>.from(jsonDecode(raw) as List)
+          : [];
+      if (!list.contains(itemId)) {
+        list.add(itemId);
+        await prefs.setString(_inventoryKey, jsonEncode(list));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _setEquippedLocal(String categoryName, String? itemId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_equippedKey);
+      final Map<String, dynamic> map = raw != null
+          ? Map<String, dynamic>.from(jsonDecode(raw) as Map)
+          : {};
+      if (itemId != null) {
+        map[categoryName] = itemId;
+      } else {
+        map.remove(categoryName);
+      }
+      await prefs.setString(_equippedKey, jsonEncode(map));
+    } catch (_) {}
+  }
+
+  void _syncInventoryToRemote(ShopItem item) {
+    if (_uid == null) return;
+    try {
+      _db.from('user_inventory').insert({
+        'user_id': _uid,
+        'item_id': item.id,
+        'item_type': item.category.name,
+        'purchased_at': DateTime.now().toIso8601String(),
+        'is_equipped': false,
+      }).then((_) {}, onError: (_) {});
+    } catch (_) {}
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home/home_screen.dart';
 
@@ -126,15 +127,15 @@ class _LevelTestScreenState extends State<LevelTestScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: _saving
             ? const Center(
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                CircularProgressIndicator(color: Color(0xFF0ABDB9)),
+                CircularProgressIndicator(color: AppColors.tiffany),
                 SizedBox(height: 16),
                 Text('Настраиваем программу...',
-                    style: TextStyle(color: Color(0xFF8EAEAC))),
+                    style: TextStyle(color: AppColors.textSecondary)),
               ]))
             : Padding(
                 padding: const EdgeInsets.all(24),
@@ -147,7 +148,7 @@ class _LevelTestScreenState extends State<LevelTestScreen>
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0ABDB9),
+                          color: AppColors.tiffany,
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Image.asset('assets/images/logo.png', width: 24, height: 24),
@@ -159,16 +160,16 @@ class _LevelTestScreenState extends State<LevelTestScreen>
                       const Spacer(),
                       Text('${_step + 1} / 3',
                           style: const TextStyle(
-                              color: Color(0xFF8EAEAC), fontSize: 13)),
+                              color: AppColors.textSecondary, fontSize: 13)),
                     ]),
                     const SizedBox(height: 12),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: LinearProgressIndicator(
                         value: (_step + 1) / 3,
-                        backgroundColor: const Color(0xFFD6F5F4),
+                        backgroundColor: AppColors.darkBorder,
                         valueColor: const AlwaysStoppedAnimation(
-                            Color(0xFF0ABDB9)),
+                            AppColors.tiffany),
                         minHeight: 6,
                       ),
                     ),
@@ -262,16 +263,16 @@ class _QuestionCard extends StatelessWidget {
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF0F1F1E),
+            color: AppColors.textPrimary,
             letterSpacing: -0.5,
             height: 1.3,
           ),
         ),
         const SizedBox(height: 32),
         ...options.map((opt) {
-          Color bg = Colors.white;
-          Color border = const Color(0xFFD6F5F4);
-          Color text = const Color(0xFF0F1F1E);
+          Color bg = AppColors.darkCard;
+          Color border = AppColors.darkBorder;
+          Color text = AppColors.textPrimary;
           IconData? icon;
 
           if (selected != null) {
@@ -286,9 +287,9 @@ class _QuestionCard extends StatelessWidget {
               text = const Color(0xFF22C55E);
               icon = Icons.check_circle_rounded;
             } else if (opt == selected && correct == null) {
-              bg = const Color(0xFF0ABDB9).withValues(alpha: 0.08);
-              border = const Color(0xFF0ABDB9);
-              text = const Color(0xFF0ABDB9);
+              bg = AppColors.tiffany.withValues(alpha: 0.08);
+              border = AppColors.tiffany;
+              text = AppColors.tiffany;
               icon = Icons.check_circle_rounded;
             }
           }

@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
+import '../../../data/courses/all_courses.dart';
 import '../../../presentation/widgets/neuronchik.dart';
+import '../../../presentation/widgets/neuron_chat_sheet.dart';
 import 'exam_screen.dart';
 
 class ExerciseScreen extends StatefulWidget {
@@ -87,10 +89,19 @@ class _ExerciseScreenState extends State<ExerciseScreen>
   Future<void> _finish() async {
     final score = (_correct / _exercises.length * 100).round();
     await CourseService.instance.markExercisesDone(
-        widget.langCode, widget.chapter.id, score);
+      widget.langCode,
+      widget.chapter.id,
+      score,
+      coinsReward: widget.chapter.coinsReward,
+      xpReward: widget.chapter.xpReward,
+    );
     if (!mounted) return;
     // Переходим к экзамену если он есть
     if (widget.chapter.exam.isNotEmpty) {
+      final nextChapterId = CourseService.instance.getNextChapterId(
+        widget.langCode,
+        widget.chapter.id,
+      );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -98,6 +109,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
             chapter: widget.chapter,
             langCode: widget.langCode,
             isKidsMode: widget.isKidsMode,
+            nextChapterId: nextChapterId,
           ),
         ),
       );
@@ -154,7 +166,31 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          final course = getCourseByLang(widget.langCode);
+                          NeuronChatSheet.open(
+                            context,
+                            languageName:
+                                course?.name ?? widget.langCode.toUpperCase(),
+                            chapterTitle: widget.chapter.title,
+                            isKids: isKids,
+                          );
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text('🧠', style: TextStyle(fontSize: 18)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         '${_current + 1}/${_exercises.length}',
                         style: TextStyle(

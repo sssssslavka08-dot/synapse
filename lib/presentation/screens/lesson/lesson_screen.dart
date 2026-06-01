@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../core/constants/app_colors.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
@@ -165,8 +167,10 @@ class _LessonScreenState extends State<LessonScreen>
       _answered = true;
       if (isCorrect) {
         _correctCount++;
+        HapticFeedback.lightImpact();
       } else {
         _wrongCount++;
+        HapticFeedback.heavyImpact();
         _shakeController.forward().then((_) => _shakeController.reset());
       }
     });
@@ -216,15 +220,15 @@ class _LessonScreenState extends State<LessonScreen>
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF4FEFE),
+        backgroundColor: AppColors.darkBg,
         body: const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: Color(0xFF0ABDB9)),
+              CircularProgressIndicator(color: AppColors.tiffany),
               SizedBox(height: 16),
               Text('Подбираем слова для тебя...',
-                  style: TextStyle(color: Color(0xFF8EAEAC))),
+                  style: TextStyle(color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -233,7 +237,7 @@ class _LessonScreenState extends State<LessonScreen>
 
     if (_words.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF4FEFE),
+        backgroundColor: AppColors.darkBg,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -242,12 +246,12 @@ class _LessonScreenState extends State<LessonScreen>
               const SizedBox(height: 16),
               const Text('Слова не найдены.\nДобавь слова в Supabase.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF8EAEAC))),
+                  style: TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0ABDB9),
+                  backgroundColor: AppColors.tiffany,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Назад'),
@@ -259,7 +263,7 @@ class _LessonScreenState extends State<LessonScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -274,12 +278,12 @@ class _LessonScreenState extends State<LessonScreen>
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.darkCard,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFD6F5F4)),
+                        border: Border.all(color: AppColors.darkBorder),
                       ),
                       child: const Icon(Icons.close,
-                          size: 20, color: Color(0xFF4D6766)),
+                          size: 20, color: AppColors.textSecondary),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -294,7 +298,7 @@ class _LessonScreenState extends State<LessonScreen>
                               '${_currentIndex + 1} / ${_words.length}',
                               style: const TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF8EAEAC),
+                                color: AppColors.textSecondary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -318,9 +322,9 @@ class _LessonScreenState extends State<LessonScreen>
                           borderRadius: BorderRadius.circular(8),
                           child: LinearProgressIndicator(
                             value: (_currentIndex + 1) / _words.length,
-                            backgroundColor: const Color(0xFFD6F5F4),
+                            backgroundColor: AppColors.darkBorder,
                             valueColor: const AlwaysStoppedAnimation(
-                                Color(0xFF0ABDB9)),
+                                AppColors.tiffany),
                             minHeight: 8,
                           ),
                         ),
@@ -356,12 +360,12 @@ class _LessonScreenState extends State<LessonScreen>
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF0ABDB9), Color(0xFF3FCFCC)],
+                            colors: [AppColors.tiffany, AppColors.tiffanyMid],
                           ),
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0ABDB9).withValues(alpha: 0.3),
+                              color: AppColors.tiffany.withValues(alpha: 0.3),
                               blurRadius: 24,
                               offset: const Offset(0, 12),
                             ),
@@ -455,9 +459,9 @@ class _LessonScreenState extends State<LessonScreen>
 
                     // ── Варианты ответов ────────────────────
                     ..._currentOptions.map((option) {
-                      Color bg = Colors.white;
-                      Color border = const Color(0xFFD6F5F4);
-                      Color text = const Color(0xFF0F1F1E);
+                      Color bg = AppColors.darkCard;
+                      Color border = AppColors.darkBorder;
+                      Color text = AppColors.textPrimary;
                       IconData? icon;
 
                       if (_answered && option == _currentWord.translation) {

@@ -3,7 +3,9 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/courses/course_structure.dart';
 import '../../../services/course_service.dart';
+import '../../../data/courses/all_courses.dart';
 import '../../../presentation/widgets/neuronchik.dart';
+import '../../../presentation/widgets/neuron_chat_sheet.dart';
 import 'exercise_screen.dart';
 
 class TheoryScreen extends StatefulWidget {
@@ -41,8 +43,12 @@ class _TheoryScreenState extends State<TheoryScreen> {
   }
 
   Future<void> _finish() async {
-    await CourseService.instance
-        .markTheoryDone(widget.langCode, widget.chapter.id);
+    await CourseService.instance.markTheoryDone(
+      widget.langCode,
+      widget.chapter.id,
+      coinsReward: (widget.chapter.coinsReward / 4).round().clamp(5, 15),
+      xpReward: (widget.chapter.xpReward / 4).round().clamp(3, 10),
+    );
     if (!mounted) return;
     setState(() => _completed = true);
     await Future.delayed(const Duration(milliseconds: 300));
@@ -70,6 +76,9 @@ class _TheoryScreenState extends State<TheoryScreen> {
   Widget build(BuildContext context) {
     final isKids = widget.isKidsMode;
     final accent = isKids ? const Color(0xFFFF6B35) : AppColors.tiffany;
+    final titleColor = isKids ? AppColors.onLight : AppColors.textPrimary;
+    final subtitleColor =
+        isKids ? AppColors.onLightSecondary : accent;
 
     return Scaffold(
       backgroundColor: isKids ? const Color(0xFFFFF9F0) : AppColors.darkBg,
@@ -89,13 +98,21 @@ class _TheoryScreenState extends State<TheoryScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: AppColors.darkCard,
+                            color: isKids
+                                ? Colors.white
+                                : AppColors.darkCard,
                             borderRadius: BorderRadius.circular(12),
-                            border:
-                                Border.all(color: AppColors.darkBorder),
+                            border: Border.all(
+                              color: isKids
+                                  ? const Color(0xFFE8E0D8)
+                                  : AppColors.darkBorder,
+                            ),
                           ),
-                          child: const Icon(Icons.close_rounded,
-                              size: 20, color: AppColors.textSecondary),
+                          child: Icon(Icons.close_rounded,
+                              size: 20,
+                              color: isKids
+                                  ? AppColors.onLightSecondary
+                                  : AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -105,18 +122,46 @@ class _TheoryScreenState extends State<TheoryScreen> {
                           children: [
                             Text(
                               '${widget.chapter.emoji} ${widget.chapter.title}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                color: titleColor,
                               ),
                             ),
                             Text(
                               'Теория · ${_currentPage + 1} из $_totalPages',
                               style: TextStyle(
-                                  fontSize: 12, color: accent),
+                                  fontSize: 12, color: subtitleColor),
                             ),
                           ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          final course = getCourseByLang(widget.langCode);
+                          final snippet = _sections.isNotEmpty
+                              ? _sections[_currentPage].content
+                              : null;
+                          NeuronChatSheet.open(
+                            context,
+                            languageName:
+                                course?.name ?? widget.langCode.toUpperCase(),
+                            chapterTitle: widget.chapter.title,
+                            isKids: isKids,
+                            theorySnippet: snippet,
+                          );
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: accent.withValues(alpha: 0.4)),
+                          ),
+                          child: const Center(
+                            child: Text('🧠', style: TextStyle(fontSize: 20)),
+                          ),
                         ),
                       ),
                     ],
@@ -150,6 +195,7 @@ class _TheoryScreenState extends State<TheoryScreen> {
                       section: _sections[i],
                       isKidsMode: isKids,
                       langCode: widget.langCode,
+                      accent: accent,
                     ),
                   ),
                 ),
@@ -204,11 +250,13 @@ class _TheoryPage extends StatefulWidget {
   final TheorySection section;
   final bool isKidsMode;
   final String langCode;
+  final Color accent;
 
   const _TheoryPage({
     required this.section,
     required this.isKidsMode,
     required this.langCode,
+    required this.accent,
   });
 
   @override
@@ -260,6 +308,12 @@ class _TheoryPageState extends State<_TheoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isKids = widget.isKidsMode;
+    final accent = widget.accent;
+    final bodyText =
+        isKids ? AppColors.onLight : AppColors.textPrimary;
+    final sectionAccent = isKids ? accent : AppColors.tiffany;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       child: Column(
@@ -269,23 +323,23 @@ class _TheoryPageState extends State<_TheoryPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.tiffany.withValues(alpha: 0.08),
+              color: sectionAccent.withValues(alpha: isKids ? 0.12 : 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: AppColors.tiffany.withValues(alpha: 0.2)),
+                  color: sectionAccent.withValues(alpha: isKids ? 0.35 : 0.2)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.menu_book_rounded,
-                    color: AppColors.tiffany, size: 22),
+                Icon(Icons.menu_book_rounded,
+                    color: sectionAccent, size: 22),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     widget.section.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.tiffany,
+                      color: sectionAccent,
                     ),
                   ),
                 ),
@@ -296,8 +350,8 @@ class _TheoryPageState extends State<_TheoryPage> {
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: _speaking
-                          ? AppColors.tiffany
-                          : AppColors.tiffany.withValues(alpha: 0.15),
+                          ? sectionAccent
+                          : sectionAccent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -309,7 +363,7 @@ class _TheoryPageState extends State<_TheoryPage> {
                               : Icons.volume_up_rounded,
                           color: _speaking
                               ? Colors.white
-                              : AppColors.tiffany,
+                              : sectionAccent,
                           size: 16,
                         ),
                         const SizedBox(width: 4),
@@ -320,7 +374,7 @@ class _TheoryPageState extends State<_TheoryPage> {
                             fontWeight: FontWeight.w700,
                             color: _speaking
                                 ? Colors.white
-                                : AppColors.tiffany,
+                                : sectionAccent,
                           ),
                         ),
                       ],
@@ -337,17 +391,21 @@ class _TheoryPageState extends State<_TheoryPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.darkCard,
+              color: isKids ? Colors.white : AppColors.darkCard,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.darkBorder),
+              border: Border.all(
+                color: isKids
+                    ? const Color(0xFFE8E0D8)
+                    : AppColors.darkBorder,
+              ),
             ),
             child: Text(
               widget.section.content,
               style: TextStyle(
-                fontSize: widget.isKidsMode ? 15 : 14,
+                fontSize: isKids ? 15 : 14,
                 height: 1.7,
-                color: AppColors.textPrimary,
-                fontFamily: 'monospace',
+                color: bodyText,
+                fontFamily: isKids ? null : 'monospace',
               ),
             ),
           ),
@@ -359,12 +417,12 @@ class _TheoryPageState extends State<_TheoryPage> {
 
           // Примеры
           if (widget.section.examples.isNotEmpty) ...[
-            const Text(
+            Text(
               '📝 Примеры',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: bodyText,
               ),
             ),
             const SizedBox(height: 8),
@@ -372,15 +430,21 @@ class _TheoryPageState extends State<_TheoryPage> {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.tiffany.withValues(alpha: 0.08),
+                    color: isKids
+                        ? Colors.white
+                        : sectionAccent.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.tiffany.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: isKids
+                          ? const Color(0xFFE8E0D8)
+                          : sectionAccent.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Text(
                     ex,
                     style: TextStyle(
-                      fontSize: widget.isKidsMode ? 14 : 13,
-                      color: AppColors.textPrimary,
+                      fontSize: isKids ? 14 : 13,
+                      color: bodyText,
                       height: 1.5,
                     ),
                   ),

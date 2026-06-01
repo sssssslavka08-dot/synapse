@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../core/auth/auth_router.dart';
+import '../../core/auth/oauth_recovery.dart';
+import '../../core/auth/session_guard.dart';
+import '../../core/constants/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'onboarding_screen.dart';
-import 'home/home_screen.dart';
-import 'onboarding/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,40 +42,29 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuth() async {
-    await Future.delayed(const Duration(milliseconds: 1800));
+    final oauthReturn = kIsWeb && OAuthRecovery.hasCallback(Uri.base);
+    await Future.delayed(
+      Duration(milliseconds: oauthReturn ? 100 : 900),
+    );
     if (!mounted) return;
 
     try {
-      final client = Supabase.instance.client;
-      // currentSession is more reliable than currentUser after restart
-      final session = client.auth.currentSession;
-      final user = session?.user ?? client.auth.currentUser;
+      final session = await OAuthRecovery.waitForSession();
+      final user = session?.user ?? Supabase.instance.client.auth.currentUser;
 
       if (user != null && session != null && !session.isExpired) {
-        Map<String, dynamic>? data;
-        try {
-          data = await client
-              .from('users')
-              .select()
-              .eq('id', user.id)
-              .maybeSingle()
-              .timeout(const Duration(seconds: 8));
-        } catch (_) {}
-
+        if (!await SessionGuard.validateSession()) {
+          if (mounted) _goToOnboarding();
+          return;
+        }
+        final profile = await AuthRouter.loadOrCreateProfile(user);
         if (!mounted) return;
-        final language = data?['selected_language'] as String?;
-        final name = data?['name'] as String? ??
-            user.email?.split('@').first ?? 'Пользователь';
-        final age = data?['age'] as int? ?? 13;
-
-        final destination = (language == null || language.isEmpty)
-            ? WelcomeScreen(name: name, age: age)
-            : HomeScreen(name: name, age: age) as Widget;
 
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => destination,
+            pageBuilder: (_, __, ___) =>
+                AuthRouter.destinationForUser(user: user, profile: profile),
             transitionsBuilder: (_, anim, __, child) =>
                 FadeTransition(opacity: anim, child: child),
             transitionDuration: const Duration(milliseconds: 400),
@@ -107,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.darkBg,
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -118,17 +110,12 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0ABDB9),
-                      borderRadius: BorderRadius.circular(26),
-                    ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(26),
                     child: Image.asset(
                       'assets/images/logo.png',
-                      width: 56,
-                      height: 56,
+                      width: 100,
+                      height: 100,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -137,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
                     style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F1F1E),
+                      color: AppColors.textPrimary,
                       letterSpacing: -1.5,
                     ),
                   ),
@@ -146,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
                     'Интеллектуальная языковая платформа',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF8EAEAC),
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -155,7 +142,7 @@ class _SplashScreenState extends State<SplashScreen>
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(0xFF0ABDB9),
+                      color: AppColors.tiffany,
                     ),
                   ),
                 ],

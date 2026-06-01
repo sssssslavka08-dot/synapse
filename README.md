@@ -6,7 +6,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-connected-green)](https://supabase.com)
 
 ## Скачать приложение
-[⬇️ Скачать APK для Android](https://github.com/sssssslavka08-dot/synapse/releases/latest)
+[⬇️ Скачать APK для Android](https://synapse-nine-brown.vercel.app/synapse.apk)
 
 ## Ссылки
 - 🌐 Сайт: https://synapse-kz.netlify.app
@@ -122,7 +122,7 @@ git push origin v1.0.0
 ```
 
 GitHub Actions автоматически соберёт APK и создаст Release.
-Ссылка для скачивания: `https://github.com/sssssslavka08-dot/synapse/releases/latest`
+Ссылка для скачивания: `https://synapse-nine-brown.vercel.app/synapse.apk`
 
 ---
 *SYNAPSE v1.0 — © 2024. Все права защищены.*

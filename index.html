@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SYNAPSE — Учи языки быстро и с удовольствием</title>
   <meta name="description" content="SYNAPSE — AI-платформа для изучения 12 языков. Алгоритм Эббингауза, XP, стрики. Бесплатно.">
-  <script>history.scrollRestoration='manual';if(location.hash)history.replaceState(null,'',location.pathname+location.search);</script>
+  <script>
+    history.scrollRestoration='manual';
+    // OAuth callback: перенаправляем токены во Flutter-приложение
+    if (location.hash && (location.hash.includes('access_token') || location.hash.includes('refresh_token') || location.search.includes('code='))) {
+      location.replace('/flutter/' + location.search + location.hash);
+    } else if (location.hash) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -838,7 +846,12 @@
 <script>
 // ── Scroll fix ───────────────────────────────────────────────────
 history.scrollRestoration = 'manual';
-if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search);
+if (window.location.hash &&
+    !window.location.hash.includes('access_token') &&
+    !window.location.hash.includes('refresh_token') &&
+    !window.location.search.includes('code=')) {
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+}
 window.scrollTo(0, 0);
 window.addEventListener('load', () => { window.scrollTo(0, 0); });
 
@@ -1066,8 +1079,8 @@ document.addEventListener('click', e => { if (!e.target.closest('#langPicker')) 
 const _savedLang = localStorage.getItem('syn_lang') || 'ru';
 if (_savedLang !== 'ru') applyLang(_savedLang);
 
-const SUPABASE_URL = 'https://recotdufzxbuffrlluqu.supabase.co';
-const SUPABASE_KEY = 'sb_publishable__B2IbsUIvFWWXsK0AmIaTA_b50roGB-';
+const SUPABASE_URL = 'https://sgtihvgzginbvsdqhqfi.supabase.co';
+const SUPABASE_KEY = 'REDACTED';
 const { createClient } = window.supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 

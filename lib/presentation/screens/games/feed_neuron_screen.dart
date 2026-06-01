@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
 import '../../../services/supabase_service.dart';
@@ -202,7 +203,7 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
               const Text('Урок завершён!',
                   style: TextStyle(
                       fontSize: 22, fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F1F1E))),
+                      color: AppColors.textPrimary)),
               const SizedBox(height: 8),
               Text('Правильно: $_score / ${_words.length}',
                   style: const TextStyle(
@@ -210,7 +211,7 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
               const SizedBox(height: 4),
               Text('+$_xp XP заработано ⚡',
                   style: const TextStyle(
-                      color: Color(0xFF0ABDB9),
+                      color: AppColors.tiffany,
                       fontSize: 15,
                       fontWeight: FontWeight.w700)),
               const SizedBox(height: 20),
@@ -222,7 +223,7 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0ABDB9),
+                    backgroundColor: AppColors.tiffany,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -252,12 +253,12 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: _loading
             ? const Center(
                 child:
-                    CircularProgressIndicator(color: Color(0xFF0ABDB9)))
+                    CircularProgressIndicator(color: AppColors.tiffany))
             : _words.isEmpty
                 ? Center(
                     child: Column(
@@ -267,12 +268,12 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                             style: TextStyle(fontSize: 48)),
                         const SizedBox(height: 12),
                         const Text('Нет слов для игры',
-                            style: TextStyle(color: Color(0xFF8EAEAC))),
+                            style: TextStyle(color: AppColors.textSecondary)),
                         const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0ABDB9),
+                              backgroundColor: AppColors.tiffany,
                               foregroundColor: Colors.white),
                           child: const Text('Назад'),
                         ),
@@ -294,7 +295,7 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: const Color(0xFFD6F5F4)),
+                                    color: AppColors.darkBorder),
                               ),
                               child: const Icon(Icons.close,
                                   size: 20, color: Color(0xFF4D6766)),
@@ -306,9 +307,9 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                               borderRadius: BorderRadius.circular(8),
                               child: LinearProgressIndicator(
                                 value: (_index + 1) / _words.length,
-                                backgroundColor: const Color(0xFFD6F5F4),
+                                backgroundColor: AppColors.darkBorder,
                                 valueColor: const AlwaysStoppedAnimation(
-                                    Color(0xFF0ABDB9)),
+                                    AppColors.tiffany),
                                 minHeight: 8,
                               ),
                             ),
@@ -318,13 +319,13 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0ABDB9)
+                              color: AppColors.tiffany
                                   .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text('⚡ $_xp XP',
                                 style: const TextStyle(
-                                  color: Color(0xFF0ABDB9),
+                                  color: AppColors.tiffany,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
                                 )),
@@ -344,7 +345,7 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                    color: const Color(0xFFD6F5F4)),
+                                    color: AppColors.darkBorder),
                               ),
                               child: Row(children: [
                                 Text(_neuron,
@@ -355,7 +356,7 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                                       style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF0F1F1E),
+                                        color: AppColors.textPrimary,
                                       )),
                                 ),
                               ]),
@@ -374,14 +375,14 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Color(0xFF0ABDB9),
-                                Color(0xFF3FCFCC)
+                                AppColors.tiffany,
+                                AppColors.tiffanyMid
                               ],
                             ),
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF0ABDB9)
+                                color: AppColors.tiffany
                                     .withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
@@ -442,9 +443,9 @@ class _FeedNeuronScreenState extends State<FeedNeuronScreen>
                             childAspectRatio: 2.2,
                             physics: const NeverScrollableScrollPhysics(),
                             children: _options.map((opt) {
-                              Color bg = Colors.white;
-                              Color border = const Color(0xFFD6F5F4);
-                              Color text = const Color(0xFF0F1F1E);
+                              Color bg = AppColors.darkCard;
+                              Color border = AppColors.darkBorder;
+                              Color text = AppColors.textPrimary;
 
                               if (_answered &&
                                   opt == _current.translation) {

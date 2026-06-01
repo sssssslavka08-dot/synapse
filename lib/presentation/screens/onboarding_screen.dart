@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import 'auth/register_screen.dart';
 import 'auth/login_screen.dart';
 
@@ -28,8 +29,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
     {
       'emoji': '🌐',
-      'title': 'Три языка:\nKZ · RU · EN',
-      'desc': 'Казахский, Русский, Английский — переключай в любой момент',
+      'title': '12 языков\nот A1 до B2',
+      'desc': 'Английский, немецкий, китайский, японский и ещё 8 — 32 главы на каждый',
     },
   ];
 
@@ -55,7 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -68,7 +69,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: _goToRegister,
                   child: const Text(
                     'Пропустить',
-                    style: TextStyle(color: Color(0xFF8EAEAC), fontSize: 14),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                   ),
                 ),
               ),
@@ -91,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           width: 130,
                           height: 130,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFD6F5F4),
+                            color: AppColors.darkBorder,
                             borderRadius: BorderRadius.circular(40),
                           ),
                           child: Center(
@@ -106,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F1F1E),
+                            color: AppColors.textPrimary,
                             height: 1.1,
                             letterSpacing: -0.5,
                           ),
@@ -140,8 +141,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: 8,
                   decoration: BoxDecoration(
                     color: _currentPage == i
-                        ? const Color(0xFF0ABDB9)
-                        : const Color(0xFFD6F5F4),
+                        ? AppColors.tiffany
+                        : AppColors.darkBorder,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -167,7 +168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0ABDB9),
+                    backgroundColor: AppColors.tiffany,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -196,7 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: _goToLogin,
                   style: OutlinedButton.styleFrom(
                     side:
-                        const BorderSide(color: Color(0xFF0ABDB9), width: 1.5),
+                        const BorderSide(color: AppColors.tiffany, width: 1.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -206,7 +207,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF0ABDB9),
+                      color: AppColors.tiffany,
                     ),
                   ),
                 ),

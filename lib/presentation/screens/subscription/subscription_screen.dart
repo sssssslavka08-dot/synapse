@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../services/supabase_service.dart';
+import '../../widgets/kaspi_payment_dialog.dart';
 import '../home/home_screen.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -102,10 +104,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     }
 
     setState(() => _isLoading = true);
-    await _showPaymentDialog();
+    final plan = _plans.firstWhere((p) => p['id'] == _selected);
+    final paid = await KaspiPaymentDialog.show(
+      context,
+      planName: plan['name'] as String,
+      amountLabel: '${plan['price']}${plan['period']}',
+      accentColor: Color(plan['color'] as int),
+    );
+    if (paid != true) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    await _showPaymentProcessing();
   }
 
-  Future<void> _showPaymentDialog() async {
+  Future<void> _showPaymentProcessing() async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -116,12 +129,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     await Future.delayed(const Duration(milliseconds: 3500));
 
     try {
-      await SupabaseService.instance.updateSubscription(_selected);
+      await SupabaseService.instance
+          .updateSubscription(_selected)
+          .timeout(const Duration(seconds: 6));
       if (_selected == 'legenda') {
-        // Выдать фиолетовую неон рамку и префикс для легенды
         await SupabaseService.instance.grantLegendaRewards();
       }
-    } catch (_) {}
+    } catch (_) {
+      // Демо: локальные награды Legenda даже если Supabase недоступен
+      if (_selected == 'legenda') {
+        await SupabaseService.instance.grantLegendaRewards();
+      }
+    }
 
     if (!mounted) return;
     Navigator.of(context).pop(); // Закрыть loading dialog
@@ -155,7 +174,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -437,10 +456,10 @@ class _PaymentLoadingDialogState extends State<_PaymentLoadingDialog>
   Timer? _timer;
 
   static const _steps = [
-    '🔐 Подключение к платёжному шлюзу...',
+    '🔐 Подключение к Kaspi...',
     '💳 Проверка карты...',
-    '🔄 Обработка транзакции...',
-    '✅ Подтверждение оплаты...',
+    '🔄 Обработка платежа...',
+    '✅ Оплата прошла успешно!',
   ];
 
   @override

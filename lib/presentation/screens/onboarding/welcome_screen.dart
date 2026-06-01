@@ -81,28 +81,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     super.dispose();
   }
 
-  Future<void> _onStart() async {
-    // Помечаем first_login = true
+  void _onStart() {
+    // Fire-and-forget — не блокируем навигацию
     try {
       final uid = Supabase.instance.client.auth.currentUser?.id;
       if (uid != null) {
-        await Supabase.instance.client
+        Supabase.instance.client
             .from('users')
-            .update({'first_login': true}).eq('id', uid);
+            .update({'first_login': true})
+            .eq('id', uid)
+            .then((_) {}, onError: (_) {});
       }
     } catch (_) {}
 
-    if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => LanguageSelectScreen(
+      MaterialPageRoute(
+        builder: (_) => LanguageSelectScreen(
           name: widget.name,
           age: widget.age,
         ),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 400),
       ),
     );
   }

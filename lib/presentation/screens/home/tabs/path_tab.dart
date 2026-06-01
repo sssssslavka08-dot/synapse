@@ -1,10 +1,19 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/kids_theme.dart';
 import '../../../../core/utils/level_system.dart';
 import '../../courses/course_list_screen.dart';
+import '../../courses/course_detail_screen.dart';
 import '../../lesson/lesson_screen.dart';
+import '../../games/survival_screen.dart';
+import '../../games/word_builder_screen.dart';
+import '../../games/feed_neuron_screen.dart';
+import '../../../../data/courses/all_courses.dart';
+import '../../../../data/courses/course_structure.dart';
+import '../../../../services/course_service.dart';
+import '../../../../services/user_store.dart';
 
 class PathTab extends StatefulWidget {
   final String name;
@@ -19,7 +28,11 @@ class PathTab extends StatefulWidget {
 class _PathTabState extends State<PathTab>
     with TickerProviderStateMixin {
   String _language = 'en';
+  String _subscription = 'free';
+  List<String> _proLangs = [];
   int _xp = 0;
+  int _chaptersDone = 0;
+  int _chaptersTotal = 32;
   bool _loading = true;
 
   // Анимация шашки (дети)
@@ -55,12 +68,19 @@ class _PathTabState extends State<PathTab>
     _floatCtrl.repeat(reverse: true);
 
     _loadProfile();
+    UserStore.instance.addListener(_onWalletUpdate);
+  }
+
+  void _onWalletUpdate() {
+    if (!mounted) return;
+    setState(() => _xp = UserStore.instance.xp);
   }
 
   @override
   void dispose() {
     _pieceCtrl.dispose();
     _floatCtrl.dispose();
+    UserStore.instance.removeListener(_onWalletUpdate);
     super.dispose();
   }
 
@@ -70,14 +90,30 @@ class _PathTabState extends State<PathTab>
     try {
       final data = await Supabase.instance.client
           .from('users')
-          .select('selected_language, xp')
+          .select('selected_language, xp, subscription_type, pro_languages')
           .eq('id', uid)
           .maybeSingle();
       if (mounted && data != null) {
         final lang = data['selected_language'] as String? ?? 'en';
+        final proRaw = data['pro_languages'] as String? ?? '';
+        final langCode = lang.isNotEmpty ? lang : 'en';
+        final course = getCourseByLang(langCode);
+        var done = 0;
+        var total = course?.totalChapters ?? 32;
+        try {
+          final progress =
+              await CourseService.instance.getCourseProgress(langCode);
+          done = progress.values
+              .where(CourseService.instance.isChapterFinished)
+              .length;
+        } catch (_) {}
         setState(() {
           if (lang.isNotEmpty) _language = lang;
           _xp = (data['xp'] ?? 0) as int;
+          _subscription = data['subscription_type'] as String? ?? 'free';
+          _proLangs = proRaw.isEmpty ? [] : proRaw.split(',').where((s) => s.isNotEmpty).toList();
+          _chaptersDone = done;
+          _chaptersTotal = total;
           _loading = false;
         });
       }
@@ -87,6 +123,35 @@ class _PathTabState extends State<PathTab>
   }
 
   void _startLesson() {
+    if (_subscription == 'legenda') {
+      _showLanguagePicker(allCourses);
+    } else if (_subscription == 'pro') {
+      final codes = {_language, ..._proLangs}.where((s) => s.isNotEmpty).toSet();
+      final courses = allCourses.where((c) => codes.contains(c.langCode)).toList();
+      if (courses.length <= 1) {
+        _openCourse(_language);
+      } else {
+        _showLanguagePicker(courses);
+      }
+    } else {
+      _openCourse(_language);
+    }
+  }
+
+  void _openCourse(String langCode) {
+    final course = allCourses.firstWhere(
+      (c) => c.langCode == langCode,
+      orElse: () => allCourses.first,
+    );
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => CourseDetailScreen(
+        course: course,
+        isKidsMode: widget.isKids,
+      ),
+    )).then((_) => _loadProfile());
+  }
+
+  void _openWordsLesson() {
     Navigator.push(context, MaterialPageRoute(
       builder: (_) => LessonScreen(
         isKidsMode: widget.isKids,
@@ -97,12 +162,88 @@ class _PathTabState extends State<PathTab>
     ));
   }
 
+  void _openMiniGame() {
+    final route = widget.isKids
+        ? FeedNeuronScreen(language: _language)
+        : (widget.age <= 12
+            ? WordBuilderScreen(language: _language)
+            : SurvivalScreen(language: _language));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => route));
+  }
+
+  void _showLanguagePicker(List<LanguageCourse> courses) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.darkSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.darkBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Выбери язык для урока',
+              style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.4,
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: courses.length,
+                itemBuilder: (ctx, i) {
+                  final c = courses[i];
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.tiffany.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(child: Text(c.flag, style: const TextStyle(fontSize: 22))),
+                    ),
+                    title: Text(c.langName,
+                      style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    subtitle: Text(c.nativeName,
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _openCourse(c.langCode);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        backgroundColor: Color(0xFFF4FEFE),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF0ABDB9))),
+        backgroundColor: AppColors.darkBg,
+        body: Center(child: CircularProgressIndicator(color: AppColors.tiffany)),
       );
     }
     return widget.isKids ? _buildKidsBoard() : _buildAdultFloors();
@@ -115,12 +256,15 @@ class _PathTabState extends State<PathTab>
     const cellColors = [Color(0xFF0ABDB9), Color(0xFF3FCFCC)];
     const boardSize = 5; // 5×5
     final totalCells = boardSize * boardSize;
-    // Считаем прогресс: сколько модульных уроков завершено
-    final doneLessons = _modules.fold<int>(
-        0, (s, m) => s + (m['completed'] as int));
-    final totalLessons = _modules.fold<int>(
-        0, (s, m) => s + (m['lessons'] as int));
-    final pieceCellIdx = (doneLessons / max(1, totalLessons) * (totalCells - 1)).round();
+    // Прогресс по реальному курсу (главы), fallback — модули
+    final doneLessons = _chaptersDone > 0
+        ? _chaptersDone
+        : _modules.fold<int>(0, (s, m) => s + (m['completed'] as int));
+    final totalLessons = _chaptersTotal > 0
+        ? _chaptersTotal
+        : _modules.fold<int>(0, (s, m) => s + (m['lessons'] as int));
+    final pieceCellIdx =
+        (doneLessons / max(1, totalLessons) * (totalCells - 1)).round();
 
     // Маршрут змейки: чётные строки слева→право, нечётные справа→лево
     List<int> snakePath = [];
@@ -134,7 +278,7 @@ class _PathTabState extends State<PathTab>
                         '🌟','⭐','🏆','🎯','🎪'];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -238,9 +382,9 @@ class _PathTabState extends State<PathTab>
                       child: LinearProgressIndicator(
                         value: doneLessons / max(1, totalLessons),
                         minHeight: 10,
-                        backgroundColor: const Color(0xFFD6F5F4),
+                        backgroundColor: AppColors.darkCard,
                         valueColor: const AlwaysStoppedAnimation(
-                            Color(0xFF0ABDB9)),
+                            AppColors.tiffany),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -344,8 +488,8 @@ class _PathTabState extends State<PathTab>
                                           fontSize: 13,
                                           fontWeight: FontWeight.w700,
                                           color: isComplete
-                                              ? const Color(0xFF0ABDB9)
-                                              : const Color(0xFF0F1F1E))),
+                                              ? AppColors.tiffany
+                                              : AppColors.textPrimary)),
                                   ClipRRect(
                                     borderRadius:
                                         BorderRadius.circular(4),
@@ -353,7 +497,7 @@ class _PathTabState extends State<PathTab>
                                       value: done / max(1, total),
                                       minHeight: 5,
                                       backgroundColor:
-                                          const Color(0xFFD6F5F4),
+                                          AppColors.darkCard,
                                       valueColor:
                                           AlwaysStoppedAnimation(
                                               m['color'] as Color),
@@ -366,7 +510,7 @@ class _PathTabState extends State<PathTab>
                             Text('$done/$total',
                                 style: const TextStyle(
                                     fontSize: 11,
-                                    color: Color(0xFF8EAEAC))),
+                                    color: AppColors.textSecondary)),
                             if (isComplete)
                               const Padding(
                                 padding: EdgeInsets.only(left: 4),
@@ -398,84 +542,83 @@ class _PathTabState extends State<PathTab>
     final maxLevel = LevelSystem.maxLevel;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1F1E),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
-            // Шапка
+            // Шапка: приветствие на всю ширину, кнопки ниже (иначе текст сжимается в узкую колонку)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Привет, ${widget.name}!',
-                            style: const TextStyle(
-                                color: Color(0xFF5A7A78), fontSize: 13)),
-                        Text('Ты на этаже $level',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5)),
-                        Text(title,
-                            style: const TextStyle(
-                                color: Color(0xFF0ABDB9),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Text('Привет, ${widget.name}!',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Color(0xFF5A7A78), fontSize: 13)),
+                  Text('Ты на этаже $level',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5)),
+                  Text(title,
+                      style: const TextStyle(
+                          color: Color(0xFF0ABDB9),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => CourseListScreen(isKidsMode: false),
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(
+                          builder: (_) =>
+                              CourseListScreen(isKidsMode: false),
                         )),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
                             color: const Color(0xFF1A3332),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFF0ABDB9).withValues(alpha: 0.3)),
+                            border: Border.all(
+                                color: const Color(0xFF0ABDB9)
+                                    .withValues(alpha: 0.3)),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text('📚', style: TextStyle(fontSize: 16)),
                               SizedBox(width: 6),
-                              Text('Курсы', style: TextStyle(color: Color(0xFF0ABDB9), fontWeight: FontWeight.w700, fontSize: 13)),
+                              Text('Курсы',
+                                  style: TextStyle(
+                                      color: Color(0xFF0ABDB9),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13)),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
+                      _PathActionChip(
+                        label: 'Слова',
+                        emoji: '📝',
+                        onTap: _openWordsLesson,
+                      ),
+                      _PathActionChip(
+                        label: 'Игра',
+                        emoji: '🎮',
+                        filled: true,
+                        onTap: _openMiniGame,
+                      ),
+                      _PathActionChip(
+                        label: 'Урок',
+                        emoji: '▶️',
+                        filled: true,
                         onTap: _startLesson,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0ABDB9),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    const Color(0xFF0ABDB9).withValues(alpha: 0.4),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              )
-                            ],
-                          ),
-                          child: const Text('Урок',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14)),
-                        ),
                       ),
                     ],
                   ),
@@ -793,6 +936,62 @@ class _NeironchikState extends State<_Neironchik>
             ),
             const Icon(Icons.touch_app_rounded,
                 color: Colors.white54, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PathActionChip extends StatelessWidget {
+  final String label;
+  final String emoji;
+  final VoidCallback onTap;
+  final bool filled;
+
+  const _PathActionChip({
+    required this.label,
+    required this.emoji,
+    required this.onTap,
+    this.filled = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: filled ? const Color(0xFF0ABDB9) : const Color(0xFF1A3332),
+          borderRadius: BorderRadius.circular(16),
+          border: filled
+              ? null
+              : Border.all(
+                  color: const Color(0xFF0ABDB9).withValues(alpha: 0.3)),
+          boxShadow: filled
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF0ABDB9).withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: filled ? Colors.white : const Color(0xFF0ABDB9),
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+            ),
           ],
         ),
       ),

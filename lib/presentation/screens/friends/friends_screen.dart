@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/level_system.dart';
 import '../../../services/supabase_service.dart';
 
@@ -74,7 +75,7 @@ class _FriendsScreenState extends State<FriendsScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Запрос отправлен!'),
-        backgroundColor: Color(0xFF0ABDB9),
+        backgroundColor: AppColors.tiffany,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -102,7 +103,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Отмена',
-                  style: TextStyle(color: Color(0xFF8EAEAC)))),
+                  style: TextStyle(color: AppColors.textSecondary))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Удалить',
@@ -119,9 +120,9 @@ class _FriendsScreenState extends State<FriendsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1F1E),
+      backgroundColor: AppColors.darkBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1F1E),
+        backgroundColor: AppColors.darkBg,
         foregroundColor: Colors.white,
         title: const Text('Друзья',
             style: TextStyle(
@@ -136,7 +137,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                 alignment: Alignment.topRight,
                 children: [
                   const Icon(Icons.notifications_rounded,
-                      color: Color(0xFF0ABDB9)),
+                      color: AppColors.tiffany),
                   Container(
                     width: 16,
                     height: 16,
@@ -158,8 +159,8 @@ class _FriendsScreenState extends State<FriendsScreen>
         ],
         bottom: TabBar(
           controller: _tabs,
-          indicatorColor: const Color(0xFF0ABDB9),
-          labelColor: const Color(0xFF0ABDB9),
+          indicatorColor: AppColors.tiffany,
+          labelColor: AppColors.tiffany,
           unselectedLabelColor: const Color(0xFF5A7A78),
           labelStyle:
               const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
@@ -195,7 +196,7 @@ class _FriendsScreenState extends State<FriendsScreen>
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF0ABDB9)))
+              child: CircularProgressIndicator(color: AppColors.tiffany))
           : TabBarView(
               controller: _tabs,
               children: [
@@ -230,7 +231,7 @@ class _FriendsScreenState extends State<FriendsScreen>
     }
 
     return RefreshIndicator(
-      color: const Color(0xFF0ABDB9),
+      color: AppColors.tiffany,
       onRefresh: _loadData,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -301,7 +302,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                 children: [
                   _ActionBtn(
                     icon: Icons.check_rounded,
-                    color: const Color(0xFF0ABDB9),
+                    color: AppColors.tiffany,
                     onTap: () => _accept(u['id'] as String),
                   ),
                   const SizedBox(width: 8),
@@ -344,7 +345,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                           height: 20,
                           child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Color(0xFF0ABDB9))),
+                              color: AppColors.tiffany)),
                     )
                   : null,
               filled: true,
@@ -421,7 +422,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                                 duration: const Duration(milliseconds: 300),
                                 child: sent
                                     ? const Icon(Icons.check_circle_rounded,
-                                        color: Color(0xFF0ABDB9))
+                                        color: AppColors.tiffany)
                                     : GestureDetector(
                                         onTap: () => _sendRequest(
                                             u['id'] as String),
@@ -429,7 +430,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 14, vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF0ABDB9),
+                                            color: AppColors.tiffany,
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                           ),
@@ -506,7 +507,7 @@ class _FriendCard extends StatelessWidget {
                     ),
                     Text('Этаж $level · $title',
                         style: const TextStyle(
-                            color: Color(0xFF0ABDB9),
+                            color: AppColors.tiffany,
                             fontSize: 12,
                             fontWeight: FontWeight.w600)),
                   ],
@@ -533,7 +534,7 @@ class _FriendCard extends StatelessWidget {
                           color: Color(0xFF5A7A78), fontSize: 11)),
                   Text('$xp XP',
                       style: const TextStyle(
-                          color: Color(0xFF8EAEAC),
+                          color: AppColors.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w600)),
                 ],
@@ -545,7 +546,7 @@ class _FriendCard extends StatelessWidget {
                   value: progress,
                   minHeight: 6,
                   backgroundColor: const Color(0xFF2A4A48),
-                  valueColor: const AlwaysStoppedAnimation(Color(0xFF0ABDB9)),
+                  valueColor: const AlwaysStoppedAnimation(AppColors.tiffany),
                 ),
               ),
             ],
@@ -583,10 +584,10 @@ class _Avatar extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF0ABDB9).withValues(alpha: 0.15),
+            color: AppColors.tiffany.withValues(alpha: 0.15),
             shape: BoxShape.circle,
             border: Border.all(
-                color: const Color(0xFF0ABDB9).withValues(alpha: 0.4),
+                color: AppColors.tiffany.withValues(alpha: 0.4),
                 width: 1.5),
           ),
           child: Center(
@@ -599,13 +600,13 @@ class _Avatar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F1F1E),
+              color: AppColors.darkBg,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFF0ABDB9), width: 1),
+              border: Border.all(color: AppColors.tiffany, width: 1),
             ),
             child: Text('$level',
                 style: const TextStyle(
-                    color: Color(0xFF0ABDB9),
+                    color: AppColors.tiffany,
                     fontSize: 9,
                     fontWeight: FontWeight.w900)),
           ),

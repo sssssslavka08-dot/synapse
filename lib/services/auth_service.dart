@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -9,8 +10,25 @@ final supabase = Supabase.instance.client;
 // Не секретный, но чтобы не дублировать — вынесено в одну константу.
 // Web OAuth ClientID проекта SYNAPSY в Google Cloud.
 // Тот же ID должен быть указан в Supabase → Authentication → Google → Client ID.
+// Web client «SYNAPSE Web» — Supabase Google provider + serverClientId (Android)
 const String _googleServerClientId =
     'REDACTED';
+
+/// Deep link для Google OAuth на Android (без SHA-1 нативного клиента).
+const String _androidOAuthRedirect = 'synapse://login-callback';
+
+/// URL возврата после Google OAuth (web).
+String get _oauthRedirectUrl {
+  if (kIsWeb) {
+    final uri = Uri.base;
+    final path = uri.path.endsWith('/') ? uri.path : '${uri.path}/';
+    return '${uri.origin}$path';
+  }
+  return 'https://synapse-nine-brown.vercel.app/flutter/';
+}
+
+bool get _useMobileOAuth =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 class GoogleSignInResult {
   final bool isNewUser;
@@ -83,23 +101,36 @@ class AuthService {
     required String password,
   }) async {
     return await supabase.auth.signInWithPassword(
-      email: email,
+      email: email.trim(),
       password: password,
+    );
+  }
+
+  Future<void> resetPasswordForEmail(String email) async {
+    await supabase.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo: _oauthRedirectUrl,
     );
   }
 
   // ── ВХОД ЧЕРЕЗ GOOGLE ────────────────────────
   Future<GoogleSignInResult?> signInWithGoogle() async {
-    if (kIsWeb) {
-      // На вебе нативный GoogleSignIn не работает — используем OAuth редирект
+    if (kIsWeb || _useMobileOAuth) {
+      // Web и Android: OAuth через браузер (Android — deep link, без SHA-1 в GCP).
       await supabase.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'https://synapse-nine-brown.vercel.app/flutter/',
+        redirectTo: kIsWeb ? _oauthRedirectUrl : _androidOAuthRedirect,
+        authScreenLaunchMode: kIsWeb
+            ? LaunchMode.platformDefault
+            : LaunchMode.externalApplication,
       );
-      return null; // редирект произойдёт, результат придёт через onAuthStateChange
+      if (kIsWeb) return null;
+      final user = supabase.auth.currentUser;
+      if (user == null) return null;
+      return _resultFromAuthUser(user);
     }
 
-    // Нативный поток (Android)
+    // iOS: нативный Google Sign-In
     final googleSignIn = GoogleSignIn(
       serverClientId: _googleServerClientId,
     );
@@ -128,14 +159,49 @@ class AuthService {
         .eq('id', response.user!.id)
         .maybeSingle();
 
-    final isNew = existing == null;
-
     return GoogleSignInResult(
-      isNewUser: isNew,
+      isNewUser: existing == null,
       name: googleUser.displayName ?? existing?['name'] ?? 'Пользователь',
       email: googleUser.email,
       photoUrl: googleUser.photoUrl,
     );
+  }
+
+  Future<GoogleSignInResult> _resultFromAuthUser(User user) async {
+    final existing = await supabase
+        .from('users')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
+
+    final meta = user.userMetadata ?? {};
+    return GoogleSignInResult(
+      isNewUser: existing == null,
+      name: existing?['name'] as String? ??
+          meta['full_name'] as String? ??
+          meta['name'] as String? ??
+          'Пользователь',
+      email: user.email ?? existing?['email'] as String? ?? '',
+      photoUrl: meta['avatar_url'] as String? ??
+          existing?['photo_url'] as String?,
+    );
+  }
+
+  /// Сообщение об ошибке Google-входа для UI.
+  static String googleSignInErrorMessage(Object e) {
+    final s = e.toString().toLowerCase();
+    if (s.contains('sign_in_canceled') || s.contains('canceled')) {
+      return 'Вход через Google отменён';
+    }
+    if (s.contains('apiexception: 10') ||
+        s.contains('developer_error') ||
+        s.contains('idtoken')) {
+      return 'Ошибка настройки Google OAuth. Добавь SHA-1 в Google Cloud или обнови приложение.';
+    }
+    if (s.contains('network') || s.contains('socket')) {
+      return 'Нет сети. Проверь интернет и попробуй снова.';
+    }
+    return 'Ошибка Google входа: ${e.toString().replaceFirst('Exception: ', '').replaceFirst('AuthException: ', '')}';
   }
 
   // ── СОХРАНИТЬ ПРОФИЛЬ GOOGLE ─────────────────
@@ -147,19 +213,24 @@ class AuthService {
   }) async {
     final uid = currentUser?.id;
     if (uid == null) return;
+    final existing = await supabase
+        .from('users')
+        .select('coins, xp, streak')
+        .eq('id', uid)
+        .maybeSingle();
+
     await supabase.from('users').upsert({
       'id': uid,
       'name': name,
       'email': email,
       'age': age,
       if (photoUrl != null) 'photo_url': photoUrl,
-      'streak': 0,
-      'xp': 0,
-      'coins': 0,
-      'words_learned': 0,
+      'streak': existing?['streak'] ?? 1,
+      'xp': existing?['xp'] ?? 0,
+      'coins': existing?['coins'] ?? 500,
       'selected_language': '',
+      'first_login': false,
       'subscription_type': 'free',
-      'created_at': DateTime.now().toIso8601String(),
       'last_active_at': DateTime.now().toIso8601String(),
     });
   }

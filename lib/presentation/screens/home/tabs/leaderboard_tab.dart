@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class LeaderboardTab extends StatefulWidget {
   final String name;
@@ -116,7 +117,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4FEFE),
+      backgroundColor: AppColors.darkBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -129,17 +130,17 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F1F1E),
+                        color: AppColors.textPrimary,
                       )),
                   const Text('Топ недели по XP',
-                      style: TextStyle(color: Color(0xFF8EAEAC), fontSize: 13)),
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                   const SizedBox(height: 16),
 
                   // Лиги
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8FAFA),
+                      color: AppColors.darkCard,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -154,7 +155,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.white
+                                    ? AppColors.darkCardHover
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -167,7 +168,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                                         : FontWeight.w400,
                                     color: isSelected
                                         ? _leagueColors[e.key]
-                                        : const Color(0xFF8EAEAC),
+                                        : AppColors.textHint,
                                   )),
                             ),
                           ),
@@ -184,7 +185,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
                 child: Center(
-                  child: CircularProgressIndicator(color: Color(0xFF0ABDB9)),
+                  child: CircularProgressIndicator(color: AppColors.tiffany),
                 ),
               )
             else if (_players.length >= 3)
@@ -229,13 +230,13 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: isMe
-                          ? const Color(0xFF0ABDB9).withValues(alpha: 0.08)
-                          : Colors.white,
+                          ? AppColors.tiffany.withValues(alpha: 0.08)
+                          : AppColors.darkCard,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isMe
-                            ? const Color(0xFF0ABDB9).withValues(alpha: 0.3)
-                            : const Color(0xFFE0F3F2),
+                            ? AppColors.tiffany.withValues(alpha: 0.3)
+                            : AppColors.darkBorder,
                         width: isMe ? 1.5 : 1,
                       ),
                     ),
@@ -252,7 +253,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                                       const Color(0xFF9EA0A5),
                                       const Color(0xFFCD7F32),
                                     ][i]
-                                  : const Color(0xFF8EAEAC),
+                                  : AppColors.textHint,
                             )),
                       ),
                       Text(p['avatar'], style: const TextStyle(fontSize: 28)),
@@ -267,13 +268,13 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: isMe
-                                    ? const Color(0xFF0ABDB9)
-                                    : const Color(0xFF0F1F1E),
+                                    ? AppColors.tiffany
+                                    : AppColors.textPrimary,
                               ),
                             ),
                             Text('🔥 ${p['streak']} дней',
                                 style: const TextStyle(
-                                    fontSize: 11, color: Color(0xFF8EAEAC))),
+                                    fontSize: 11, color: AppColors.textSecondary)),
                           ],
                         ),
                       ),
@@ -281,7 +282,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0ABDB9),
+                            color: AppColors.tiffany,
                           )),
                     ]),
                   );
@@ -316,12 +317,12 @@ class _PodiumItem extends StatelessWidget {
         Text(player['avatar'], style: const TextStyle(fontSize: 32)),
         const SizedBox(height: 4),
         Text(player['name'].toString().split(' ')[0],
-            style: const TextStyle(fontSize: 11, color: Color(0xFF4D6766))),
+            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
         Text('${player['xp']} XP',
             style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0ABDB9))),
+                color: AppColors.tiffany)),
         const SizedBox(height: 6),
         Container(
           width: 80,
