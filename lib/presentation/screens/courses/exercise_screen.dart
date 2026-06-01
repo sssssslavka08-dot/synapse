@@ -173,7 +173,7 @@ class _ExerciseScreenState extends State<ExerciseScreen>
                           NeuronChatSheet.open(
                             context,
                             languageName:
-                                course?.name ?? widget.langCode.toUpperCase(),
+                                course?.langName ?? widget.langCode.toUpperCase(),
                             chapterTitle: widget.chapter.title,
                             isKids: isKids,
                           );
