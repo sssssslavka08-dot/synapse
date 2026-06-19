@@ -10,7 +10,10 @@ import 'core/auth/oauth_recovery.dart';
 import 'presentation/screens/splash_screen.dart';
 
 /// Global route observer — used by CourseDetailScreen to reload progress on pop
-final RouteObserver<ModalRoute<void>> appRouteObserver = RouteObserver<ModalRoute<void>>();
+final RouteObserver<ModalRoute<void>> appRouteObserver =
+    RouteObserver<ModalRoute<void>>();
+
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,7 +58,8 @@ class SynapseApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('ru'), Locale('en'), Locale('kk')],
-        theme: AppTheme.dark,
+        theme: AppTheme.fromPrimary(appTheme.primary),
+        navigatorKey: appNavigatorKey,
         navigatorObservers: [appRouteObserver],
         home: const SplashScreen(),
       ),

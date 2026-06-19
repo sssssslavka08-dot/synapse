@@ -10,6 +10,7 @@ import '../../lesson/lesson_screen.dart';
 import '../../games/survival_screen.dart';
 import '../../games/word_builder_screen.dart';
 import '../../games/feed_neuron_screen.dart';
+import '../../games/neuron_jet_screen.dart';
 import '../../../../data/courses/all_courses.dart';
 import '../../../../data/courses/course_structure.dart';
 import '../../../../services/course_service.dart';
@@ -152,14 +153,26 @@ class _PathTabState extends State<PathTab>
   }
 
   void _openWordsLesson() {
-    Navigator.push(context, MaterialPageRoute(
-      builder: (_) => LessonScreen(
-        isKidsMode: widget.isKids,
-        language: _language,
-        name: widget.name,
-        age: widget.age,
+    if (widget.isKids) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => NeuronJetScreen(language: _language),
+        ),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LessonScreen(
+          isKidsMode: widget.isKids,
+          language: _language,
+          name: widget.name,
+          age: widget.age,
+        ),
       ),
-    ));
+    );
   }
 
   void _openMiniGame() {
@@ -604,19 +617,21 @@ class _PathTabState extends State<PathTab>
                         ),
                       ),
                       _PathActionChip(
-                        label: 'Слова',
-                        emoji: '📝',
+                        label: widget.isKids ? 'Истребитель' : 'Слова',
+                        icon: widget.isKids
+                            ? Icons.rocket_launch_rounded
+                            : Icons.menu_book_rounded,
                         onTap: _openWordsLesson,
                       ),
                       _PathActionChip(
                         label: 'Игра',
-                        emoji: '🎮',
+                        icon: Icons.sports_esports_rounded,
                         filled: true,
                         onTap: _openMiniGame,
                       ),
                       _PathActionChip(
                         label: 'Урок',
-                        emoji: '▶️',
+                        icon: Icons.play_arrow_rounded,
                         filled: true,
                         onTap: _startLesson,
                       ),
@@ -626,6 +641,7 @@ class _PathTabState extends State<PathTab>
               ),
             ),
 
+            _buildNeuronMascot(progress, level, title),
             // XP прогресс
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
@@ -825,6 +841,101 @@ class _PathTabState extends State<PathTab>
       ),
     );
   }
+
+  Widget _buildNeuronMascot(double progress, int level, String title) {
+    final msgs = [
+      'Сегодня отличный день учиться!',
+      'Каждый этаж — новая сила!',
+      'Нейрончик верит в тебя!',
+      'Ещё немного XP — и новый этаж!',
+    ];
+    final msg = msgs[DateTime.now().day % msgs.length];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A3332),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: const Color(0xFF0ABDB9).withValues(alpha: 0.25),
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 64,
+              height: 64,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Opacity(
+                    opacity: 0.18,
+                    child: Image.asset(
+                      'assets/images/splash/robot-happy.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      heightFactor: progress.clamp(0.08, 1.0),
+                      child: Image.asset(
+                        'assets/images/splash/robot-happy.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Нейрончик · $title',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    msg,
+                    style: const TextStyle(
+                      color: Color(0xFF8EAEAC),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: const Color(0xFF0D2423),
+                      color: const Color(0xFF0ABDB9),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Этаж $level',
+                    style: const TextStyle(
+                      color: Color(0xFF5A7A78),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -904,8 +1015,11 @@ class _NeironchikState extends State<_Neironchik>
                     color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
-                    child: Text('🧠', style: TextStyle(fontSize: 36)),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/splash/robot-happy.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -945,13 +1059,13 @@ class _NeironchikState extends State<_Neironchik>
 
 class _PathActionChip extends StatelessWidget {
   final String label;
-  final String emoji;
+  final IconData icon;
   final VoidCallback onTap;
   final bool filled;
 
   const _PathActionChip({
     required this.label,
-    required this.emoji,
+    required this.icon,
     required this.onTap,
     this.filled = false,
   });
@@ -982,7 +1096,7 @@ class _PathActionChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 14)),
+            Icon(icon, size: 16, color: filled ? Colors.white : const Color(0xFF0ABDB9)),
             const SizedBox(width: 6),
             Text(
               label,

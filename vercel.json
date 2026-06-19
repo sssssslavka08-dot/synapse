@@ -7,6 +7,6 @@
     { "source": "/app/dashboard", "destination": "/app/dashboard.html" },
     { "source": "/flutter/:path*", "destination": "/flutter/:path*" },
     { "source": "/flutter/", "destination": "/flutter/index.html" },
-    { "source": "/((?!app/|flutter/).*)", "destination": "/index.html" }
+    { "source": "/((?!app/|flutter/|privacy\\.html|terms\\.html|sm-2\\.html).*)", "destination": "/index.html" }
   ]
 }

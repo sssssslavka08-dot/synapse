@@ -10,19 +10,9 @@ class LeaderboardTab extends StatefulWidget {
   State<LeaderboardTab> createState() => _LeaderboardTabState();
 }
 
-class _LeaderboardTabState extends State<LeaderboardTab>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabCtrl;
-  int _selectedLeague = 1;
+class _LeaderboardTabState extends State<LeaderboardTab> {
   List<Map<String, dynamic>> _players = [];
   bool _loading = true;
-
-  final List<String> _leagues = ['🥉 Бронза', '🥈 Серебро', '🥇 Золото'];
-  final List<Color> _leagueColors = [
-    const Color(0xFFCD7F32),
-    const Color(0xFF9EA0A5),
-    const Color(0xFFFFD700),
-  ];
 
   static const _mockPlayers = [
     {'name': 'Айгерим К.', 'xp': 1250, 'streak': 14, 'avatar': '👩'},
@@ -39,7 +29,6 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 3, vsync: this, initialIndex: 1);
     _loadLeaderboard();
   }
 
@@ -109,12 +98,6 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   }
 
   @override
-  void dispose() {
-    _tabCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.darkBg,
@@ -134,48 +117,6 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                       )),
                   const Text('Топ недели по XP',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                  const SizedBox(height: 16),
-
-                  // Лиги
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.darkCard,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      children: _leagues.asMap().entries.map((e) {
-                        final isSelected = _selectedLeague == e.key;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _selectedLeague = e.key),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.darkCardHover
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(e.value,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w400,
-                                    color: isSelected
-                                        ? _leagueColors[e.key]
-                                        : AppColors.textHint,
-                                  )),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
                 ],
               ),
             ),

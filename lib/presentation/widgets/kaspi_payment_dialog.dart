@@ -255,9 +255,9 @@ class _KaspiPaymentDialogState extends State<KaspiPaymentDialog> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF5A7A78),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A3332),
           ),
         ),
         const SizedBox(height: 6),
@@ -266,14 +266,25 @@ class _KaspiPaymentDialogState extends State<KaspiPaymentDialog> {
           obscureText: obscure,
           keyboardType: keyboard,
           inputFormatters: inputFormatters,
+          style: const TextStyle(color: Color(0xFF0F1F1E), fontWeight: FontWeight.w600),
           onChanged: (_) => setState(() => _error = null),
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: const TextStyle(color: Color(0xFF6B8A88)),
             filled: true,
-            fillColor: const Color(0xFFF4FEFE),
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: const BorderSide(color: Color(0xFFB8E8E6)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFB8E8E6)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF0ABDB9), width: 2),
             ),
           ),
         ),

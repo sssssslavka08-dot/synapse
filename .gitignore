@@ -44,6 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Собранные артефакты (собираются локально или в CI)
+/flutter/
+/synapse.apk
+
 # Secrets — не пушить в репозиторий
 lib/config/secrets.dart
 .env

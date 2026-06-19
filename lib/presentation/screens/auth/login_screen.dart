@@ -7,9 +7,9 @@ import '../../../core/auth/auth_router.dart';
 import '../../../core/auth/oauth_recovery.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../services/auth_service.dart';
+import '../../widgets/auth_web_shell.dart';
 import '../home/home_screen.dart';
 import 'register_screen.dart';
-import 'google_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -184,28 +184,19 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       if (result != null && mounted) {
-        if (result.isNewUser) {
-          Navigator.pushReplacement(
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          final profile = await AuthRouter.loadOrCreateProfile(user);
+          if (!mounted) return;
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => GoogleSetupScreen(
-                googleName: result.name,
-                googleEmail: result.email,
-                googlePhotoUrl: result.photoUrl,
-                isNewUser: true,
+              builder: (_) => AuthRouter.destinationForUser(
+                user: user,
+                profile: profile,
               ),
             ),
-          );
-        } else {
-          final data = await _authService.getUserData();
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => HomeScreen(
-                name: data?['name'] ?? result.name,
-                age: data?['age'] ?? 13,
-              ),
-            ),
+            (_) => false,
           );
         }
       }
@@ -246,7 +237,18 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.resetPasswordForEmail(email);
       if (mounted) {
-        _showMessage('Ссылка для сброса пароля отправлена на $email', success: true);
+        if (_method == LoginMethod.phone) {
+          final phone = _phoneCtrl.text.trim();
+          _showMessage(
+            'Ссылка отправлена. Для входа по номеру $phone используется служебный адрес $email — проверьте почту, если она привязана к аккаунту.',
+            success: true,
+          );
+        } else {
+          _showMessage(
+            'Ссылка для сброса пароля отправлена на $email',
+            success: true,
+          );
+        }
       }
     } on AuthException catch (e) {
       _showError(e.message);
@@ -271,35 +273,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showError(String msg) => _showMessage(msg);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.darkBg,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-
-              // Логотип
-              Row(children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.tiffany,
-                    borderRadius: BorderRadius.circular(12),
+  Widget _buildForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+              Center(
+                child: Text(
+                  'SYNAPSE',
+                  style: TextStyle(
+                    fontSize: kIsWeb ? 22 : 20,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: kIsWeb ? 2 : 0,
+                    color: AppColors.textPrimary,
                   ),
-                  child: Image.asset('assets/images/logo.png', width: 26, height: 26),
                 ),
-                const SizedBox(width: 10),
-                const Text('SYNAPSE',
-                    style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-              ]),
-              const SizedBox(height: 48),
+              ),
+              SizedBox(height: kIsWeb ? 28 : 48),
 
               const Text('Добро пожаловать!',
                   style: TextStyle(
@@ -461,7 +450,21 @@ class _LoginScreenState extends State<LoginScreen> {
               ]),
               const SizedBox(height: 16),
             ],
-          ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final form = _buildForm();
+    if (kIsWeb) {
+      return AuthWebShell(child: form);
+    }
+    return Scaffold(
+      backgroundColor: AppColors.darkBg,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: form,
         ),
       ),
     );

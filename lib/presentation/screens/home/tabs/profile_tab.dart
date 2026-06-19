@@ -5,6 +5,7 @@ import '../../../../core/utils/level_system.dart';
 import '../../../../core/utils/user_prefs.dart';
 import '../../../../core/theme/theme_notifier.dart';
 import '../../../../core/achievements/achievement_checker.dart';
+import '../../../../services/avatar_photo_service.dart';
 import '../../../../services/shop_service.dart';
 import '../../../../services/user_store.dart';
 import '../../auth/login_screen.dart';
@@ -13,6 +14,7 @@ import '../../language_select_screen.dart';
 import '../../friends/friends_screen.dart';
 import '../../shop/shop_screen.dart';
 import '../../profile/customization_screen.dart';
+import '../../../widgets/avatar_display.dart';
 
 class ProfileTab extends StatefulWidget {
   final String name;
@@ -202,11 +204,10 @@ class _ProfileTabState extends State<ProfileTab> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: Container(
-            color: const Color(0xFF0ABDB9),
-            child: Center(
-              child: Text(_avatarEmoji, style: const TextStyle(fontSize: 40)),
-            ),
+          child: AvatarDisplay(
+            emoji: _avatarEmoji,
+            fontSize: 40,
+            backgroundColor: const Color(0xFF0ABDB9),
           ),
         ),
       ),
@@ -328,7 +329,44 @@ class _ProfileTabState extends State<ProfileTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Редактировать профиль', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              Center(
+                child: GestureDetector(
+                  onTap: () async {
+                    final path = await AvatarPhotoService.instance.pickAndSave(sheetCtx);
+                    if (path != null && ctx.mounted) {
+                      Navigator.pop(sheetCtx);
+                      _loadStats();
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: AvatarDisplay(
+                            emoji: _avatarEmoji,
+                            fontSize: 36,
+                            backgroundColor: AppColors.darkCard,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Сменить фото',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: appTheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               TextField(
                 controller: nameCtrl,
                 decoration: InputDecoration(
@@ -691,6 +729,14 @@ class _ProfileTabState extends State<ProfileTab> {
                             ),
                         ],
                       ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Нажми на достижение — условие получения указано ниже',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       GridView.count(
                         shrinkWrap: true,
@@ -711,46 +757,60 @@ class _ProfileTabState extends State<ProfileTab> {
                                     ))
                                 : _achievements)
                             .map((a) => Opacity(
-                                  opacity: a.earned ? 1.0 : 0.35,
-                                  child: Tooltip(
-                                    message: a.description,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
+                                  opacity: a.earned ? 1.0 : 0.45,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: a.earned
+                                          ? AppColors.tiffany.withValues(alpha: 0.08)
+                                          : AppColors.darkCard,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
                                         color: a.earned
-                                            ? AppColors.tiffany.withValues(alpha: 0.08)
-                                            : AppColors.darkCard,
-                                        borderRadius: BorderRadius.circular(14),
-                                        border: Border.all(
+                                            ? AppColors.tiffany.withValues(alpha: 0.4)
+                                            : AppColors.darkBorder,
+                                        width: a.earned ? 1.5 : 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          a.earned
+                                              ? Icons.emoji_events_rounded
+                                              : Icons.lock_outline_rounded,
                                           color: a.earned
-                                              ? AppColors.tiffany.withValues(alpha: 0.4)
-                                              : AppColors.darkBorder,
-                                          width: a.earned ? 1.5 : 1,
+                                              ? AppColors.tiffany
+                                              : AppColors.textHint,
+                                          size: 22,
                                         ),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(a.earned ? a.emoji : '🔒',
-                                              style: const TextStyle(
-                                                  fontSize: 26)),
-                                          const SizedBox(height: 4),
-                                          Text(a.title,
-                                              textAlign: TextAlign.center,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: a.earned
-                                                    ? FontWeight.w600
-                                                    : FontWeight.w400,
-                                                color: a.earned
-                                                    ? AppColors.textPrimary
-                                                    : AppColors.textHint,
-                                              )),
-                                        ],
-                                      ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          a.title,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w700,
+                                            color: a.earned
+                                                ? AppColors.textPrimary
+                                                : AppColors.textHint,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          a.description,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 7,
+                                            height: 1.2,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ))

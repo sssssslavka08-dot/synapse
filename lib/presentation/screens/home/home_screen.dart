@@ -73,6 +73,14 @@ class _HomeScreenState extends State<HomeScreen>
     SupabaseService.instance.ensureWelcomeCoins();
     UserStore.instance.refresh();
     _warmWordsAndNotifications();
+    NotificationService.instance.onNotificationTap = (_) {
+      final tab = NotificationService.instance.consumePendingTab();
+      if (tab != null && mounted) setState(() => _currentIndex = tab);
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tab = NotificationService.instance.consumePendingTab();
+      if (tab != null && mounted) setState(() => _currentIndex = tab);
+    });
   }
 
   Future<void> _warmWordsAndNotifications() async {
@@ -154,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final isWide = w >= 768;
+    final accent = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       backgroundColor: AppColors.darkBg,
@@ -166,6 +175,7 @@ class _HomeScreenState extends State<HomeScreen>
                 _Sidebar(
                   currentIndex: _currentIndex,
                   items: _navItems,
+                  accent: accent,
                   onTap: _onNav,
                 ),
                 Expanded(
@@ -258,6 +268,7 @@ class _HomeScreenState extends State<HomeScreen>
           : _MobileBottomNav(
               currentIndex: _currentIndex,
               items: _navItems,
+              accent: accent,
               onTap: _onNav,
             ),
     );
@@ -275,8 +286,14 @@ class _NavData {
 class _Sidebar extends StatelessWidget {
   final int currentIndex;
   final List<_NavData> items;
+  final Color accent;
   final ValueChanged<int> onTap;
-  const _Sidebar({required this.currentIndex, required this.items, required this.onTap});
+  const _Sidebar({
+    required this.currentIndex,
+    required this.items,
+    required this.accent,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -333,11 +350,11 @@ class _Sidebar extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
                         color: active
-                            ? AppColors.tiffany.withValues(alpha: 0.12)
+                            ? accent.withValues(alpha: 0.12)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(14),
                         border: active
-                            ? Border.all(color: AppColors.tiffany.withValues(alpha: 0.25))
+                            ? Border.all(color: accent.withValues(alpha: 0.25))
                             : null,
                       ),
                       child: Row(
@@ -345,7 +362,7 @@ class _Sidebar extends StatelessWidget {
                           Icon(
                             item.icon,
                             size: 22,
-                            color: active ? AppColors.tiffany : AppColors.textHint,
+                            color: active ? accent : AppColors.textHint,
                           ),
                           const SizedBox(width: 12),
                           Text(
@@ -387,8 +404,14 @@ class _Sidebar extends StatelessWidget {
 class _MobileBottomNav extends StatelessWidget {
   final int currentIndex;
   final List<_NavData> items;
+  final Color accent;
   final ValueChanged<int> onTap;
-  const _MobileBottomNav({required this.currentIndex, required this.items, required this.onTap});
+  const _MobileBottomNav({
+    required this.currentIndex,
+    required this.items,
+    required this.accent,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -413,7 +436,7 @@ class _MobileBottomNav extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: active
-                        ? AppColors.tiffany.withValues(alpha: 0.12)
+                        ? accent.withValues(alpha: 0.12)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -423,7 +446,7 @@ class _MobileBottomNav extends StatelessWidget {
                       Icon(
                         item.icon,
                         size: 24,
-                        color: active ? AppColors.tiffany : AppColors.textHint,
+                        color: active ? accent : AppColors.textHint,
                       ),
                       const SizedBox(height: 3),
                       Text(
@@ -431,7 +454,7 @@ class _MobileBottomNav extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                          color: active ? AppColors.tiffany : AppColors.textHint,
+                          color: active ? accent : AppColors.textHint,
                         ),
                       ),
                     ],

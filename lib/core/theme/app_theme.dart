@@ -7,13 +7,15 @@ class AppTheme {
 
   static ThemeData get light => dark;
 
-  static ThemeData get dark => ThemeData(
+  static ThemeData get dark => fromPrimary(AppColors.tiffany);
+
+  static ThemeData fromPrimary(Color primary) => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.tiffany,
+        colorScheme: ColorScheme.dark(
+          primary: primary,
           onPrimary: Colors.white,
-          secondary: AppColors.tiffanyMid,
+          secondary: primary.withValues(alpha: 0.85),
           surface: AppColors.darkSurface,
           onSurface: AppColors.textPrimary,
           surfaceTint: Colors.transparent,
@@ -44,7 +46,7 @@ class AppTheme {
         dividerColor: AppColors.darkBorder,
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.tiffany,
+            backgroundColor: primary,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -95,16 +97,16 @@ class AppTheme {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: AppColors.tiffany,
+            borderSide: BorderSide(
+              color: primary,
               width: 2,
             ),
           ),
           hintStyle: const TextStyle(color: AppColors.textHint),
         ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: AppColors.darkNav,
-          selectedItemColor: AppColors.tiffany,
+          selectedItemColor: primary,
           unselectedItemColor: AppColors.textHint,
         ),
         dialogTheme: DialogThemeData(
@@ -117,7 +119,7 @@ class AppTheme {
         datePickerTheme: DatePickerThemeData(
           backgroundColor: AppColors.darkSurface,
           surfaceTintColor: Colors.transparent,
-          headerBackgroundColor: AppColors.tiffany,
+          headerBackgroundColor: primary,
           headerForegroundColor: Colors.white,
           dayForegroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) return Colors.white;
@@ -130,9 +132,9 @@ class AppTheme {
             if (states.contains(WidgetState.selected)) return Colors.white;
             return AppColors.textPrimary;
           }),
-          todayForegroundColor: WidgetStateProperty.all(AppColors.tiffany),
+          todayForegroundColor: WidgetStateProperty.all(primary),
           todayBackgroundColor: WidgetStateProperty.all(
-            AppColors.tiffany.withValues(alpha: 0.15),
+            primary.withValues(alpha: 0.15),
           ),
         ),
         snackBarTheme: SnackBarThemeData(

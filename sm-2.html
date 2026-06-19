@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Алгоритм SM-2 — SYNAPSE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:Nunito,sans-serif;max-width:800px;margin:0 auto;padding:32px 20px;line-height:1.75;color:#111827;background:#F0FFFE}
+    h1{font-size:32px;letter-spacing:-1px} h2{color:#0ABDB9;margin-top:32px}
+    .card{background:#fff;border:2px solid #C8F0EE;border-radius:16px;padding:20px;margin:16px 0}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid #C8F0EE;padding:10px;text-align:left;font-size:14px}
+    th{background:#E6FFFE}a{color:#0ABDB9;font-weight:800;text-decoration:none}
+  </style>
+</head>
+<body>
+  <a href="/">← На главную</a>
+  <h1>Алгоритм SM-2 в SYNAPSE</h1>
+  <p>SYNAPSE использует <strong>SuperMemo 2 (SM-2)</strong> — научно обоснованный метод интервального повторения, основанный на кривой забывания <strong>Эббингауза</strong>.</p>
+  <div class="card">
+    <h2>Как это работает</h2>
+    <ol>
+      <li>Вы учите новое слово.</li>
+      <li>После каждого ответа система оценивает качество (0–5).</li>
+      <li>SM-2 рассчитывает, через сколько дней показать слово снова.</li>
+      <li>Правильный ответ увеличивает интервал (1 день → 3 → 7 → 14…).</li>
+      <li>Ошибка сбрасывает интервал — слово возвращается в активное повторение.</li>
+    </ol>
+  </div>
+  <h2>Пример интервалов</h2>
+  <table>
+    <tr><th>Ответ</th><th>Следующий показ</th></tr>
+    <tr><td>Первый раз верно</td><td>через 1 день</td></tr>
+    <tr><td>Снова верно</td><td>через 3 дня</td></tr>
+    <tr><td>Уверенно знаю</td><td>через 7–14 дней</td></tr>
+    <tr><td>Ошибка</td><td>снова сегодня / завтра</td></tr>
+  </table>
+  <h2>Зачем это вам</h2>
+  <p>Вы тратите меньше времени и запоминаете больше: повторение происходит в момент, когда слово почти забыто — так мозг закрепляет его эффективнее.</p>
+  <p><a href="/flutter/">Попробовать в приложении →</a></p>
+</body>
+</html>

@@ -14,6 +14,9 @@ class NotificationService {
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  int? pendingHomeTab;
+
+  void Function(NotificationResponse)? onNotificationTap;
 
   static const _channelId = 'synapse_main';
   static const _channelName = 'SYNAPSE Уведомления';
@@ -34,6 +37,7 @@ class NotificationService {
 
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: _handleTap,
     );
 
     await _plugin
@@ -42,6 +46,28 @@ class NotificationService {
         ?.requestNotificationsPermission();
 
     _initialized = true;
+
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp == true) {
+      _handleTap(launch!.notificationResponse);
+    }
+  }
+
+  void _handleTap(NotificationResponse? response) {
+    if (response == null) return;
+    final payload = response.payload ?? '';
+    if (payload == 'daily') {
+      pendingHomeTab = 2;
+    } else {
+      pendingHomeTab = 0;
+    }
+    onNotificationTap?.call(response);
+  }
+
+  int? consumePendingTab() {
+    final t = pendingHomeTab;
+    pendingHomeTab = null;
+    return t;
   }
 
   // ── Канал уведомлений ──────────────────────────────────────
@@ -111,10 +137,11 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       1,
-      'SYNAPSE 🧠',
+      'SYNAPSE',
       msg,
       scheduled,
       _details,
+      payload: 'home',
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
@@ -136,10 +163,11 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       3,
-      'Доброе утро! ☀️',
+      'Доброе утро!',
       'Начни день с урока — 5 минут языка заряжают мозг!',
       scheduled,
       _details,
+      payload: 'home',
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
@@ -155,10 +183,11 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       2,
-      'Стрик сгорает! 🔥',
-      'Твоя серия сгорит через час. Зайди на 1 минуту! ⚡',
+      'Стрик сгорает!',
+      'Твоя серия сгорит через час. Зайди на 1 минуту!',
       scheduled,
       _details,
+      payload: 'home',
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,

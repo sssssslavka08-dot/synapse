@@ -431,6 +431,33 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     style: TextStyle(fontSize: 11, color: Color(0xFF8EAEAC)),
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 12),
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Как отменить подписку?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0ABDB9),
+                      ),
+                    ),
+                    children: const [
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '1. Профиль → Подписка → «Управление» → Отменить.\n'
+                          '2. В Kaspi отключите автоплатёж для SYNAPSE.\n'
+                          '3. Напишите на hello@synapse.app — доступ сохранится до конца периода.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF8EAEAC),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

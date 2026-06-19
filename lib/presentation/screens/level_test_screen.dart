@@ -27,6 +27,7 @@ class _LevelTestScreenState extends State<LevelTestScreen>
     with SingleTickerProviderStateMixin {
   int _step = 0;
   int _score = 0; // 0–3
+  bool _fromZero = false;
   bool _answered = false;
   String? _selected;
   bool _saving = false;
@@ -72,9 +73,11 @@ class _LevelTestScreenState extends State<LevelTestScreen>
       _answered = true;
     });
 
-    // Считаем очки
+    if (_step == 0) {
+      if (answer == 'Знаю хорошо') _score++;
+      if (answer == 'Нет, совсем с нуля') _fromZero = true;
+    }
     if (_step == 1 && answer == _q2Correct) _score++;
-    if (_step == 0 && answer == 'Знаю хорошо') _score++;
     if (_step == 2) {
       if (answer == '20 мин в день') _score++;
       if (answer == '30 мин+') _score += 2;
@@ -85,7 +88,11 @@ class _LevelTestScreenState extends State<LevelTestScreen>
 
     if (_step < 2) {
       setState(() {
-        _step++;
+        if (_step == 0 && _fromZero) {
+          _step = 2;
+        } else {
+          _step++;
+        }
         _answered = false;
         _selected = null;
       });

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/constants/app_colors.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/words_service.dart';
@@ -185,6 +186,7 @@ class _SurvivalScreenState extends State<SurvivalScreen>
   }
 
   void _onWrong(String? selected) {
+    HapticFeedback.heavyImpact();
     setState(() {
       _selected = selected;
       _answered = true;
