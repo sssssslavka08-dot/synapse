@@ -1,3 +1,4 @@
+import 'config/secrets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'shop_service.dart';
@@ -95,10 +96,8 @@ class SupabaseService {
     return res;
   }
 
-  // Google Sign-In
-  // Web client ID из google-services.json — нужен для получения idToken
-  static const _webClientId =
-      'REDACTED';
+  // Google Sign-In — Web Client ID из secrets.dart
+  static const _webClientId = googleWebClientId;
 
   Future<AuthResponse?> signInWithGoogle() async {
     final googleSignIn = GoogleSignIn(serverClientId: _webClientId);

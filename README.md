@@ -35,7 +35,23 @@ flutter run -d android
 ```bash
 cp lib/config/secrets.example.dart lib/config/secrets.dart
 ```
-Заполни URL и anon key из Supabase. Для Android также нужен `android/app/google-services.json` (Google Sign-In).
+Заполни URL, anon key и Google Client ID из Supabase / Google Cloud.
+
+Для веб-страниц (лендинг, admin, app):
+```bash
+cp config/supabase.public.example.js config/supabase.public.js
+```
+
+Для Android:
+```bash
+cp android/app/google-services.json.example android/app/google-services.json
+```
+Заполни из Firebase Console.
+
+## Безопасность
+
+Не коммить в репозиторий: `secrets.dart`, `config/supabase.public.js`, `google-services.json`.
+Если ключи уже попали в публичный git — **смени их** в Supabase и Firebase Dashboard.
 
 ## Структура
 

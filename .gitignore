@@ -48,6 +48,8 @@ app.*.map.json
 /flutter/
 /synapse.apk
 
+config/supabase.public.js
+
 # Secrets — не пушить в репозиторий
 lib/config/secrets.dart
 .env

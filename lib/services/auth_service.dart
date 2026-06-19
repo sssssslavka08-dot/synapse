@@ -1,3 +1,4 @@
+import 'config/secrets.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,14 +6,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 final supabase = Supabase.instance.client;
 
-// Web OAuth Client ID (из Google Cloud → OAuth consent).
-// Тот же ClientID должен стоять в Supabase → Authentication → Google.
-// Не секретный, но чтобы не дублировать — вынесено в одну константу.
-// Web OAuth ClientID проекта SYNAPSY в Google Cloud.
-// Тот же ID должен быть указан в Supabase → Authentication → Google → Client ID.
 // Web client «SYNAPSE Web» — Supabase Google provider + serverClientId (Android)
-const String _googleServerClientId =
-    'REDACTED';
+const String _googleServerClientId = googleWebClientId;
 
 /// Deep link для Google OAuth на Android (без SHA-1 нативного клиента).
 const String _androidOAuthRedirect = 'synapse://login-callback';
